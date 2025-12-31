@@ -131,17 +131,6 @@ $app_enabled = getConfig('app_enabled', 'true') === 'true';
 <body>
 <div class="container-fluid">
     <div class="row">
-        <div class="col-md-3 col-lg-2 sidebar">
-            <div class="text-center mb-4">
-                <h4><i class="fas fa-gamepad"></i> Silent Panel</h4>
-            </div>
-            <nav>
-                <a href="index.php" class="nav-link"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-                <a href="panels.php" class="nav-link"><i class="fas fa-list"></i> Manage Panels</a>
-                <a href="announcements.php" class="nav-link"><i class="fas fa-bullhorn"></i> Announcements</a>
-                <a href="settings.php" class="nav-link"><i class="fas fa-cog"></i> Settings</a>
-            </nav>
-        </div>
         <div class="col-md-9 col-lg-10 main-content">
 <?php if (isset($msg)): ?><div class="alert alert-success alert-dismissible fade show"><i class="fas fa-check-circle"></i> <?php echo $msg; ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><?php endif; ?>
 <?php if (isset($error)): ?><div class="alert alert-danger alert-dismissible fade show"><i class="fas fa-exclamation-triangle"></i> <?php echo $error; ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><?php endif; ?>
