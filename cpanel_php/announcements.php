@@ -12,6 +12,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$_POST['ann_text'], $start_time, $end_time]);
         $msg = "Announcement successfully published and scheduled for all users!";
     }
+    if (isset($_POST['delete_announcement'])) {
+        $pdo->prepare("UPDATE announcements SET active = 0 WHERE id = ?")->execute([$_POST['ann_id']]);
+        $msg = "Announcement deleted successfully!";
+    }
 }
 $ann = getActiveAnnouncement();
 ?>
@@ -51,5 +55,25 @@ $ann = getActiveAnnouncement();
         </form>
     </div>
 </div>
+
+<?php if ($ann): ?>
+<div class="card shadow mb-4 border-left-danger" style="border-left: .25rem solid #e74c3c !important;">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-danger">Current Active Announcement</h6>
+        <form method="POST" onsubmit="return confirm('Are you sure you want to delete this announcement?');">
+            <input type="hidden" name="ann_id" value="<?php echo $ann['id']; ?>">
+            <button type="submit" name="delete_announcement" class="btn btn-danger btn-sm">
+                <i class="fas fa-trash"></i> Delete Announcement
+            </button>
+        </form>
+    </div>
+    <div class="card-body">
+        <p class="mb-0"><?php echo htmlspecialchars($ann['message']); ?></p>
+        <div class="mt-2">
+            <small class="text-muted"><i class="fas fa-clock"></i> Scheduled: <?php echo $ann['start_time']; ?> to <?php echo $ann['end_time']; ?></small>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
 <?php require_once 'footer.php'; ?>
