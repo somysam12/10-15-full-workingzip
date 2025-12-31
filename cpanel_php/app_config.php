@@ -2,11 +2,30 @@
 require_once 'config.php';
 header('Content-Type: application/json');
 
-$data = getData();
+$app_enabled = getConfig('app_enabled', 'true') === 'true';
+$ann = getActiveAnnouncement();
+$panels = getAllPanels();
 
-// Add full URL to logo if needed
-$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
-$data['logo_url'] = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . "/logo.png";
+// Format response to match your exact request
+$response = [
+    "app_enabled" => $app_enabled,
+    "disable_message" => "App is under maintenance",
+    "force_logout" => false,
+    "announcement" => [
+        "text" => $ann ? $ann['message'] : "",
+        "start" => $ann ? $ann['start_time'] : "",
+        "end" => $ann ? $ann['end_time'] : ""
+    ],
+    "panels" => []
+];
 
-echo json_encode($data, JSON_PRETTY_PRINT);
+foreach ($panels as $p) {
+    $response['panels'][] = [
+        "name" => $p['name'],
+        "url" => $p['url'],
+        "key" => $p['site_key']
+    ];
+}
+
+echo json_encode($response, JSON_PRETTY_PRINT);
 ?>
