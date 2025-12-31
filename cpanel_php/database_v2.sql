@@ -34,7 +34,7 @@ INSERT IGNORE INTO app_config (config_key, config_value) VALUES
 ('maintenance_message', 'App is under maintenance'),
 ('force_logout_flag', 'no'),
 ('latest_version', '1.0.0'),
-('min_required_version', '1.0.0'),
+('min_required_version', '1'),
 ('update_url', ''),
 ('update_message', 'New update available!'),
 ('reset_cache_flag', 'no'),

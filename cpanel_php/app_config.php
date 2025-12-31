@@ -18,7 +18,7 @@ $response = [
     ],
     "version_management" => [
         "latest_version" => $all_config['latest_version'] ?? '1.0.0',
-        "min_required_version" => $all_config['min_required_version'] ?? '1.0.0',
+        "min_required_version" => (int)($all_config['min_required_version'] ?? 1),
         "update_url" => $all_config['update_url'] ?? '',
         "update_message" => $all_config['update_message'] ?? ''
     ],
@@ -43,6 +43,7 @@ $response = [
     "branding" => [
         "splash_logo" => $base_url . "/splash_logo.png",
         "app_logo" => $base_url . "/logo.png",
+        "loader_animation_url" => $all_config['loader_url'] ?? '',
         "splash_text" => $all_config['splash_text'] ?? '',
         "bg_color" => $all_config['bg_color'] ?? '#0A0E27'
     ],
