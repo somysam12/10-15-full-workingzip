@@ -8,6 +8,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         setConfig('theme_mode', $_POST['theme_mode']);
         setConfig('theme_locked', isset($_POST['theme_locked']) ? 'yes' : 'no');
         setConfig('splash_text', $_POST['splash_text']);
+        setConfig('splash_text_color', $_POST['splash_text_color']);
+        setConfig('splash_text_position', $_POST['splash_text_position']);
         setConfig('bg_color', $_POST['bg_color']);
         $msg = "Branding & Theme updated!";
     }
@@ -49,6 +51,20 @@ $all_config = getAllConfig();
                     <div class="mb-3">
                         <label class="form-label">Welcome Text</label>
                         <input type="text" name="splash_text" class="form-control" value="<?php echo htmlspecialchars($all_config['splash_text'] ?? ''); ?>">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Text Color</label>
+                            <input type="color" name="splash_text_color" class="form-control form-control-color w-100" value="<?php echo $all_config['splash_text_color'] ?? '#ffffff'; ?>">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Text Position</label>
+                            <select name="splash_text_position" class="form-select">
+                                <option value="top" <?php echo ($all_config['splash_text_position'] ?? '') == 'top' ? 'selected' : ''; ?>>Top</option>
+                                <option value="center" <?php echo ($all_config['splash_text_position'] ?? 'center') == 'center' ? 'selected' : ''; ?>>Center</option>
+                                <option value="bottom" <?php echo ($all_config['splash_text_position'] ?? '') == 'bottom' ? 'selected' : ''; ?>>Bottom</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Background Color</label>

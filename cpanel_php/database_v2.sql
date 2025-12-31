@@ -44,4 +44,6 @@ INSERT IGNORE INTO app_config (config_key, config_value) VALUES
 ('splash_logo_url', 'logo.png'),
 ('loader_url', ''),
 ('splash_text', 'Welcome'),
+('splash_text_color', '#ffffff'),
+('splash_text_position', 'center'),
 ('bg_color', '#0A0E27');

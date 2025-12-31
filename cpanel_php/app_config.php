@@ -45,6 +45,8 @@ $response = [
         "app_logo" => $base_url . "/logo.png",
         "loader_animation_url" => $all_config['loader_url'] ?? '',
         "splash_text" => $all_config['splash_text'] ?? '',
+        "splash_text_color" => $all_config['splash_text_color'] ?? '#ffffff',
+        "splash_text_position" => $all_config['splash_text_position'] ?? 'center',
         "bg_color" => $all_config['bg_color'] ?? '#0A0E27'
     ],
     "panels" => []
