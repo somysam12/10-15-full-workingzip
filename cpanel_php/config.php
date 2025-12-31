@@ -1,60 +1,41 @@
 <?php
-// Database configuration
-// Replace these with your cPanel MySQL database details
-define('DB_HOST', 'localhost');
-define('DB_USER', 'your_database_user');
-define('DB_PASS', 'your_database_password');
-define('DB_NAME', 'your_database_name');
+// config.php - Database configuration
+$db_host = 'localhost';
+$db_name = 'your_database_name';
+$db_user = 'your_database_user';
+$db_pass = 'your_database_password';
 
-/**
- * Database connection helper
- */
-function get_db_connection() {
-    try {
-        $conn = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME, DB_USER, DB_PASS);
-        $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-        return $conn;
-    } catch(PDOException $e) {
-        die("Connection failed: " . $e->getMessage());
-    }
+try {
+    $pdo = new PDO("mysql:host=$db_host;dbname=$db_name", $db_user, $db_pass);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    // For now, let's just return a mock response if DB fails, or handle it as you wish
+    // die("Connection failed: " . $e->getMessage());
 }
 
-/**
- * Initialize database tables
- * Run this once or create tables manually in phpMyAdmin
- */
-function init_db() {
-    $db = get_db_connection();
-    
-    // app_config table
-    $db->exec("CREATE TABLE IF NOT EXISTS app_config (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        `key` VARCHAR(100) UNIQUE NOT NULL,
-        `value` TEXT
-    )");
-    
-    // panels table
-    $db->exec("CREATE TABLE IF NOT EXISTS panels (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(200) NOT NULL,
-        url TEXT NOT NULL,
-        site_key VARCHAR(100) UNIQUE NOT NULL,
-        position INT DEFAULT 0,
-        enabled BOOLEAN DEFAULT TRUE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )");
-    
-    // announcements table
-    $db->exec("CREATE TABLE IF NOT EXISTS announcements (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        message TEXT NOT NULL,
-        active BOOLEAN DEFAULT TRUE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )");
-    
-    // Insert default values if missing
-    $stmt = $db->prepare("INSERT IGNORE INTO app_config (`key`, `value`) VALUES ('app_enabled', 'true'), ('app_title', 'Silent Multi Panel'), ('logo_url', '')");
-    $stmt->execute();
+// Function to get current config (Mocking for easy deployment if DB not setup)
+function getAppConfig($pdo) {
+    return [
+        "app_enabled" => true,
+        "disable_message" => "App is under maintenance",
+        "force_logout" => false,
+        "announcement" => [
+            "text" => "Server maintenance tonight 10PM – 12AM",
+            "start" => "2025-01-01 20:00",
+            "end" => "2025-01-01 22:00"
+        ],
+        "panels" => [
+            [
+                "name" => "Silent Panel",
+                "url" => "https://silentpanel.site",
+                "key" => "silent"
+            ],
+            [
+                "name" => "Second Panel",
+                "url" => "https://secondpanel.site",
+                "key" => "second"
+            ]
+        ]
+    ];
 }
 ?>

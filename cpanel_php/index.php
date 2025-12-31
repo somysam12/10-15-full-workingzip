@@ -1,7 +1,6 @@
 <?php
 require_once 'config.php';
-// Uncomment the line below to initialize the database tables on the first run
-// init_db();
+$config = getAppConfig($pdo);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -10,279 +9,45 @@ require_once 'config.php';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Silent Panel Admin Dashboard</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #333; min-height: 100vh; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); overflow: hidden; }
-        header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; text-align: center; }
-        header h1 { font-size: 2em; margin-bottom: 10px; }
-        .tabs { display: flex; border-bottom: 2px solid #ddd; background: #f9f9f9; }
-        .tab-btn { flex: 1; padding: 15px; background: none; border: none; cursor: pointer; font-size: 16px; border-bottom: 3px solid transparent; transition: all 0.3s; }
-        .tab-btn.active { color: #667eea; border-bottom-color: #667eea; background: white; }
-        .tab-btn:hover { background: #f0f0f0; }
-        .content { padding: 30px; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
-        .setting-card { background: #f9f9f9; padding: 20px; border-radius: 8px; border: 2px solid #ddd; }
-        .setting-card h3 { margin-bottom: 15px; color: #667eea; }
-        .setting-card label { display: block; margin-bottom: 10px; font-weight: 500; }
-        .setting-card input, .setting-card textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; font-family: inherit; }
-        .setting-card textarea { resize: vertical; min-height: 100px; }
-        .switch { display: flex; align-items: center; gap: 15px; }
-        .toggle { position: relative; width: 60px; height: 30px; background: #ccc; border-radius: 15px; cursor: pointer; transition: background 0.3s; }
-        .toggle.active { background: #667eea; }
-        .toggle::after { content: ''; position: absolute; width: 26px; height: 26px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: left 0.3s; }
-        .toggle.active::after { left: 32px; }
-        .panel-item { background: #f9f9f9; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 4px solid #667eea; }
-        .panel-item input { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
-        .panel-actions { display: flex; gap: 10px; }
-        button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.3s; }
-        .btn-primary { background: #667eea; color: white; }
-        .btn-primary:hover { background: #5568d3; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3); }
-        .btn-danger { background: #e74c3c; color: white; }
-        .btn-danger:hover { background: #c0392b; }
-        .message { padding: 15px; border-radius: 5px; margin-bottom: 20px; display: none; }
-        .message.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; display: block; }
-        .message.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; display: block; }
-        .add-panel-form { background: #f0f0f0; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
-        .form-group input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #1a73e8; }
+        .status { padding: 10px; border-radius: 4px; margin-bottom: 20px; }
+        .online { background: #e6f4ea; color: #1e8e3e; }
+        .offline { background: #fce8e6; color: #d93025; }
+        .panel-list { margin-top: 20px; }
+        .panel-item { border-bottom: 1px solid #eee; padding: 10px 0; }
+        .announcement { background: #fff4e5; border-left: 4px solid #ffa000; padding: 15px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>🎮 Silent Panel Admin Dashboard</h1>
-            <p>Control your Android app remotely</p>
-        </header>
+        <h1>🎮 Silent Panel Admin</h1>
         
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('overview')">📊 Overview</button>
-            <button class="tab-btn" onclick="switchTab('panels')">📱 Manage Panels</button>
-            <button class="tab-btn" onclick="switchTab('announcements')">📢 Announcements</button>
-            <button class="tab-btn" onclick="switchTab('settings')">⚙️ Settings</button>
+        <div class="status <?php echo $config['app_enabled'] ? 'online' : 'offline'; ?>">
+            Status: <?php echo $config['app_enabled'] ? '✅ Online' : '❌ Offline'; ?>
+        </div>
+
+        <?php if ($config['announcement']['text']): ?>
+        <div class="announcement">
+            <strong>Announcement:</strong><br>
+            <?php echo htmlspecialchars($config['announcement']['text']); ?>
+        </div>
+        <?php endif; ?>
+
+        <h2>Active Panels</h2>
+        <div class="panel-list">
+            <?php foreach ($config['panels'] as $panel): ?>
+                <div class="panel-item">
+                    <strong><?php echo htmlspecialchars($panel['name']); ?></strong><br>
+                    <small><?php echo htmlspecialchars($panel['url']); ?></small> (<?php echo htmlspecialchars($panel['key']); ?>)
+                </div>
+            <?php endforeach; ?>
         </div>
         
-        <div class="content">
-            <div id="overview" class="tab-content active">
-                <h2>Dashboard Overview</h2>
-                <div class="settings-grid">
-                    <div class="setting-card">
-                        <h3>🔌 Server Status</h3>
-                        <p>Status: <strong id="serverStatus">Checking...</strong></p>
-                        <div class="switch" style="margin-top: 15px;">
-                            <span>Enable App:</span>
-                            <div id="serverToggle" class="toggle active" onclick="toggleServer()"></div>
-                        </div>
-                    </div>
-                    <div class="setting-card">
-                        <h3>📈 Quick Stats</h3>
-                        <p>Total Panels: <strong id="panelCount">0</strong></p>
-                        <p>Active Announcement: <strong id="annCount">No</strong></p>
-                        <button class="btn-primary" onclick="refreshStats()" style="margin-top: 15px;">Refresh Stats</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="panels" class="tab-content">
-                <h2>Manage Panels</h2>
-                <div class="add-panel-form">
-                    <h3>Add New Panel</h3>
-                    <div class="form-group">
-                        <label>Panel Name:</label>
-                        <input type="text" id="newPanelName" placeholder="e.g., My Gaming Panel">
-                    </div>
-                    <div class="form-group">
-                        <label>Website URL:</label>
-                        <input type="text" id="newPanelUrl" placeholder="https://panel.example.com">
-                    </div>
-                    <div class="form-group">
-                        <label>Site Key:</label>
-                        <input type="text" id="newPanelKey" placeholder="my_panel_key">
-                    </div>
-                    <button class="btn-primary" onclick="addPanel()">Add Panel</button>
-                </div>
-                <div id="panelsList"></div>
-            </div>
-            
-            <div id="announcements" class="tab-content">
-                <h2>Send Announcements</h2>
-                <div class="setting-card">
-                    <h3>Create Announcement</h3>
-                    <div class="form-group">
-                        <label>Announcement Message:</label>
-                        <textarea id="announcementText" placeholder="Enter your announcement here..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="announcementActive" checked> Active
-                        </label>
-                    </div>
-                    <button class="btn-primary" onclick="saveAnnouncement()">Send Announcement</button>
-                </div>
-            </div>
-            
-            <div id="settings" class="tab-content">
-                <h2>Application Settings</h2>
-                <div class="settings-grid">
-                    <div class="setting-card">
-                        <h3>App Title</h3>
-                        <input type="text" id="appTitle" placeholder="Application Title">
-                        <button class="btn-primary" onclick="saveAppTitle()" style="margin-top: 15px;">Save</button>
-                    </div>
-                    <div class="setting-card">
-                        <h3>Logo URL</h3>
-                        <input type="text" id="logoUrl" placeholder="https://example.com/logo.png">
-                        <button class="btn-primary" onclick="saveLogo()" style="margin-top: 15px;">Save</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <p style="margin-top: 30px; font-size: 0.8em; color: #666;">
+            To deploy on cPanel: Upload all files in this folder to your public_html directory.
+        </p>
     </div>
-    
-    <script>
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
-            if (tabName === 'panels') loadPanels();
-            if (tabName === 'announcements') loadAnnouncements();
-            if (tabName === 'settings') loadSettings();
-        }
-        
-        function showMessage(type, message) {
-            const msg = document.createElement('div');
-            msg.className = `message ${type}`;
-            msg.textContent = message;
-            document.querySelector('.content').insertBefore(msg, document.querySelector('.content').firstChild);
-            setTimeout(() => msg.remove(), 3000);
-        }
-        
-        async function refreshStats() {
-            try {
-                const res = await fetch('api.php?action=config');
-                const data = await res.json();
-                document.getElementById('panelCount').textContent = data.panels.length;
-                document.getElementById('annCount').textContent = data.announcement ? 'Yes' : 'No';
-                document.getElementById('serverStatus').textContent = data.enabled ? '✅ Online' : '❌ Offline';
-                document.getElementById('serverToggle').classList.toggle('active', data.enabled);
-            } catch (e) {
-                showMessage('error', 'Failed to load stats');
-            }
-        }
-        
-        async function toggleServer() {
-            const current = document.getElementById('serverToggle').classList.contains('active');
-            try {
-                const res = await fetch('api.php?action=toggle_server', {
-                    method: 'POST',
-                    body: JSON.stringify({ enabled: !current })
-                });
-                if (res.ok) {
-                    document.getElementById('serverToggle').classList.toggle('active');
-                    refreshStats();
-                    showMessage('success', 'Server status updated');
-                }
-            } catch (e) {
-                showMessage('error', 'Failed to toggle server');
-            }
-        }
-        
-        async function loadPanels() {
-            try {
-                const res = await fetch('api.php?action=config');
-                const data = await res.json();
-                const list = document.getElementById('panelsList');
-                list.innerHTML = '';
-                data.panels.forEach(panel => {
-                    const item = document.createElement('div');
-                    item.className = 'panel-item';
-                    item.innerHTML = `
-                        <input type="text" value="${panel.name}" readonly>
-                        <input type="text" value="${panel.url}" readonly>
-                        <div class="panel-actions">
-                            <button class="btn-danger" onclick="deletePanel('${panel.site_key}')">Delete</button>
-                        </div>
-                    `;
-                    list.appendChild(item);
-                });
-            } catch (e) { showMessage('error', 'Failed to load panels'); }
-        }
-        
-        async function addPanel() {
-            const name = document.getElementById('newPanelName').value;
-            const url = document.getElementById('newPanelUrl').value;
-            const key = document.getElementById('newPanelKey').value;
-            if (!name || !url || !key) return showMessage('error', 'All fields required');
-            try {
-                const res = await fetch('api.php?action=add_panel', {
-                    method: 'POST',
-                    body: JSON.stringify({ name, url, site_key: key })
-                });
-                if (res.ok) {
-                    showMessage('success', 'Panel added');
-                    loadPanels();
-                }
-            } catch (e) { showMessage('error', 'Failed to add panel'); }
-        }
-        
-        async function deletePanel(siteKey) {
-            if (!confirm('Are you sure?')) return;
-            try {
-                const res = await fetch(`api.php?action=delete_panel&site_key=${siteKey}`);
-                if (res.ok) {
-                    showMessage('success', 'Panel deleted');
-                    loadPanels();
-                }
-            } catch (e) { showMessage('error', 'Failed to delete panel'); }
-        }
-        
-        async function saveAnnouncement() {
-            const message = document.getElementById('announcementText').value;
-            const active = document.getElementById('announcementActive').checked;
-            try {
-                const res = await fetch('api.php?action=add_announcement', {
-                    method: 'POST',
-                    body: JSON.stringify({ message, active })
-                });
-                if (res.ok) showMessage('success', 'Announcement saved');
-            } catch (e) { showMessage('error', 'Failed to save announcement'); }
-        }
-        
-        async function loadAnnouncements() {
-            const res = await fetch('api.php?action=config');
-            const data = await res.json();
-            document.getElementById('announcementText').value = data.announcement || '';
-        }
-        
-        async function loadSettings() {
-            const res = await fetch('api.php?action=config');
-            const data = await res.json();
-            document.getElementById('appTitle').value = data.app_title;
-            document.getElementById('logoUrl').value = data.logo_url;
-        }
-        
-        async function saveAppTitle() {
-            const title = document.getElementById('appTitle').value;
-            const res = await fetch('api.php?action=update_title', {
-                method: 'POST',
-                body: JSON.stringify({ title })
-            });
-            if (res.ok) showMessage('success', 'Title updated');
-        }
-        
-        async function saveLogo() {
-            const url = document.getElementById('logoUrl').value;
-            const res = await fetch('api.php?action=update_logo', {
-                method: 'POST',
-                body: JSON.stringify({ url })
-            });
-            if (res.ok) showMessage('success', 'Logo updated');
-        }
-        
-        refreshStats();
-    </script>
 </body>
 </html>

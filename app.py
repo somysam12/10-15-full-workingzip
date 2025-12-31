@@ -678,6 +678,33 @@ DASHBOARD_HTML = """
 </html>
 """
 
+@app.route('/app_config.json', methods=['GET'])
+def get_app_config_json():
+    """Exact JSON response as requested by the user"""
+    config = {
+        "app_enabled": True,
+        "disable_message": "App is under maintenance",
+        "force_logout": False,
+        "announcement": {
+            "text": "Server maintenance tonight 10PM – 12AM",
+            "start": "2025-01-01 20:00",
+            "end": "2025-01-01 22:00"
+        },
+        "panels": [
+            {
+                "name": "Silent Panel",
+                "url": "https://silentpanel.site",
+                "key": "silent"
+            },
+            {
+                "name": "Second Panel",
+                "url": "https://secondpanel.site",
+                "key": "second"
+            }
+        ]
+    }
+    return jsonify(config)
+
 @app.route('/')
 def dashboard():
     """Serve admin dashboard"""
