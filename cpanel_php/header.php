@@ -12,6 +12,7 @@ $app_enabled = getConfig('app_enabled', 'true') === 'true';
     <title>Silent Panel Control</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-color: #4e73df;
@@ -23,7 +24,7 @@ $app_enabled = getConfig('app_enabled', 'true') === 'true';
         
         body { 
             background: var(--bg-light); 
-            font-family: 'Nunito', sans-serif;
+            font-family: 'Inter', sans-serif;
             overflow-x: hidden;
         }
         
@@ -32,67 +33,97 @@ $app_enabled = getConfig('app_enabled', 'true') === 'true';
             min-height: 100vh;
             color: white;
             padding-top: 20px;
+            transition: all 0.3s;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                min-height: auto;
+                padding-bottom: 20px;
+            }
+            .main-content {
+                padding: 20px;
+            }
         }
         
         .nav-link {
             color: rgba(255,255,255,0.7);
-            padding: 15px 20px;
-            transition: all 0.3s;
-            display: block;
+            padding: 12px 20px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
             text-decoration: none;
+            border-left: 4px solid transparent;
         }
         
         .nav-link:hover, .nav-link.active {
             color: white;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
             border-left: 4px solid var(--primary-color);
         }
         
         .nav-link i {
-            margin-right: 10px;
+            margin-right: 12px;
             width: 20px;
+            text-align: center;
         }
         
         .main-content {
-            padding: 40px;
+            padding: 30px;
         }
         
         .card {
             border: none;
-            border-radius: 15px;
-            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-            margin-bottom: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.08);
+            margin-bottom: 25px;
+            transition: transform 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
         }
         
         .card-header {
-            background-color: #f8f9fc;
-            border-bottom: 1px solid #e3e6f0;
+            background-color: white;
+            border-bottom: 1px solid #f1f1f1;
             padding: 15px 20px;
-            border-top-left-radius: 15px !important;
-            border-top-right-radius: 15px !important;
+            border-top-left-radius: 12px !important;
+            border-top-right-radius: 12px !important;
         }
         
-        .btn-primary { background: var(--primary-color); border: none; padding: 10px 20px; border-radius: 10px; }
+        .btn {
+            border-radius: 8px;
+            padding: 8px 18px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary { background: var(--primary-color); border: none; }
+        .btn-primary:hover { background: #3e5fcb; transform: scale(1.02); }
+        
+        .form-control, .form-select {
+            border-radius: 8px;
+            padding: 10px 15px;
+            border: 1px solid #d1d3e2;
+        }
+        
+        .form-control:focus {
+            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.1);
+            border-color: var(--primary-color);
+        }
         
         /* Modern Toggle */
         .form-switch .form-check-input {
-            width: 3em;
-            height: 1.5em;
+            width: 3.2em;
+            height: 1.6em;
             cursor: pointer;
         }
         
-        /* Custom Date/Time */
-        .datetime-input {
-            border: 2px solid #e3e6f0;
-            border-radius: 10px;
-            padding: 10px;
-            width: 100%;
-        }
-        
         .logo-preview-big {
-            max-width: 200px;
+            max-width: 120px;
+            height: auto;
             border-radius: 10px;
-            border: 3px solid #eee;
             margin-bottom: 20px;
         }
     </style>
