@@ -26,6 +26,8 @@ $app_enabled = getConfig('app_enabled', 'true') === 'true';
             background: var(--bg-light); 
             font-family: 'Inter', sans-serif;
             overflow-x: hidden;
+            margin: 0;
+            padding: 0;
         }
         
         .sidebar {
@@ -34,14 +36,38 @@ $app_enabled = getConfig('app_enabled', 'true') === 'true';
             color: white;
             padding-top: 20px;
             transition: all 0.3s;
+            position: fixed;
+            width: 250px;
+            z-index: 1000;
+        }
+        
+        .sidebar-container {
+            width: 250px;
+            flex-shrink: 0;
+        }
+        
+        .main-content {
+            flex-grow: 1;
+            padding: 30px;
+            min-height: 100vh;
+            background: var(--bg-light);
         }
         
         @media (max-width: 768px) {
+            .d-flex {
+                flex-direction: column;
+            }
             .sidebar {
                 min-height: auto;
+                width: 100%;
+                position: relative;
                 padding-bottom: 20px;
             }
+            .sidebar-container {
+                width: 100%;
+            }
             .main-content {
+                width: 100%;
                 padding: 20px;
             }
         }
@@ -66,10 +92,6 @@ $app_enabled = getConfig('app_enabled', 'true') === 'true';
             margin-right: 12px;
             width: 20px;
             text-align: center;
-        }
-        
-        .main-content {
-            padding: 30px;
         }
         
         .card {
@@ -129,8 +151,11 @@ $app_enabled = getConfig('app_enabled', 'true') === 'true';
     </style>
 </head>
 <body>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-9 col-lg-10 main-content">
+<div class="container-fluid p-0">
+    <div class="d-flex">
+        <div class="sidebar-container">
+            <?php require_once 'sidebar.php'; ?>
+        </div>
+        <div class="main-content">
 <?php if (isset($msg)): ?><div class="alert alert-success alert-dismissible fade show"><i class="fas fa-check-circle"></i> <?php echo $msg; ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><?php endif; ?>
 <?php if (isset($error)): ?><div class="alert alert-danger alert-dismissible fade show"><i class="fas fa-exclamation-triangle"></i> <?php echo $error; ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><?php endif; ?>

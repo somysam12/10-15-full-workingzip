@@ -1,7 +1,6 @@
 <?php
 require_once 'header.php';
-require_once 'sidebar.php';
-
+?>
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['update_announcement'])) {
         $start_time = $_POST['ann_start_date'] . ' ' . $_POST['ann_start_time'];

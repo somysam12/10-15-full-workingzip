@@ -1,7 +1,6 @@
 <?php
 require_once 'header.php';
-require_once 'sidebar.php';
-
+?>
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['update_general'])) {
         setConfig('app_enabled', isset($_POST['app_enabled']) ? 'true' : 'false');
