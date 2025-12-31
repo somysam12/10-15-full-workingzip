@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0a0e27">
+
+    <!-- WebView -->
+    <WebView
+        android:id="@+id/webview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#0a0e27" />
+
+    <!-- Progress Bar -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="3dp"
+        android:visibility="gone"
+        android:indeterminate="false" />
+
+    <!-- 🔄 REFRESH BUTTON (BOTTOM RIGHT) -->
+    <Button
+        android:id="@+id/btn_refresh"
+        android:layout_width="42dp"
+        android:layout_height="42dp"
+        android:text="⟳"
+        android:textSize="18sp"
+        android:textColor="#FFFFFF"
+        android:background="#6D28D9"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="66dp" />
+
+    <!-- 🏠 HOME BUTTON (BOTTOM RIGHT) -->
+    <Button
+        android:id="@+id/btn_home"
+        android:layout_width="42dp"
+        android:layout_height="42dp"
+        android:text="⌂"
+        android:textSize="18sp"
+        android:textColor="#FFFFFF"
+        android:background="#10B981"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Splash Screen -->
+    <FrameLayout
+        android:id="@+id/splash_screen"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#0a0e27"
+        android:visibility="visible">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:src="@drawable/logo"
+                android:scaleType="fitCenter" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SilentMultiPanel"
+                android:textColor="#8b5cf6"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginTop="10dp" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+</FrameLayout>
