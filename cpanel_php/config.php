@@ -1,9 +1,9 @@
 <?php
 // config.php - MySQL Database Configuration
 $db_host = 'localhost';
-$db_name = 'your_database_name';
-$db_user = 'your_database_user';
-$db_pass = 'your_database_password';
+$db_name = 'silentmu_app';
+$db_user = 'silentmu_isam';
+$db_pass = '844121@LuvKush';
 
 try {
     $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass);
