@@ -2,19 +2,49 @@
 require_once 'config.php';
 header('Content-Type: application/json');
 
-$app_enabled = getConfig('app_enabled', 'true') === 'true';
+$all_config = getAllConfig();
 $ann = getActiveAnnouncement();
 $panels = getAllPanels();
 
-// Format response to match your exact request
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+$base_url = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']);
+
+// Format response to match all new features
 $response = [
-    "app_enabled" => $app_enabled,
-    "disable_message" => "App is under maintenance",
-    "force_logout" => false,
-    "announcement" => [
-        "text" => $ann ? $ann['message'] : "",
-        "start" => $ann ? $ann['start_time'] : "",
-        "end" => $ann ? $ann['end_time'] : ""
+    "global_control" => [
+        "app_status" => $all_config['app_status'] ?? 'ON',
+        "maintenance_message" => $all_config['maintenance_message'] ?? '',
+        "force_logout" => ($all_config['force_logout_flag'] ?? 'no') === 'yes'
+    ],
+    "version_management" => [
+        "latest_version" => $all_config['latest_version'] ?? '1.0.0',
+        "min_required_version" => $all_config['min_required_version'] ?? '1.0.0',
+        "update_url" => $all_config['update_url'] ?? '',
+        "update_message" => $all_config['update_message'] ?? ''
+    ],
+    "remote_reset" => [
+        "reset_cache" => ($all_config['reset_cache_flag'] ?? 'no') === 'yes',
+        "reset_time" => $all_config['reset_time'] ?? ''
+    ],
+    "announcement" => $ann ? [
+        "id" => $ann['id'],
+        "title" => $ann['title'],
+        "message" => $ann['message'],
+        "button_text" => $ann['button_text'],
+        "button_link" => $ann['button_link'],
+        "type" => $ann['type'],
+        "start" => $ann['start_time'],
+        "end" => $ann['end_time']
+    ] : null,
+    "theme" => [
+        "mode" => $all_config['theme_mode'] ?? 'System',
+        "locked" => ($all_config['theme_locked'] ?? 'no') === 'yes'
+    ],
+    "branding" => [
+        "splash_logo" => $base_url . "/splash_logo.png",
+        "app_logo" => $base_url . "/logo.png",
+        "splash_text" => $all_config['splash_text'] ?? '',
+        "bg_color" => $all_config['bg_color'] ?? '#0A0E27'
     ],
     "panels" => []
 ];
@@ -26,6 +56,10 @@ foreach ($panels as $p) {
         "key" => $p['site_key']
     ];
 }
+
+// If reset flag was set to yes, the app would normally clear it after receiving it.
+// However, since multiple users fetch this, the reset flag management logic 
+// usually happens on the app side (comparing stored reset_time).
 
 echo json_encode($response, JSON_PRETTY_PRINT);
 ?>
