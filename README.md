@@ -6,27 +6,38 @@ A complete **Android application with a backend control system** that allows you
 
 ```
 silent-panel/
-├── android/              # Android app code and modifications
-│   ├── MainActivity.java
-│   ├── WebsiteSelectorActivity.java
-│   ├── ConfigManager.java          # NEW: Server communication
-│   ├── Config.java                 # NEW: Configuration model
-│   ├── Panel.java                  # NEW: Panel data model
-│   └── build.gradle
+├── silentpanel/              # Android App Project (Main)
+│   ├── app/
+│   │   ├── src/main/
+│   │   │   ├── java/com/silentpanel/app/
+│   │   │   │   ├── MainActivity.java           [MODIFIED]
+│   │   │   │   ├── WebsiteSelectorActivity.java [MODIFIED]
+│   │   │   │   ├── ConfigManager.java          [NEW] Server communication
+│   │   │   │   ├── Config.java                 [NEW] Configuration model
+│   │   │   │   └── Panel.java                  [NEW] Panel data model
+│   │   │   ├── res/
+│   │   │   └── AndroidManifest.xml
+│   │   └── build.gradle        [MODIFIED]
+│   ├── build.gradle
+│   ├── settings.gradle
+│   └── README.md
 │
-├── backend/              # Flask backend server
-│   ├── app.py           # Main Flask application with API & dashboard
-│   └── .env.example     # Environment configuration template
+├── backend/                  # Flask Backend Server
+│   ├── app.py               # API endpoints + Admin dashboard
+│   ├── .env.example         # Configuration template
+│   └── README.md
 │
-├── docs/                # Documentation
+├── docs/                    # Documentation
 │   ├── QUICKSTART.md
 │   ├── BACKEND_API_COMPLETE.md
-│   ├── ANDROID_MODIFICATIONS.md
 │   ├── INTEGRATION_GUIDE.md
+│   ├── ANDROID_MODIFICATIONS.md
 │   └── ANDROID_APP_SUMMARY.md
 │
-├── replit.md           # Project metadata
-├── README.md           # This file
+├── PROJECT_STRUCTURE.md     # Detailed structure explanation
+├── SETUP_GUIDE.md           # Setup instructions
+├── replit.md               # Project metadata
+├── README.md               # This file
 └── .gitignore
 ```
 
@@ -59,9 +70,9 @@ curl http://localhost:5000/api/config
 ```
 
 ### Option 2: Integrate Android App
-1. Copy Java files from `android/` folder
+1. Navigate to `silentpanel/` folder
 2. Update `ConfigManager.java` with your server URL
-3. Rebuild APK
+3. Rebuild APK in Android Studio
 
 See `docs/QUICKSTART.md` for detailed instructions.
 
