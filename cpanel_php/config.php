@@ -38,6 +38,19 @@ function getActiveAnnouncement() {
     return $stmt->fetch();
 }
 
+function getAllConfig() {
+    global $pdo;
+    if (!$pdo) return [];
+    $stmt = $pdo->prepare("SELECT config_key, config_value FROM app_config");
+    $stmt->execute();
+    $rows = $stmt->fetchAll();
+    $config = [];
+    foreach ($rows as $row) {
+        $config[$row['config_key']] = $row['config_value'];
+    }
+    return $config;
+}
+
 function getAllPanels() {
     global $pdo;
     if (!$pdo) return [];

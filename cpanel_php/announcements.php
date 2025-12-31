@@ -7,8 +7,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $end_time = $_POST['ann_end_date'] . ' ' . $_POST['ann_end_time'];
         
         $pdo->prepare("UPDATE announcements SET active = 0")->execute();
-        $stmt = $pdo->prepare("INSERT INTO announcements (message, start_time, end_time, active) VALUES (?, ?, ?, 1)");
-        $stmt->execute([$_POST['ann_text'], $start_time, $end_time]);
+        $stmt = $pdo->prepare("INSERT INTO announcements (message, title, button_text, button_link, type, start_time, end_time, active) VALUES (?, ?, ?, ?, ?, ?, ?, 1)");
+        $stmt->execute([$_POST['ann_text'], $_POST['ann_title'], $_POST['btn_text'], $_POST['btn_link'], $_POST['ann_type'], $start_time, $end_time]);
         $msg = "Announcement successfully published and scheduled for all users!";
     }
     if (isset($_POST['delete_announcement'])) {
@@ -28,9 +28,30 @@ $ann = getActiveAnnouncement();
     </div>
     <div class="card-body">
         <form method="POST">
-            <div class="mb-4">
+            <div class="mb-3">
+                <label class="form-label">Announcement Title</label>
+                <input type="text" name="ann_title" class="form-control" placeholder="e.g. Important Update" value="<?php echo $ann ? htmlspecialchars($ann['title']) : ''; ?>">
+            </div>
+            <div class="mb-3">
                 <label class="form-label">Message</label>
-                <textarea name="ann_text" class="form-control" rows="4" placeholder="Enter message to display in app..."><?php echo $ann ? htmlspecialchars($ann['message']) : ''; ?></textarea>
+                <textarea name="ann_text" class="form-control" rows="3" placeholder="Enter message..."><?php echo $ann ? htmlspecialchars($ann['message']) : ''; ?></textarea>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Button Text</label>
+                    <input type="text" name="btn_text" class="form-control" placeholder="e.g. Update Now" value="<?php echo $ann ? htmlspecialchars($ann['button_text']) : ''; ?>">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Button Link</label>
+                    <input type="url" name="btn_link" class="form-control" placeholder="https://..." value="<?php echo $ann ? htmlspecialchars($ann['button_link']) : ''; ?>">
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="form-label">Display Type</label>
+                <select name="ann_type" class="form-select">
+                    <option value="banner" <?php echo ($ann['type'] ?? '') == 'banner' ? 'selected' : ''; ?>>Banner (Top of screen)</option>
+                    <option value="popup" <?php echo ($ann['type'] ?? '') == 'popup' ? 'selected' : ''; ?>>Popup (Modal dialog)</option>
+                </select>
             </div>
             
             <div class="row mb-4">
