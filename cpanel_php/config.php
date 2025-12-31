@@ -1,41 +1,38 @@
 <?php
-// config.php - Database configuration
+// config.php - Modernized with better structure
 $db_host = 'localhost';
-$db_name = 'your_database_name';
-$db_user = 'your_database_user';
-$db_pass = 'your_database_password';
+$db_name = 'your_db';
+$db_user = 'your_user';
+$db_pass = 'your_pass';
 
-try {
-    $pdo = new PDO("mysql:host=$db_host;dbname=$db_name", $db_user, $db_pass);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    // For now, let's just return a mock response if DB fails, or handle it as you wish
-    // die("Connection failed: " . $e->getMessage());
-}
+// Simple JSON file storage for this example to make it "easy to deploy" without DB first
+$storage_file = __DIR__ . '/data.json';
 
-// Function to get current config (Mocking for easy deployment if DB not setup)
-function getAppConfig($pdo) {
-    return [
+if (!file_exists($storage_file)) {
+    $initial_data = [
         "app_enabled" => true,
         "disable_message" => "App is under maintenance",
         "force_logout" => false,
+        "logo_url" => "logo.png",
         "announcement" => [
-            "text" => "Server maintenance tonight 10PM – 12AM",
-            "start" => "2025-01-01 20:00",
-            "end" => "2025-01-01 22:00"
+            "text" => "Welcome to Silent Panel",
+            "start" => date('Y-m-d H:i'),
+            "end" => date('Y-m-d H:i', strtotime('+1 day'))
         ],
         "panels" => [
-            [
-                "name" => "Silent Panel",
-                "url" => "https://silentpanel.site",
-                "key" => "silent"
-            ],
-            [
-                "name" => "Second Panel",
-                "url" => "https://secondpanel.site",
-                "key" => "second"
-            ]
+            ["name" => "Silent Panel", "url" => "https://silentpanel.site", "key" => "silent"]
         ]
     ];
+    file_put_contents($storage_file, json_encode($initial_data));
+}
+
+function getData() {
+    global $storage_file;
+    return json_decode(file_get_contents($storage_file), true);
+}
+
+function saveData($data) {
+    global $storage_file;
+    file_put_contents($storage_file, json_encode($data, JSON_PRETTY_PRINT));
 }
 ?>
