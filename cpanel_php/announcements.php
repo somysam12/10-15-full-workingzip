@@ -3,10 +3,13 @@ require_once 'header.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['update_announcement'])) {
+        $start_time = $_POST['ann_start_date'] . ' ' . $_POST['ann_start_time'];
+        $end_time = $_POST['ann_end_date'] . ' ' . $_POST['ann_end_time'];
+        
         $pdo->prepare("UPDATE announcements SET active = 0")->execute();
         $stmt = $pdo->prepare("INSERT INTO announcements (message, start_time, end_time, active) VALUES (?, ?, ?, 1)");
-        $stmt->execute([$_POST['ann_text'], $_POST['ann_start'], $_POST['ann_end']]);
-        $msg = "Announcement updated!";
+        $stmt->execute([$_POST['ann_text'], $start_time, $end_time]);
+        $msg = "Announcement successfully published and scheduled for all users!";
     }
 }
 $ann = getActiveAnnouncement();
@@ -27,13 +30,19 @@ $ann = getActiveAnnouncement();
             </div>
             
             <div class="row mb-4">
-                <div class="col-md-6">
-                    <label class="form-label"><i class="fas fa-calendar-alt"></i> Start Time</label>
-                    <input type="datetime-local" name="ann_start" class="datetime-input" value="<?php echo $ann ? date('Y-m-d\TH:i', strtotime($ann['start_time'])) : ''; ?>">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label"><i class="fas fa-calendar-alt"></i> Start Date & Time</label>
+                    <div class="input-group">
+                        <input type="date" name="ann_start_date" class="form-control" value="<?php echo $ann ? date('Y-m-d', strtotime($ann['start_time'])) : date('Y-m-d'); ?>">
+                        <input type="time" name="ann_start_time" class="form-control" value="<?php echo $ann ? date('H:i', strtotime($ann['start_time'])) : date('H:i'); ?>">
+                    </div>
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label"><i class="fas fa-calendar-check"></i> End Time</label>
-                    <input type="datetime-local" name="ann_end" class="datetime-input" value="<?php echo $ann ? date('Y-m-d\TH:i', strtotime($ann['end_time'])) : ''; ?>">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label"><i class="fas fa-calendar-check"></i> End Date & Time</label>
+                    <div class="input-group">
+                        <input type="date" name="ann_end_date" class="form-control" value="<?php echo $ann ? date('Y-m-d', strtotime($ann['end_time'])) : date('Y-m-d', strtotime('+1 day')); ?>">
+                        <input type="time" name="ann_end_time" class="form-control" value="<?php echo $ann ? date('H:i', strtotime($ann['end_time'])) : date('H:i'); ?>">
+                    </div>
                 </div>
             </div>
             

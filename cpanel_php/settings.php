@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if (isset($_FILES['logo']) && $_FILES['logo']['error'] === 0) {
         move_uploaded_file($_FILES['logo']['tmp_name'], __DIR__ . '/logo.png');
-        $msg = "Logo uploaded successfully!";
+        $msg = "Logo uploaded successfully! The new logo is now active for all APK users.";
     }
 }
 $app_enabled = getConfig('app_enabled', 'true') === 'true';
