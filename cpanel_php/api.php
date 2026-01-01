@@ -32,6 +32,7 @@ try {
     // Ensure all fields are correctly typed for JSON
     $apps = array_map(function($row) {
         $row['id'] = (string)$row['id'];
+        $row['packageName'] = (string)($row['packageName'] ?? '');
         $row['versionCode'] = (int)$row['versionCode'];
         $row['latestVersion'] = (string)$row['latestVersion'];
         return $row;

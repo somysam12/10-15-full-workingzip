@@ -10,9 +10,15 @@ if (($_SESSION['app_type'] ?? 'master') !== 'master') {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_app'])) {
         $name = $_POST['app_name'];
-        $stmt = $pdo->prepare("INSERT INTO apps (app_name) VALUES (?)");
-        $stmt->execute([$name]);
-        $success_msg = "App folder created!";
+        $package = trim($_POST['packageName'] ?? '');
+        
+        if (empty($package)) {
+            $error_msg = "Package Name is required!";
+        } else {
+            $stmt = $pdo->prepare("INSERT INTO apps (app_name, packageName) VALUES (?, ?)");
+            $stmt->execute([$name, $package]);
+            $success_msg = "App folder created!";
+        }
     } elseif (isset($_POST['delete_app'])) {
         $del_id = (int)$_POST['app_id'];
         
@@ -96,6 +102,10 @@ function request_protocol() {
                     <div class="mb-3">
                         <label class="form-label">App Name</label>
                         <input type="text" name="app_name" class="form-control bg-secondary text-white border-0" placeholder="e.g. My Awesome App" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Package Name (Required)</label>
+                        <input type="text" name="packageName" class="form-control bg-secondary text-white border-0" placeholder="e.g. com.example.app" required>
                     </div>
                 </div>
                 <div class="modal-footer border-secondary">
