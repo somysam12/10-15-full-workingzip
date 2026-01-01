@@ -69,6 +69,7 @@ header('Content-Type: application/json');
         "config" => [
             "announcement" => $ann['message'] ?? 'Welcome!',
             "isMaintenance" => ($all_config['app_status'] ?? 'ON') === 'OFF',
+            "status" => $all_config['app_status'] ?? 'ON',
             "mainLogoUrl" => $all_config['main_logo_url'] ?? '',
             "apks" => $apps
         ]
