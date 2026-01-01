@@ -22,13 +22,13 @@ args = "PHP Server"
 name = "PHP Server"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "php -S 0.0.0.0:5000 -t cpanel_php"
-waitForPort = 5000
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "php -S 0.0.0.0:5000 -t cpanel_php -c /home/runner/workspace/php.ini"
+waitForPort = 5000
 
 [[ports]]
 localPort = 5000

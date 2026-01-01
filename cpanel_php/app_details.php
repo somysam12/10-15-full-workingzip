@@ -27,14 +27,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_version'])) {
     
     if (isset($_FILES['apk_file'])) {
         $err_code = $_FILES['apk_file']['error'];
+        $file_size = $_FILES['apk_file']['size'] ?? 0;
         
         // Log details about the received file
-        error_log("Upload Attempt - Name: " . $_FILES['apk_file']['name'] . ", Size: " . $_FILES['apk_file']['size'] . " bytes, Error Code: " . $err_code);
+        error_log("Upload Attempt - Name: " . $_FILES['apk_file']['name'] . ", Size: " . $file_size . " bytes, Error Code: " . $err_code);
         error_log("Runtime Config - upload_max_filesize: " . ini_get('upload_max_filesize') . ", post_max_size: " . ini_get('post_max_size'));
         
-        if ($err_code === UPLOAD_ERR_OK) {
+        if ($err_code === UPLOAD_ERR_OK && $file_size > 0) {
             $upload_dir = 'uploads/apks/';
-            if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0777, true);
+                chmod('uploads', 0777);
+                chmod('uploads/apks', 0777);
+            }
             
             $file_ext = pathinfo($_FILES['apk_file']['name'], PATHINFO_EXTENSION);
             $clean_name = preg_replace("/[^a-zA-Z0-9]/", "_", $v_name);
