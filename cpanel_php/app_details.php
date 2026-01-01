@@ -1,193 +1,139 @@
 <?php
 require_once 'header.php';
 
-$app_id = $_GET['id'] ?? null;
+$app_id = isset($_GET['id']) ? (int)$_GET['id'] : null;
 if (!$app_id) {
     header("Location: apps.php");
     exit;
 }
 
-$app = $pdo->prepare("SELECT * FROM apps WHERE id = ?");
-$app->execute([$app_id]);
-$app_data = $app->fetch();
+// 1. Fetch App Name
+$app_stmt = $pdo->prepare("SELECT app_name FROM apps WHERE id = ?");
+$app_stmt->execute([$app_id]);
+$app_name = $app_stmt->fetchColumn() ?: "Unknown App";
+
+// 2. Handle Upload
+$error_msg = "";
+$success_msg = "";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_version'])) {
-    $v_name = $_POST['version_name'];
-    $apk_url = "";
-
+    $v_name = $_POST['version_name'] ?? 'New Update';
+    
     if (isset($_FILES['apk_file']) && $_FILES['apk_file']['error'] === UPLOAD_ERR_OK) {
         $upload_dir = 'uploads/apks/';
-        if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0777, true);
-        }
-        $file_name = time() . '_' . preg_replace("/[^a-zA-Z0-9\._-]/", "_", $_FILES['apk_file']['name']);
-        $target_file = $upload_dir . $file_name;
+        if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
         
-        if (move_uploaded_file($_FILES['apk_file']['tmp_name'], $target_file)) {
+        $file_ext = pathinfo($_FILES['apk_file']['name'], PATHINFO_EXTENSION);
+        $clean_name = preg_replace("/[^a-zA-Z0-9]/", "_", $v_name);
+        $file_name = time() . "_" . $clean_name . "." . $file_ext;
+        $target_path = $upload_dir . $file_name;
+        
+        if (move_uploaded_file($_FILES['apk_file']['tmp_name'], $target_path)) {
             $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
-            $apk_url = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/' . $target_file;
-        }
-    }
-    
-    if ($apk_url) {
-        try {
-            $pdo->beginTransaction();
+            $apk_url = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/' . $target_path;
             
-            // Explicitly set is_latest = FALSE for all previous versions of this app
-            $pdo->prepare("UPDATE app_versions SET is_latest = FALSE WHERE app_id = ?")->execute([$app_id]);
-            
-            // Insert the new version
-            $stmt = $pdo->prepare("INSERT INTO app_versions (app_id, version_name, apk_url, is_latest, version_code, created_at) VALUES (?, ?, ?, TRUE, ?, CURRENT_TIMESTAMP)");
-            $stmt->execute([$app_id, $v_name, $apk_url, time()]);
-            
-            $pdo->commit();
-            $msg = "APK Uploaded successfully!";
-        } catch (Exception $e) {
-            if ($pdo->inTransaction()) {
-                $pdo->rollBack();
+            try {
+                // Deactivate old versions
+                $pdo->prepare("UPDATE app_versions SET is_latest = FALSE WHERE app_id = ?")->execute([$app_id]);
+                
+                // Insert new version
+                $stmt = $pdo->prepare("INSERT INTO app_versions (app_id, version_name, apk_url, is_latest, version_code, created_at) VALUES (?, ?, ?, TRUE, ?, NOW())");
+                $stmt->execute([$app_id, $v_name, $apk_url, time()]);
+                
+                header("Location: app_details.php?id=$app_id&msg=uploaded&v=" . time());
+                exit;
+            } catch (Exception $e) {
+                $error_msg = "Database Error: " . $e->getMessage();
             }
-            $error = "Database error: " . $e->getMessage();
+        } else {
+            $error_msg = "Could not save file to disk.";
         }
     } else {
-        $error = "Upload failed. Check file size or folder permissions.";
+        $error_msg = "File upload failed (Error code: " . ($_FILES['apk_file']['error'] ?? 'None') . ")";
     }
 }
 
-// Fetch versions using a more reliable query
-$versions = $pdo->prepare("SELECT * FROM app_versions WHERE app_id = ? ORDER BY created_at DESC, id DESC");
-$versions->execute([$app_id]);
-$version_list = $versions->fetchAll();
+// 3. Fetch History (Direct & Reliable)
+$history_stmt = $pdo->prepare("SELECT * FROM app_versions WHERE app_id = ? ORDER BY id DESC");
+$history_stmt->execute([$app_id]);
+$history = $history_stmt->fetchAll();
+
+if (isset($_GET['msg']) && $_GET['msg'] === 'uploaded') $success_msg = "APK Uploaded successfully!";
 ?>
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-white">Manage APK: <?php echo htmlspecialchars($app_data['app_name'] ?? 'Unknown App'); ?></h1>
-    <a href="apps.php" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
-</div>
+<div class="container-fluid py-4">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 text-white">Manage: <?php echo htmlspecialchars($app_name); ?></h1>
+        <a href="apps.php" class="btn btn-outline-light btn-sm">Back to Apps</a>
+    </div>
 
-<?php if (isset($msg)): ?>
-<div class="alert alert-success alert-dismissible fade show" role="alert">
-    <?php echo $msg; ?>
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-</div>
-<?php endif; ?>
+    <?php if ($error_msg): ?><div class="alert alert-danger"><?php echo $error_msg; ?></div><?php endif; ?>
+    <?php if ($success_msg): ?><div class="alert alert-success"><?php echo $success_msg; ?></div><?php endif; ?>
 
-<?php if (isset($error)): ?>
-<div class="alert alert-danger alert-dismissible fade show" role="alert">
-    <?php echo $error; ?>
-    <button type="button" class="btn-close" data-bs-alert="alert" aria-label="Close"></button>
-</div>
-<?php endif; ?>
-
-<div class="row">
-    <div class="col-lg-12">
-        <div class="card shadow mb-4 bg-dark border-0">
-            <div class="card-header bg-dark border-secondary py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Upload New APK</h6>
-            </div>
-            <div class="card-body">
-                <form method="POST" enctype="multipart/form-data" id="apkUploadForm">
-                    <div class="mb-3">
-                        <label class="form-label text-white">Display Name</label>
-                        <input type="text" name="version_name" class="form-control bg-dark text-white border-secondary" placeholder="e.g. Update v1" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-white">Select APK File</label>
-                        <input type="file" name="apk_file" class="form-control bg-dark text-white border-secondary" accept=".apk" required id="apkFileInput">
-                    </div>
-                    <div class="progress d-none mb-3" style="height: 25px;" id="apkUploadProgress">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%">0%</div>
-                    </div>
-                    <button type="submit" name="add_version" class="btn btn-primary w-100" id="uploadApkBtn">
-                        <i class="fas fa-upload me-2"></i> Start Upload
-                    </button>
-                </form>
+    <div class="row">
+        <!-- Upload Card -->
+        <div class="col-md-5">
+            <div class="card bg-dark border-secondary shadow mb-4">
+                <div class="card-header bg-dark border-secondary text-primary font-weight-bold">New APK Upload</div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="text-white-50 small">Display Name</label>
+                            <input type="text" name="version_name" class="form-control bg-dark text-white border-secondary" placeholder="e.g. BGMI v1.2" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-white-50 small">Select APK</label>
+                            <input type="file" name="apk_file" class="form-control bg-dark text-white border-secondary" accept=".apk" required>
+                        </div>
+                        <button type="submit" name="add_version" class="btn btn-primary w-100">Upload & Activate</button>
+                    </form>
+                </div>
             </div>
         </div>
 
-        <div class="card shadow mb-4 bg-dark border-0">
-            <div class="card-header bg-dark border-secondary py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Uploaded Files History</h6>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-dark table-hover mb-0">
-                        <thead class="text-white">
-                            <tr>
-                                <th>Name</th>
-                                <th>Upload Date</th>
-                                <th>Status</th>
-                                <th>Link</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-muted">
-                            <?php if (empty($version_list)): ?>
-                            <tr><td colspan="4" class="text-center py-4">No files uploaded yet.</td></tr>
-                            <?php endif; ?>
-                            <?php foreach($version_list as $v): ?>
-                            <tr>
-                                <td class="text-white"><?php echo htmlspecialchars($v['version_name']); ?></td>
-                                <td><?php echo date('Y-m-d H:i', strtotime($v['created_at'])); ?></td>
-                                <td>
-                                    <?php if ($v['is_latest']): ?>
-                                        <span class="badge bg-success">Live</span>
-                                    <?php else: ?>
-                                        <span class="badge bg-secondary">Old</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <a href="<?php echo $v['apk_url']; ?>" target="_blank" class="btn btn-sm btn-info text-white">
-                                        <i class="fas fa-external-link-alt"></i> View
-                                    </a>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+        <!-- History Card -->
+        <div class="col-md-7">
+            <div class="card bg-dark border-secondary shadow">
+                <div class="card-header bg-dark border-secondary text-primary font-weight-bold">
+                    Uploaded Files History (<?php echo count($history); ?>)
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover mb-0">
+                            <thead class="small text-uppercase text-white-50">
+                                <tr>
+                                    <th class="border-secondary px-4">Name</th>
+                                    <th class="border-secondary">Status</th>
+                                    <th class="border-secondary px-4 text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($history)): ?>
+                                    <tr><td colspan="3" class="text-center py-5 text-white-50">No uploads found for this app folder.</td></tr>
+                                <?php endif; ?>
+                                <?php foreach ($history as $v): ?>
+                                    <tr>
+                                        <td class="px-4">
+                                            <div class="text-white"><?php echo htmlspecialchars($v['version_name']); ?></div>
+                                            <small class="text-white-50"><?php echo date('M d, Y - H:i', strtotime($v['created_at'])); ?></small>
+                                        </td>
+                                        <td class="align-middle">
+                                            <?php if ($v['is_latest']): ?>
+                                                <span class="badge bg-success">LIVE</span>
+                                            <?php else: ?>
+                                                <span class="badge bg-secondary opacity-50">OLD</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="px-4 text-end align-middle">
+                                            <a href="<?php echo $v['apk_url']; ?>" target="_blank" class="btn btn-sm btn-info">Download</a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<script>
-document.getElementById('apkUploadForm').onsubmit = function(e) {
-    const fileInput = document.getElementById('apkFileInput');
-    if (fileInput.files.length > 0) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        formData.append('add_version', '1');
-        
-        const xhr = new XMLHttpRequest();
-        const progressBar = document.getElementById('apkUploadProgress');
-        const progressInner = progressBar.querySelector('.progress-bar');
-        const uploadBtn = document.getElementById('uploadApkBtn');
-        
-        progressBar.classList.remove('d-none');
-        uploadBtn.disabled = true;
-        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Uploading...';
-        
-        xhr.upload.addEventListener('progress', function(e) {
-            if (e.lengthComputable) {
-                const percent = Math.round((e.loaded / e.total) * 100);
-                progressInner.style.width = percent + '%';
-                progressInner.innerText = percent + '%';
-            }
-        });
-        
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    // Force refresh to bypass potential cache
-                    window.location.href = 'app_details.php?id=<?php echo $app_id; ?>&msg=success&t=' + new Date().getTime();
-                } else {
-                    alert('Upload failed. Please check file size limits.');
-                    location.reload();
-                }
-            }
-        };
-        
-        xhr.open('POST', window.location.href, true);
-        xhr.send(formData);
-    }
-};
-</script>
 <?php require_once 'footer.php'; ?>
