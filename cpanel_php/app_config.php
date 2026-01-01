@@ -2,6 +2,23 @@
 require_once 'config.php';
 header('Content-Type: application/json');
 
+// --- START: CACHE-BUSTING FIX ---
+// This function gets the last modified time of a file to create a unique version number.
+// This forces the app to re-download the image whenever the file changes.
+function get_cache_buster($file_path) {
+    if (file_exists($file_path)) {
+        return '?v=' . filemtime($file_path);
+    }
+    return '';
+}
+
+$splash_logo_path = __DIR__ . '/splash_logo.png';
+$app_logo_path = __DIR__ . '/logo.png';
+
+$splash_logo_cache_buster = get_cache_buster($splash_logo_path);
+$app_logo_cache_buster = get_cache_buster($app_logo_path);
+// --- END: CACHE-BUSTING FIX ---
+
 $all_config = getAllConfig();
 $ann = getActiveAnnouncement();
 $panels = getAllPanels();
@@ -41,8 +58,9 @@ $response = [
         "locked" => ($all_config['theme_locked'] ?? 'no') === 'yes'
     ],
     "branding" => [
-        "splash_logo" => $base_url . "/splash_logo.png",
-        "app_logo" => $base_url . "/logo.png",
+        // FIX: Appended the unique version number to the image URLs
+        "splash_logo" => $base_url . "/splash_logo.png" . $splash_logo_cache_buster,
+        "app_logo" => $base_url . "/logo.png" . $app_logo_cache_buster,
         "loader_animation_url" => $all_config['loader_url'] ?? '',
         "splash_text" => $all_config['splash_text'] ?? '',
         "splash_text_color" => $all_config['splash_text_color'] ?? '#ffffff',
@@ -59,10 +77,6 @@ foreach ($panels as $p) {
         "key" => $p['site_key']
     ];
 }
-
-// If reset flag was set to yes, the app would normally clear it after receiving it.
-// However, since multiple users fetch this, the reset flag management logic 
-// usually happens on the app side (comparing stored reset_time).
 
 echo json_encode($response, JSON_PRETTY_PRINT);
 ?>

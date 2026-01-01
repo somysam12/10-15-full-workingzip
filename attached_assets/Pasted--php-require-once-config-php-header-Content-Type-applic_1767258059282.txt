@@ -1,0 +1,82 @@
+<?php
+require_once 'config.php';
+header('Content-Type: application/json');
+
+// --- START: CACHE-BUSTING FIX ---
+// This function gets the last modified time of a file to create a unique version number.
+// This forces the app to re-download the image whenever the file changes.
+function get_cache_buster($file_path) {
+    if (file_exists($file_path)) {
+        return '?v=' . filemtime($file_path);
+    }
+    return '';
+}
+
+$splash_logo_path = __DIR__ . '/splash_logo.png';
+$app_logo_path = __DIR__ . '/logo.png';
+
+$splash_logo_cache_buster = get_cache_buster($splash_logo_path);
+$app_logo_cache_buster = get_cache_buster($app_logo_path);
+// --- END: CACHE-BUSTING FIX ---
+
+$all_config = getAllConfig();
+$ann = getActiveAnnouncement();
+$panels = getAllPanels();
+
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+$base_url = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']);
+
+// Format response to match all new features
+$response = [
+    "global_control" => [
+        "app_status" => $all_config['app_status'] ?? 'ON',
+        "maintenance_message" => $all_config['maintenance_message'] ?? '',
+        "force_logout" => ($all_config['force_logout_flag'] ?? 'no') === 'yes'
+    ],
+    "version_management" => [
+        "latest_version" => $all_config['latest_version'] ?? '1.0.0',
+        "min_required_version" => (int)($all_config['min_required_version'] ?? 1),
+        "update_url" => $all_config['update_url'] ?? '',
+        "update_message" => $all_config['update_message'] ?? ''
+    ],
+    "remote_reset" => [
+        "reset_cache" => ($all_config['reset_cache_flag'] ?? 'no') === 'yes',
+        "reset_time" => $all_config['reset_time'] ?? ''
+    ],
+    "announcement" => $ann ? [
+        "id" => $ann['id'],
+        "title" => $ann['title'],
+        "message" => $ann['message'],
+        "button_text" => $ann['button_text'],
+        "button_link" => $ann['button_link'],
+        "type" => $ann['type'],
+        "start" => $ann['start_time'],
+        "end" => $ann['end_time']
+    ] : null,
+    "theme" => [
+        "mode" => $all_config['theme_mode'] ?? 'System',
+        "locked" => ($all_config['theme_locked'] ?? 'no') === 'yes'
+    ],
+    "branding" => [
+        // FIX: Appended the unique version number to the image URLs
+        "splash_logo" => $base_url . "/splash_logo.png" . $splash_logo_cache_buster,
+        "app_logo" => $base_url . "/logo.png" . $app_logo_cache_buster,
+        "loader_animation_url" => $all_config['loader_url'] ?? '',
+        "splash_text" => $all_config['splash_text'] ?? '',
+        "splash_text_color" => $all_config['splash_text_color'] ?? '#ffffff',
+        "splash_text_position" => $all_config['splash_text_position'] ?? 'center',
+        "bg_color" => $all_config['bg_color'] ?? '#0A0E27'
+    ],
+    "panels" => []
+];
+
+foreach ($panels as $p) {
+    $response['panels'][] = [
+        "name" => $p['name'],
+        "url" => $p['url'],
+        "key" => $p['site_key']
+    ];
+}
+
+echo json_encode($response, JSON_PRETTY_PRINT);
+?>
