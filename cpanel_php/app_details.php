@@ -17,11 +17,15 @@ $error_msg = "";
 $success_msg = "";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_version'])) {
-    // Attempt to override limits at runtime to the absolute maximum
+    // Attempt to override limits at runtime
     @ini_set('upload_max_filesize', '1024M');
     @ini_set('post_max_size', '1024M');
     @ini_set('memory_limit', '1024M');
     @ini_set('max_execution_time', '1200');
+    
+    // Log the current limits for debugging
+    error_log("Upload Max Filesize: " . ini_get('upload_max_filesize'));
+    error_log("Post Max Size: " . ini_get('post_max_size'));
 
     $v_name = $_POST['version_name'] ?? 'New Update';
     
