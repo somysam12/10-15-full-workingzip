@@ -18,20 +18,25 @@ try {
         $protocol = request_protocol();
         $base_url = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']);
 
+        // Format to match Android ConfigManager.java expectations
         echo json_encode([
-            "global_control" => [
+            "status" => "success",
+            "app_config" => [
                 "app_status" => $all_config['app_status'] ?? 'ON',
                 "maintenance_message" => $all_config['maintenance_message'] ?? '',
-                "force_logout" => ($all_config['force_logout_flag'] ?? 'no') === 'yes'
+                "latest_version" => $all_config['latest_version'] ?? '1.0.0',
+                "update_url" => $all_config['update_url'] ?? '',
+                "announcement_title" => $ann['title'] ?? '',
+                "announcement_message" => $ann['message'] ?? '',
+                "announcement_active" => $ann ? true : false
             ],
-            "announcement" => $ann ? [
-                "id" => $ann['id'],
-                "title" => $ann['title'],
-                "message" => $ann['message'],
-                "priority" => $ann['priority'] ?? 'normal',
-                "type" => $ann['type']
-            ] : null,
-            "panels" => $panels
+            "panels" => array_map(function($p) {
+                return [
+                    "name" => $p['name'],
+                    "url" => $p['url'],
+                    "site_key" => $p['site_key']
+                ];
+            }, $panels)
         ]);
     } 
     elseif ($action === 'apps') {
