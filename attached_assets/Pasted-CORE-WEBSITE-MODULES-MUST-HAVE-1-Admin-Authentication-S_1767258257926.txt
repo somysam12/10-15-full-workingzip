@@ -1,0 +1,236 @@
+CORE WEBSITE MODULES (MUST HAVE)
+🔹 1. Admin Authentication System
+
+Features
+
+Secure admin login
+
+Password hashing (bcrypt)
+
+Session-based authentication
+
+Optional 2FA (later)
+
+Why needed
+
+Prevent unauthorized APK uploads
+
+Protect API access
+
+🔹 2. APK Management System (MOST IMPORTANT)
+
+Features
+
+Upload APK file
+
+Auto read:
+
+Package name
+
+Version name
+
+Version code
+
+Upload app icon
+
+App description
+
+Category selection
+
+Minimum Android version
+
+APK file size display
+
+Controls
+
+Enable / Disable APK
+
+Mark as:
+
+Active
+
+Beta
+
+Deprecated
+
+Delete APK
+
+🔹 3. Version Control & Update Logic
+
+Features
+
+Multiple versions per APK
+
+Mark latest version
+
+Rollback support
+
+Force update flag
+
+Optional changelog per version
+
+Why needed
+
+App shows “Update” button
+
+Prevent users from installing outdated builds
+
+🔹 4. Announcement / Notice System
+
+Features
+
+Create announcements
+
+Set priority (normal / warning / urgent)
+
+Start & end date
+
+Enable / disable toggle
+
+Used in App
+
+Top banner like your screenshot
+
+Server notices
+
+Update alerts
+
+🔹 5. API System (FOR APP COMMUNICATION)
+
+API Endpoints
+
+/api/config
+
+/api/apps
+
+/api/app/{package}
+
+/api/announcement
+
+Security
+
+API token validation
+
+Rate limiting
+
+Request logging
+
+🔹 6. Download Hosting System
+
+Features
+
+Direct APK download links
+
+Resume supported
+
+Speed limiting (optional)
+
+File integrity check (SHA-256)
+
+Storage Options
+
+Local server
+
+Cloud storage (S3 / R2)
+
+CDN (recommended)
+
+2️⃣ ADVANCED WEBSITE FEATURES (IMPORTANT)
+🔹 7. App Category System
+
+Tools
+
+Games
+
+Utilities
+
+Internal apps
+
+Beta testing apps
+
+Benefit
+
+Clean UI filtering in app
+
+🔹 8. App Visibility Control
+
+Public
+
+Private
+
+Hidden (admin only)
+
+Region-based (future)
+
+🔹 9. Download Analytics Dashboard
+
+Track
+
+Total downloads
+
+Per-app downloads
+
+Daily / monthly stats
+
+App version usage
+
+Android version stats
+
+🔹 10. User Device Logging (Optional)
+
+Device model
+
+Android version
+
+App version
+
+IP-based country
+
+⚠️ Privacy policy required
+
+🔹 11. App Configuration Panel
+
+Dynamic Controls
+
+App name
+
+Logo
+
+Theme colors
+
+Maintenance mode
+
+Force update toggle
+
+3️⃣ SECURITY FEATURES (VERY IMPORTANT)
+🔐 12. Website Security
+
+SQL injection protection (PDO)
+
+CSRF protection
+
+File type validation (APK only)
+
+Max upload size limit
+
+Admin activity logs
+
+🔐 13. API Security
+
+Token-based access
+
+Request signature
+
+Timestamp validation
+
+IP rate limiting
+
+🔐 14. APK Protection
+
+File checksum verification
+
+Tamper detection
+
+Secure headers
+
+Anti-hotlinking
