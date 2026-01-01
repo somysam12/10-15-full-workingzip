@@ -30,16 +30,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_version'])) {
     }
     
     if ($apk_url) {
-        $pdo->prepare("UPDATE app_versions SET is_latest = FALSE WHERE app_id = ?")->execute([$app_id]);
-        $stmt = $pdo->prepare("INSERT INTO app_versions (app_id, version_name, apk_url, is_latest, version_code) VALUES (?, ?, ?, TRUE, ?)");
-        $stmt->execute([$app_id, $v_name, $apk_url, time()]);
-        $msg = "APK Uploaded successfully!";
+        try {
+            $pdo->beginTransaction();
+            // Ensure app_versions exists (should have been created by SQL migration, but let's be safe)
+            $pdo->exec("CREATE TABLE IF NOT EXISTS app_versions (
+                id SERIAL PRIMARY KEY,
+                app_id INTEGER REFERENCES apps(id),
+                version_name VARCHAR(255),
+                version_code BIGINT,
+                apk_url TEXT NOT NULL,
+                is_latest BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )");
+
+            $pdo->prepare("UPDATE app_versions SET is_latest = FALSE WHERE app_id = ?")->execute([$app_id]);
+            $stmt = $pdo->prepare("INSERT INTO app_versions (app_id, version_name, apk_url, is_latest, version_code, created_at) VALUES (?, ?, ?, TRUE, ?, CURRENT_TIMESTAMP)");
+            $stmt->execute([$app_id, $v_name, $apk_url, time()]);
+            $pdo->commit();
+            
+            // Double check insertion
+            $check = $pdo->prepare("SELECT COUNT(*) FROM app_versions WHERE app_id = ?");
+            $check->execute([$app_id]);
+            $count = $check->fetchColumn();
+            
+            error_log("APK Uploaded for App ID $app_id. Total versions now: $count");
+            $msg = "APK Uploaded successfully! (Total: $count)";
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            error_log("Database error in APK upload: " . $e->getMessage());
+            $error = "Database error: " . $e->getMessage();
+        }
     } else {
         $error = "Upload failed. Check file size or folder permissions.";
     }
 }
 
-$versions = $pdo->prepare("SELECT * FROM app_versions WHERE app_id = ? ORDER BY id DESC");
+$versions = $pdo->prepare("SELECT * FROM app_versions WHERE app_id = ? ORDER BY created_at DESC, id DESC");
 $versions->execute([$app_id]);
 $version_list = $versions->fetchAll();
 ?>
