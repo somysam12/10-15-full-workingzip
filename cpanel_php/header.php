@@ -123,7 +123,71 @@ $app_status = getConfig('app_status', 'ON');
             border-bottom: 1px solid rgba(255,255,255,0.05);
             margin-bottom: 30px !important;
         }
-        .navbar-text { color: rgba(255,255,255,0.8) !important; }
+        /* Modern Toggle Switch */
+        .status-toggle-wrapper {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 15px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .status-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-right: 10px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 24px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #333;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        input:checked + .slider {
+            background: linear-gradient(135deg, #00b09b, #96c93d);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+        
+        .status-badge {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+            text-transform: uppercase;
+        }
+        .status-on { background: rgba(28, 200, 138, 0.2); color: #1cc88a; }
+        .status-off { background: rgba(231, 74, 59, 0.2); color: #e74a3b; }
     </style>
 </head>
 <body>

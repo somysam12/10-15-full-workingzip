@@ -2,7 +2,16 @@
 require_once 'config.php';
 header('Content-Type: application/json');
 
-try {
+    // Action handling
+    $action = $_GET['action'] ?? '';
+    if ($action === 'toggle_server') {
+        $data = json_decode(file_get_contents('php://input'), true);
+        $status = (isset($data['enabled']) && $data['enabled']) ? 'ON' : 'OFF';
+        setConfig('app_status', $status);
+        echo json_encode(['success' => true, 'status' => $status]);
+        exit;
+    }
+
     $all_config = getAllConfig();
     
     // Filter announcement by app_type if provided
