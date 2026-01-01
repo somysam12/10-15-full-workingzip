@@ -12,11 +12,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_version'])) {
     $v_name = $_POST['version_name'];
     $v_code = $_POST['version_code'];
     $apk_url = $_POST['apk_url'];
+
+    // Handle File Upload
+    if (isset($_FILES['apk_file']) && $_FILES['apk_file']['error'] === UPLOAD_ERR_OK) {
+        $upload_dir = 'uploads/apks/';
+        $file_name = time() . '_' . basename($_FILES['apk_file']['name']);
+        $target_file = $upload_dir . $file_name;
+        
+        if (move_uploaded_file($_FILES['apk_file']['tmp_name'], $target_file)) {
+            $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
+            $apk_url = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/' . $target_file;
+        }
+    }
     
     $pdo->prepare("UPDATE app_versions SET is_latest = FALSE WHERE app_id = ?")->execute([$app_id]);
     $stmt = $pdo->prepare("INSERT INTO app_versions (app_id, version_name, version_code, apk_url, is_latest) VALUES (?, ?, ?, ?, TRUE)");
     $stmt->execute([$app_id, $v_name, $v_code, $apk_url]);
-    $msg = "Version added";
+    $msg = "Version added successfully";
 }
 
 $versions = $pdo->prepare("SELECT * FROM app_versions WHERE app_id = ? ORDER BY version_code DESC");
@@ -63,14 +75,31 @@ $version_list = $versions->fetchAll();
 <div class="modal fade" id="addVersionModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form method="POST">
-                <div class="modal-header"><h5>Add Version</h5></div>
+            <form method="POST" enctype="multipart/form-data">
+                <div class="modal-header"><h5>Add New Version / Upload APK</h5></div>
                 <div class="modal-body">
-                    <input type="text" name="version_name" class="form-control mb-2" placeholder="1.0.1" required>
-                    <input type="number" name="version_code" class="form-control mb-2" placeholder="2" required>
-                    <input type="text" name="apk_url" class="form-control" placeholder="Direct APK URL" required>
+                    <div class="mb-3">
+                        <label class="form-label">Version Name</label>
+                        <input type="text" name="version_name" class="nav-control form-control mb-2" placeholder="e.g. 1.0.1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Version Code</label>
+                        <input type="number" name="version_code" class="form-control mb-2" placeholder="e.g. 2" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Upload APK File</label>
+                        <input type="file" name="apk_file" class="form-control mb-2" accept=".apk">
+                        <div class="text-muted small">Or provide external URL below</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">External APK URL</label>
+                        <input type="text" name="apk_url" class="form-control" placeholder="https://site.com/app.apk">
+                    </div>
                 </div>
-                <div class="modal-footer"><button type="submit" name="add_version" class="btn btn-primary">Save</button></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal">Cancel</button>
+                    <button type="submit" name="add_version" class="btn btn-primary">Upload & Save</button>
+                </div>
             </form>
         </div>
     </div>
