@@ -44,7 +44,7 @@ function getConfig($key, $default = '') {
 function setConfig($key, $value) {
     global $pdo;
     if (!$pdo) return;
-    $stmt = $pdo->prepare("INSERT INTO app_config (config_key, config_value) VALUES (?, ?) ON CONFLICT (config_key) DO UPDATE SET config_value = EXCLUDED.config_value");
+    $stmt = $pdo->prepare("INSERT INTO app_config (config_key, config_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE config_value = VALUES(config_value)");
     $stmt->execute([$key, $value]);
 }
 
@@ -70,7 +70,7 @@ function getAllPanels() {
 function getActiveAnnouncement() {
     global $pdo;
     if (!$pdo) return null;
-    $stmt = $pdo->query("SELECT * FROM announcements WHERE active = TRUE ORDER BY id DESC LIMIT 1");
+    $stmt = $pdo->query("SELECT * FROM announcements WHERE active = 1 ORDER BY id DESC LIMIT 1");
     return $stmt->fetch();
 }
 ?>

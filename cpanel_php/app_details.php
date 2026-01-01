@@ -48,15 +48,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_version'])) {
             
             if (move_uploaded_file($_FILES['apk_file']['tmp_name'], $target_path)) {
                 $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
-                // Fix for cPanel base URL
-                $current_dir = str_replace('\\', '/', dirname($_SERVER['PHP_SELF']));
-                if ($current_dir === '/') $current_dir = '';
-                $apk_url = $protocol . "://" . $_SERVER['HTTP_HOST'] . $current_dir . '/' . $target_path;
+                
+                // FINAL PATH FIX FOR CPANEL
+                $host = $_SERVER['HTTP_HOST'];
+                $script_path = $_SERVER['SCRIPT_NAME']; // e.g. /app_details.php or /folder/app_details.php
+                $current_dir = dirname($script_path);
+                if ($current_dir === DIRECTORY_SEPARATOR || $current_dir === '.') $current_dir = '';
+                
+                $apk_url = $protocol . "://" . $host . $current_dir . '/' . $target_path;
                 
                 try {
+                    // Use 0 and 1 for MySQL compatibility
                     $pdo->prepare("UPDATE app_versions SET is_latest = 0 WHERE app_id = ?")->execute([$app_id]);
                     $stmt = $pdo->prepare("INSERT INTO app_versions (app_id, version_name, apk_url, is_latest, version_code, created_at) VALUES (?, ?, ?, 1, ?, NOW())");
                     $stmt->execute([$app_id, $v_name, $apk_url, time()]);
+                    
+                    // Final confirmation log
+                    error_log("SUCCESS: Saved APK history for app_id: $app_id. Name: $v_name");
                     
                     if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
                         echo json_encode(['success' => true]);
@@ -113,10 +121,8 @@ $history_stmt = $pdo->prepare("SELECT id, version_name, apk_url, is_latest, crea
 $history_stmt->execute([$app_id]);
 $history = $history_stmt->fetchAll();
 
-// Debugging for cPanel (Visible in server error logs)
-if (empty($history)) {
-    error_log("No history found for app_id: $app_id in table app_versions");
-}
+// Log count for debugging
+error_log("History found for app_id $app_id: " . count($history));
 
 if (isset($_GET['msg']) && $_GET['msg'] === 'uploaded') $success_msg = "APK Uploaded successfully!";
 ?>
