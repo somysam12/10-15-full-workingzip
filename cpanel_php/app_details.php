@@ -48,16 +48,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_version'])) {
             
             if (move_uploaded_file($_FILES['apk_file']['tmp_name'], $target_path)) {
                 $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
-                $apk_url = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/' . $target_path;
+                // Fix for cPanel base URL
+                $current_dir = str_replace('\\', '/', dirname($_SERVER['PHP_SELF']));
+                if ($current_dir === '/') $current_dir = '';
+                $apk_url = $protocol . "://" . $_SERVER['HTTP_HOST'] . $current_dir . '/' . $target_path;
                 
                 try {
-                    $pdo->prepare("UPDATE app_versions SET is_latest = FALSE WHERE app_id = ?")->execute([$app_id]);
-                    $stmt = $pdo->prepare("INSERT INTO app_versions (app_id, version_name, apk_url, is_latest, version_code, created_at) VALUES (?, ?, ?, TRUE, ?, NOW())");
+                    $pdo->prepare("UPDATE app_versions SET is_latest = 0 WHERE app_id = ?")->execute([$app_id]);
+                    $stmt = $pdo->prepare("INSERT INTO app_versions (app_id, version_name, apk_url, is_latest, version_code, created_at) VALUES (?, ?, ?, 1, ?, NOW())");
                     $stmt->execute([$app_id, $v_name, $apk_url, time()]);
+                    
+                    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                        echo json_encode(['success' => true]);
+                        exit;
+                    }
                     
                     header("Location: app_details.php?id=$app_id&msg=uploaded&v=" . time());
                     exit;
                 } catch (Exception $e) {
+                    error_log("Database Insert Error: " . $e->getMessage());
+                    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                        http_response_code(500);
+                        echo json_encode(['error' => $e->getMessage()]);
+                        exit;
+                    }
                     $error_msg = "Database Error: " . $e->getMessage();
                 }
             } else {
