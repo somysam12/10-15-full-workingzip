@@ -1,6 +1,12 @@
 <?php
 require_once 'header.php';
 
+if (($_SESSION['app_type'] ?? 'master') !== 'master') {
+    echo "<div class='alert alert-danger'>Access Denied. APK Management is only available in Master App.</div>";
+    require_once 'footer.php';
+    exit();
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_app'])) {
         $name = $_POST['app_name'];

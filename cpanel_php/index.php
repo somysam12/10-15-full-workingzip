@@ -1,6 +1,8 @@
 <?php
 require_once 'header.php';
 
+$app_type = $_SESSION['app_type'] ?? 'master';
+
 // Fetch stats
 $total_apps = $pdo->query("SELECT COUNT(*) FROM apps")->fetchColumn();
 $total_downloads = $pdo->query("SELECT COUNT(*) FROM download_stats")->fetchColumn();
@@ -9,7 +11,7 @@ $app_status = getConfig('app_status', 'ON');
 ?>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800">Dashboard Overview</h1>
+    <h1 class="h3 mb-0 text-gray-800"><?php echo ucfirst($app_type); ?> Dashboard</h1>
     <div class="form-check form-switch">
         <input class="form-check-input" type="checkbox" id="appStatusToggle" <?php echo $app_status == 'ON' ? 'checked' : ''; ?>>
         <label class="form-check-label" for="appStatusToggle">App Online Status</label>
@@ -17,8 +19,9 @@ $app_status = getConfig('app_status', 'ON');
 </div>
 
 <div class="row">
+    <?php if ($app_type === 'master'): ?>
     <!-- Total Apps Card -->
-    <div class="col-xl-3 col-md-6 mb-4">
+    <div class="col-xl-4 col-md-6 mb-4">
         <div class="card h-100 py-2 border-start border-primary border-4">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
@@ -35,7 +38,7 @@ $app_status = getConfig('app_status', 'ON');
     </div>
 
     <!-- Total Downloads Card -->
-    <div class="col-xl-3 col-md-6 mb-4">
+    <div class="col-xl-4 col-md-6 mb-4">
         <div class="card h-100 py-2 border-start border-success border-4">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
@@ -50,9 +53,11 @@ $app_status = getConfig('app_status', 'ON');
             </div>
         </div>
     </div>
+    <?php endif; ?>
 
+    <?php if ($app_type === 'panel'): ?>
     <!-- Active Panels Card -->
-    <div class="col-xl-3 col-md-6 mb-4">
+    <div class="col-xl-4 col-md-6 mb-4">
         <div class="card h-100 py-2 border-start border-info border-4">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
@@ -67,6 +72,7 @@ $app_status = getConfig('app_status', 'ON');
             </div>
         </div>
     </div>
+    <?php endif; ?>
 </div>
 
 <div class="row">

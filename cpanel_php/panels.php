@@ -1,6 +1,12 @@
 <?php
 require_once 'header.php';
 
+if (($_SESSION['app_type'] ?? 'master') !== 'panel') {
+    echo "<div class='alert alert-danger'>Access Denied. Panel Management is only available in Panel App.</div>";
+    require_once 'footer.php';
+    exit();
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_panel'])) {
         try {
