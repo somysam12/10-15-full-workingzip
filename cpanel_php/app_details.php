@@ -109,9 +109,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_version'])) {
 }
 
 // 3. Fetch History
-$history_stmt = $pdo->prepare("SELECT * FROM app_versions WHERE app_id = ? ORDER BY id DESC");
+$history_stmt = $pdo->prepare("SELECT id, version_name, apk_url, is_latest, created_at FROM app_versions WHERE app_id = ? ORDER BY id DESC");
 $history_stmt->execute([$app_id]);
 $history = $history_stmt->fetchAll();
+
+// Debugging for cPanel (Visible in server error logs)
+if (empty($history)) {
+    error_log("No history found for app_id: $app_id in table app_versions");
+}
 
 if (isset($_GET['msg']) && $_GET['msg'] === 'uploaded') $success_msg = "APK Uploaded successfully!";
 ?>

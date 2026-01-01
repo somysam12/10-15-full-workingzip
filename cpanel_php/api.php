@@ -40,10 +40,10 @@ try {
         ]);
     } 
     elseif ($action === 'apps') {
-        $stmt = $pdo->query("SELECT a.package_name, a.app_name, a.icon_url, a.visibility, v.version_name, v.version_code, v.apk_url 
+        $stmt = $pdo->query("SELECT a.id, a.app_name, a.category_id, v.version_name, v.version_code, v.apk_url 
                              FROM apps a 
-                             LEFT JOIN app_versions v ON a.id = v.app_id AND v.is_latest = TRUE
-                             WHERE a.is_enabled = TRUE AND a.visibility != 'hidden'");
+                             LEFT JOIN app_versions v ON a.id = v.app_id AND v.is_latest = 1
+                             ORDER BY a.id DESC");
         echo json_encode($stmt->fetchAll());
     }
     elseif ($action === 'toggle_server') {
