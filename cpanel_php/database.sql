@@ -43,6 +43,8 @@ CREATE TABLE IF NOT EXISTS apps (
     id INT AUTO_INCREMENT PRIMARY KEY,
     app_name VARCHAR(255) NOT NULL,
     category_id INT,
+    packageName VARCHAR(255) NULL,
+    iconUrl VARCHAR(500) NULL,
     FOREIGN KEY (category_id) REFERENCES categories(id)
 );
 
@@ -71,3 +73,6 @@ CREATE TABLE IF NOT EXISTS download_stats (
 INSERT INTO admins (username, password_hash) 
 VALUES ('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi')
 ON DUPLICATE KEY UPDATE username=username;
+
+-- Default Config
+INSERT INTO app_config (config_key, config_value) VALUES ('app_status', 'ON'), ('main_logo_url', '') ON DUPLICATE KEY UPDATE config_key=config_key;
