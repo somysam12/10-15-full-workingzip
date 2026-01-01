@@ -1,6 +1,5 @@
 <?php
 // --- UNIVERSAL AJAX ERROR HANDLER ---
-// This block will catch ANY error and ensure a JSON response is sent for AJAX requests.
 function custom_error_handler($level, $message, $file, $line) {
     if (error_reporting() & $level) {
         throw new ErrorException($message, 0, $level, $file, $line);
@@ -11,29 +10,27 @@ set_error_handler('custom_error_handler');
 function fatal_shutdown_handler() {
     $last_error = error_get_last();
     if ($last_error && in_array($last_error['type'], [E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR, E_PARSE])) {
-        // Check if this was an AJAX request
         if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
             if (!headers_sent()) {
                 header('Content-Type: application/json; charset=UTF-8', true, 500);
             }
             echo json_encode([
                 'success' => false,
-                'error' => 'A fatal server error occurred. Check server logs for details.',
-                'details' => $last_error['message'] // For debugging
+                'error' => 'A fatal server error occurred.',
+                'details' => $last_error['message']
             ]);
         }
     }
 }
 register_shutdown_function('fatal_shutdown_handler');
-// --- END ERROR HANDLER BLOCK ---
 
-// IMPORTANT: Do NOT include header.php before checking if it's an AJAX request
-// because header.php usually contains HTML which will break JSON responses.
+// INSTRUCTION FOR USER: PHP Error Code 1 means the file is larger than 'upload_max_filesize' in your cPanel PHP settings.
+// This block tries to override it, but cPanel often requires changing it in "Select PHP Version" -> "Options".
+
 $is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
 
 require_once 'config.php';
 
-// --- INITIALIZATION ---
 $app_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if (!$app_id) {
     if ($is_ajax) {
@@ -48,7 +45,6 @@ if (!$app_id) {
 $error_msg = "";
 $success_msg = "";
 
-// --- MAIN LOGIC WRAPPED IN TRY/CATCH ---
 try {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
@@ -56,11 +52,21 @@ try {
     $app_name_stmt->execute([$app_id]);
     $app_name = $app_name_stmt->fetchColumn() ?: "Unknown App";
 
-    // --- UPLOAD HANDLING ---
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!isset($_FILES['apk_file']) || $_FILES['apk_file']['error'] !== UPLOAD_ERR_OK) {
             $err_code = $_FILES['apk_file']['error'] ?? 'Unknown';
-            throw new Exception("File upload failed. PHP Error Code: " . $err_code);
+            $err_detail = "";
+            switch($err_code) {
+                case 1: $err_detail = "The file is too large for the server's PHP configuration (upload_max_filesize). Please increase this in cPanel -> Select PHP Version -> Options."; break;
+                case 2: $err_detail = "The file is too large for the HTML form."; break;
+                case 3: $err_detail = "The file was only partially uploaded."; break;
+                case 4: $err_detail = "No file was uploaded."; break;
+                case 6: $err_detail = "Missing a temporary folder on server."; break;
+                case 7: $err_detail = "Failed to write file to disk."; break;
+                case 8: $err_detail = "A PHP extension stopped the file upload."; break;
+                default: $err_detail = "Unknown upload error."; break;
+            }
+            throw new Exception("Upload Failed: " . $err_detail);
         }
 
         $upload_dir = 'uploads/apks/';
@@ -75,7 +81,7 @@ try {
         $target_path = $upload_dir . $file_name;
 
         if (!move_uploaded_file($_FILES['apk_file']['tmp_name'], $target_path)) {
-            throw new Exception("Failed to move uploaded file. Check server write permissions for the directory.");
+            throw new Exception("Failed to move uploaded file. Check server write permissions.");
         }
         
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
@@ -102,34 +108,22 @@ try {
     }
 
 } catch (Exception $e) {
-    if (isset($pdo) && $pdo->inTransaction()) {
-        $pdo->rollBack();
-    }
-    error_log("Caught Exception: " . $e->getMessage());
+    if (isset($pdo) && $pdo->inTransaction()) { $pdo->rollBack(); }
     $error_msg = $e->getMessage();
-
     if ($is_ajax) {
-        if (!headers_sent()) {
-             header('Content-Type: application/json; charset=UTF-8', true, 500);
-        }
+        if (!headers_sent()) { header('Content-Type: application/json; charset=UTF-8', true, 500); }
         echo json_encode(['success' => false, 'error' => $error_msg]);
         exit;
     }
 }
 
-// Only include header if NOT an AJAX request
-if (!$is_ajax) {
-    require_once 'header.php';
-}
+if (!$is_ajax) { require_once 'header.php'; }
 
-// --- DATA FETCHING FOR DISPLAY ---
 $history_stmt = $pdo->prepare("SELECT id, version_name, apk_url, is_latest, created_at FROM app_versions WHERE app_id = ? ORDER BY id DESC");
 $history_stmt->execute([$app_id]);
 $history_items = $history_stmt->fetchAll();
 
-if (isset($_GET['msg']) && $_GET['msg'] === 'uploaded') {
-    $success_msg = "APK uploaded successfully and is now LIVE!";
-}
+if (isset($_GET['msg']) && $_GET['msg'] === 'uploaded') { $success_msg = "APK uploaded successfully!"; }
 ?>
 
 <div class="container-fluid py-4">
@@ -140,15 +134,15 @@ if (isset($_GET['msg']) && $_GET['msg'] === 'uploaded') {
 
     <div id="alert-container">
         <?php if ($error_msg): ?>
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div class="alert alert-danger alert-dismissible fade show">
                 <strong>Error:</strong> <?php echo htmlspecialchars($error_msg); ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
         <?php if ($success_msg): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <div class="alert alert-success alert-dismissible fade show">
                 <?php echo htmlspecialchars($success_msg); ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
     </div>
@@ -160,16 +154,16 @@ if (isset($_GET['msg']) && $_GET['msg'] === 'uploaded') {
                 <div class="card-body">
                     <form id="uploadForm" method="POST" enctype="multipart/form-data">
                         <div class="mb-3">
-                            <label for="version_name" class="text-white-50 small">Display Name</label>
-                            <input type="text" id="version_name" name="version_name" class="form-control bg-dark text-white border-secondary" placeholder="e.g. App v2.5 (Hotfix)" required>
+                            <label class="text-white-50 small">Display Name</label>
+                            <input type="text" name="version_name" class="form-control bg-dark text-white border-secondary" required>
                         </div>
                         <div class="mb-3">
-                            <label for="apkFileInput" class="text-white-50 small">Select APK File</label>
-                            <input type="file" name="apk_file" id="apkFileInput" class="form-control bg-dark text-white border-secondary" accept=".apk" required>
+                            <label class="text-white-50 small">Select APK File</label>
+                            <input type="file" name="apk_file" class="form-control bg-dark text-white border-secondary" accept=".apk" required>
                         </div>
                         <div id="uploadProgressContainer" class="mb-3 d-none">
                             <div class="progress bg-dark-subtle border border-secondary" style="height: 25px;">
-                                <div id="uploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary fw-bold" role="progressbar" style="width: 0%;" aria-valuenow="0">0%</div>
+                                <div id="uploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary fw-bold" style="width: 0%;">0%</div>
                             </div>
                             <small id="uploadStatusText" class="text-white-50 mt-1 d-block text-center"></small>
                         </div>
@@ -177,6 +171,9 @@ if (isset($_GET['msg']) && $_GET['msg'] === 'uploaded') {
                             <i class="fas fa-upload me-2"></i>Upload & Activate
                         </button>
                     </form>
+                    <div class="mt-3 small text-white-50">
+                        <i class="fas fa-info-circle me-1"></i> <strong>Note:</strong> If you get "PHP Error Code: 1", you must increase <code>upload_max_filesize</code> in your cPanel PHP Options.
+                    </div>
                 </div>
             </div>
         </div>
@@ -191,32 +188,28 @@ if (isset($_GET['msg']) && $_GET['msg'] === 'uploaded') {
                         <table class="table table-dark table-hover mb-0">
                             <thead class="small text-uppercase text-white-50">
                                 <tr>
-                                    <th class="border-secondary px-4">Version Details</th>
+                                    <th class="border-secondary px-4">Version</th>
                                     <th class="border-secondary">Status</th>
                                     <th class="border-secondary px-4 text-end">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if (empty($history_items)): ?>
-                                    <tr><td colspan="3" class="text-center py-5 text-white-50">No uploads found for this app.</td></tr>
+                                    <tr><td colspan="3" class="text-center py-5 text-white-50">No history found.</td></tr>
                                 <?php else: ?>
                                     <?php foreach ($history_items as $v): ?>
                                         <tr>
-                                            <td class="px-4 align-middle">
+                                            <td class="px-4">
                                                 <div class="text-white fw-bold"><?php echo htmlspecialchars($v['version_name']); ?></div>
-                                                <small class="text-white-50"><?php echo date('M d, Y, h:i A', strtotime($v['created_at'])); ?></small>
+                                                <small class="text-white-50"><?php echo date('M d, Y', strtotime($v['created_at'])); ?></small>
                                             </td>
-                                            <td class="align-middle">
-                                                <?php if ($v['is_latest']): ?>
-                                                    <span class="badge bg-success fs-6">LIVE</span>
-                                                <?php else: ?>
-                                                    <span class="badge bg-secondary opacity-50">OLD</span>
-                                                <?php endif; ?>
+                                            <td>
+                                                <span class="badge bg-<?php echo $v['is_latest'] ? 'success' : 'secondary'; ?>">
+                                                    <?php echo $v['is_latest'] ? 'LIVE' : 'OLD'; ?>
+                                                </span>
                                             </td>
-                                            <td class="px-4 text-end align-middle">
-                                                <a href="<?php echo htmlspecialchars($v['apk_url']); ?>" target="_blank" class="btn btn-sm btn-outline-info">
-                                                   <i class="fas fa-download me-1"></i> Download
-                                                </a>
+                                            <td class="px-4 text-end">
+                                                <a href="<?php echo htmlspecialchars($v['apk_url']); ?>" target="_blank" class="btn btn-sm btn-outline-info">Download</a>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -231,67 +224,52 @@ if (isset($_GET['msg']) && $_GET['msg'] === 'uploaded') {
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const uploadForm = document.getElementById('uploadForm');
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const alertContainer = document.getElementById('alert-container');
     const uploadBtn = document.getElementById('uploadBtn');
     const progressContainer = document.getElementById('uploadProgressContainer');
     const progressBar = document.getElementById('uploadProgressBar');
-    const alertContainer = document.getElementById('alert-container');
     const statusText = document.getElementById('uploadStatusText');
 
-    uploadForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        alertContainer.innerHTML = '';
-        
-        const formData = new FormData(uploadForm);
-        const xhr = new XMLHttpRequest();
+    alertContainer.innerHTML = '';
+    const formData = new FormData(this);
+    const xhr = new XMLHttpRequest();
 
-        uploadBtn.disabled = true;
-        uploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Uploading...';
-        progressContainer.classList.remove('d-none');
+    uploadBtn.disabled = true;
+    progressContainer.classList.remove('d-none');
 
-        xhr.upload.addEventListener('progress', function(e) {
-            if (e.lengthComputable) {
-                const percent = Math.round((e.loaded / e.total) * 100);
-                progressBar.style.width = percent + '%';
-                progressBar.textContent = percent + '%';
-                progressBar.setAttribute('aria-valuenow', percent);
-                if (statusText) statusText.textContent = `Uploading: ${Math.round(e.loaded / 1024 / 1024)}MB of ${Math.round(e.total / 1024 / 1024)}MB`;
-            }
-        });
-
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === XMLHttpRequest.DONE) {
-                if (xhr.status === 200) {
-                    try {
-                        const result = JSON.parse(xhr.responseText);
-                        if (result.success) {
-                            window.location.href = 'app_details.php?id=<?php echo $app_id; ?>&msg=uploaded';
-                        } else {
-                            throw new Error(result.error || 'Unknown error');
-                        }
-                    } catch (e) {
-                        alertContainer.innerHTML = `<div class="alert alert-danger">Upload Failed: ${e.message}</div>`;
-                        uploadBtn.disabled = false;
-                        uploadBtn.innerHTML = '<i class="fas fa-upload me-2"></i>Upload & Activate';
-                    }
-                } else {
-                    let errorMsg = 'Server Error';
-                    try {
-                        const result = JSON.parse(xhr.responseText);
-                        errorMsg = result.error || result.details || errorMsg;
-                    } catch(e) {}
-                    alertContainer.innerHTML = `<div class="alert alert-danger">Upload Failed: ${errorMsg}</div>`;
-                    uploadBtn.disabled = false;
-                    uploadBtn.innerHTML = '<i class="fas fa-upload me-2"></i>Upload & Activate';
-                }
-            }
-        };
-
-        xhr.open('POST', window.location.href, true);
-        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-        xhr.send(formData);
+    xhr.upload.addEventListener('progress', function(e) {
+        if (e.lengthComputable) {
+            const percent = Math.round((e.loaded / e.total) * 100);
+            progressBar.style.width = percent + '%';
+            progressBar.textContent = percent + '%';
+            statusText.textContent = `Uploading: ${Math.round(e.loaded / 1024 / 1024)}MB / ${Math.round(e.total / 1024 / 1024)}MB`;
+        }
     });
+
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+                try {
+                    const res = JSON.parse(xhr.responseText);
+                    if (res.success) { window.location.href = 'app_details.php?id=<?php echo $app_id; ?>&msg=uploaded'; }
+                    else { throw new Error(res.error); }
+                } catch (err) {
+                    alertContainer.innerHTML = `<div class="alert alert-danger">Error: ${err.message}</div>`;
+                    uploadBtn.disabled = false;
+                }
+            } else {
+                let msg = "Server Error";
+                try { msg = JSON.parse(xhr.responseText).error || msg; } catch(e) {}
+                alertContainer.innerHTML = `<div class="alert alert-danger">${msg}</div>`;
+                uploadBtn.disabled = false;
+            }
+        }
+    };
+    xhr.open('POST', window.location.href, true);
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.send(formData);
 });
 </script>
 <?php if (!$is_ajax) require_once 'footer.php'; ?>
