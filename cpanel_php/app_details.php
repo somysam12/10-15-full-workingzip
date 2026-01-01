@@ -17,15 +17,18 @@ $error_msg = "";
 $success_msg = "";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_version'])) {
-    // Increase limits at runtime if possible
-    @ini_set('upload_max_filesize', '128M');
-    @ini_set('post_max_size', '128M');
-    @ini_set('max_execution_time', '300');
+    // Attempt to override limits at runtime to the absolute maximum
+    @ini_set('upload_max_filesize', '1024M');
+    @ini_set('post_max_size', '1024M');
+    @ini_set('memory_limit', '1024M');
+    @ini_set('max_execution_time', '1200');
 
     $v_name = $_POST['version_name'] ?? 'New Update';
     
     if (isset($_FILES['apk_file'])) {
-        if ($_FILES['apk_file']['error'] === UPLOAD_ERR_OK) {
+        $err_code = $_FILES['apk_file']['error'];
+        
+        if ($err_code === UPLOAD_ERR_OK) {
             $upload_dir = 'uploads/apks/';
             if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
             
@@ -52,15 +55,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_version'])) {
                 $error_msg = "Could not save file to disk. Check permissions.";
             }
         } else {
-            $err_code = $_FILES['apk_file']['error'];
-            if ($err_code === 1 || $err_code === 2) {
-                $error_msg = "File is too large! Maximum allowed is 128MB. (PHP Error Code: $err_code)";
-            } else {
-                $error_msg = "File upload failed (PHP Error code: $err_code)";
+            // Detailed error handling for all codes
+            switch ($err_code) {
+                case UPLOAD_ERR_INI_SIZE:
+                    $error_msg = "File exceeds 'upload_max_filesize' in php.ini. I have attempted to increase this to 1GB, but your host might be blocking it.";
+                    break;
+                case UPLOAD_ERR_FORM_SIZE:
+                    $error_msg = "File exceeds 'MAX_FILE_SIZE' specified in the HTML form.";
+                    break;
+                case UPLOAD_ERR_PARTIAL:
+                    $error_msg = "The file was only partially uploaded. Connection might be unstable.";
+                    break;
+                case UPLOAD_ERR_NO_FILE:
+                    $error_msg = "No file was selected.";
+                    break;
+                case UPLOAD_ERR_NO_TMP_DIR:
+                    $error_msg = "Missing a temporary folder on the server.";
+                    break;
+                case UPLOAD_ERR_CANT_WRITE:
+                    $error_msg = "Failed to write file to disk.";
+                    break;
+                default:
+                    $error_msg = "Upload failed with system error code: $err_code.";
+                    break;
             }
         }
     } else {
-        $error_msg = "No file received. Make sure the file isn't too large for the server.";
+        $error_msg = "No file data detected. If the file is large, the server might be cutting the connection. I've increased limits to 1GB to prevent this.";
     }
 }
 
@@ -102,7 +123,7 @@ if (isset($_GET['msg']) && $_GET['msg'] === 'uploaded') $success_msg = "APK Uplo
                             <input type="text" name="version_name" class="form-control bg-dark text-white border-secondary" placeholder="e.g. BGMI v1.2" required>
                         </div>
                         <div class="mb-3">
-                            <label class="text-white-50 small">Select APK (Max 128MB)</label>
+                            <label class="text-white-50 small">Select APK</label>
                             <input type="file" name="apk_file" class="form-control bg-dark text-white border-secondary" accept=".apk" required>
                         </div>
                         <button type="submit" name="add_version" class="btn btn-primary w-100">Upload & Activate</button>
