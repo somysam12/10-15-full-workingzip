@@ -18,19 +18,19 @@ $success_msg = "";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_version'])) {
     // Attempt to override limits at runtime
-    @ini_set('upload_max_filesize', '1024M');
-    @ini_set('post_max_size', '1024M');
-    @ini_set('memory_limit', '1024M');
-    @ini_set('max_execution_time', '1200');
+    @ini_set('upload_max_filesize', '2048M');
+    @ini_set('post_max_size', '2048M');
+    @ini_set('memory_limit', '2048M');
+    @ini_set('max_execution_time', '3600');
     
-    // Log the current limits for debugging
-    error_log("Upload Max Filesize: " . ini_get('upload_max_filesize'));
-    error_log("Post Max Size: " . ini_get('post_max_size'));
-
     $v_name = $_POST['version_name'] ?? 'New Update';
     
     if (isset($_FILES['apk_file'])) {
         $err_code = $_FILES['apk_file']['error'];
+        
+        // Log details about the received file
+        error_log("Upload Attempt - Name: " . $_FILES['apk_file']['name'] . ", Size: " . $_FILES['apk_file']['size'] . " bytes, Error Code: " . $err_code);
+        error_log("Runtime Config - upload_max_filesize: " . ini_get('upload_max_filesize') . ", post_max_size: " . ini_get('post_max_size'));
         
         if ($err_code === UPLOAD_ERR_OK) {
             $upload_dir = 'uploads/apks/';
@@ -128,9 +128,15 @@ if (isset($_GET['msg']) && $_GET['msg'] === 'uploaded') $success_msg = "APK Uplo
                         </div>
                         <div class="mb-3">
                             <label class="text-white-50 small">Select APK</label>
-                            <input type="file" name="apk_file" class="form-control bg-dark text-white border-secondary" accept=".apk" required>
+                            <input type="file" name="apk_file" id="apkFileInput" class="form-control bg-dark text-white border-secondary" accept=".apk" required>
                         </div>
-                        <button type="submit" name="add_version" class="btn btn-primary w-100">Upload & Activate</button>
+                        <div id="uploadProgressContainer" class="mb-3 d-none">
+                            <div class="progress bg-dark border border-secondary" style="height: 20px;">
+                                <div id="uploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                            </div>
+                            <small id="uploadStatusText" class="text-white-50 mt-1 d-block text-center"></small>
+                        </div>
+                        <button type="submit" id="uploadBtn" name="add_version" class="btn btn-primary w-100">Upload & Activate</button>
                     </form>
                 </div>
             </div>
@@ -181,4 +187,52 @@ if (isset($_GET['msg']) && $_GET['msg'] === 'uploaded') $success_msg = "APK Uplo
         </div>
     </div>
 </div>
+<script>
+document.querySelector('form[enctype="multipart/form-data"]').addEventListener('submit', function(e) {
+    const fileInput = document.getElementById('apkFileInput');
+    if (!fileInput.files.length) return;
+
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    formData.append('add_version', '1');
+    
+    const xhr = new XMLHttpRequest();
+    const progressContainer = document.getElementById('uploadProgressContainer');
+    const progressBar = document.getElementById('uploadProgressBar');
+    const statusText = document.getElementById('uploadStatusText');
+    const uploadBtn = document.getElementById('uploadBtn');
+
+    progressContainer.classList.remove('d-none');
+    uploadBtn.disabled = true;
+
+    xhr.upload.addEventListener('progress', function(e) {
+        if (e.lengthComputable) {
+            const percent = Math.round((e.loaded / e.total) * 100);
+            progressBar.style.width = percent + '%';
+            progressBar.innerHTML = percent + '%';
+            progressBar.setAttribute('aria-valuenow', percent);
+            statusText.innerHTML = `Uploading: ${Math.round(e.loaded / 1024 / 1024)}MB of ${Math.round(e.total / 1024 / 1024)}MB`;
+        }
+    });
+
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+                // If it's a redirect, manually follow it or reload
+                const url = new URL(window.location.href);
+                url.searchParams.set('msg', 'uploaded');
+                window.location.href = url.href;
+            } else {
+                alert('Upload failed. The file might be too large for the server to handle even with increased limits.');
+                uploadBtn.disabled = false;
+                progressContainer.classList.add('d-none');
+            }
+        }
+    };
+
+    xhr.open('POST', window.location.href, true);
+    xhr.send(formData);
+});
+</script>
 <?php require_once 'footer.php'; ?>
