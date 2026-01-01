@@ -30,11 +30,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Login - Silent Panel Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background: #0A0E27; color: white; height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .login-card { background: #1a1f3c; border: 1px solid #2e365f; border-radius: 15px; padding: 30px; width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .form-control { background: #0a0e27; border: 1px solid #2e365f; color: white; }
-        .form-control:focus { background: #0a0e27; color: white; border-color: #667eea; box-shadow: none; }
-        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; }
+        body { 
+            background: radial-gradient(circle at top right, #1a1f3c, #0A0E27); 
+            color: white; 
+            height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-family: 'Inter', sans-serif;
+        }
+        .login-card { 
+            background: rgba(26, 31, 60, 0.8); 
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            border-radius: 20px; 
+            padding: 40px; 
+            width: 100%; 
+            max-width: 400px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4); 
+        }
+        .form-label { font-weight: 600; color: #a0aec0; margin-bottom: 8px; }
+        .form-control { 
+            background: rgba(10, 14, 39, 0.5); 
+            border: 1px solid #2e365f; 
+            color: white; 
+            padding: 12px;
+            border-radius: 10px;
+        }
+        .form-control:focus { 
+            background: rgba(10, 14, 39, 0.8); 
+            color: white; 
+            border-color: #667eea; 
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2); 
+        }
+        .btn-primary { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            border: none; 
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 700;
+            margin-top: 10px;
+            transition: transform 0.2s;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+        h3 { font-weight: 800; letter-spacing: -0.5px; margin-bottom: 30px !important; }
     </style>
 </head>
 <body>
