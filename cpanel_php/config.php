@@ -44,7 +44,12 @@ function getConfig($key, $default = '') {
 function setConfig($key, $value) {
     global $pdo;
     if (!$pdo) return;
-    $stmt = $pdo->prepare("INSERT INTO app_config (config_key, config_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE config_value = VALUES(config_value)");
+    $is_postgres = (getenv('DATABASE_URL')) ? true : false;
+    if ($is_postgres) {
+        $stmt = $pdo->prepare("INSERT INTO app_config (config_key, config_value) VALUES (?, ?) ON CONFLICT (config_key) DO UPDATE SET config_value = EXCLUDED.config_value");
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO app_config (config_key, config_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE config_value = VALUES(config_value)");
+    }
     $stmt->execute([$key, $value]);
 }
 
