@@ -8,25 +8,28 @@ $db_user = 'silentmu_isam';
 $db_pass = '844121@LuvKush';
 
 if (getenv('DATABASE_URL')) {
+    // Replit / Postgres Environment
     $db_url = parse_url(getenv('DATABASE_URL'));
     $db_host = $db_url['host'];
     $db_user = $db_url['user'];
     $db_pass = $db_url['pass'];
     $db_name = ltrim($db_url['path'], '/');
+    $dsn = "pgsql:host=$db_host;dbname=$db_name";
+} else {
+    // cPanel / MySQL Environment
+    $db_host = 'localhost';
+    $db_name = 'silentmu_app';
+    $db_user = 'silentmu_isam';
+    $db_pass = '844121@LuvKush';
+    $dsn = "mysql:host=$db_host;dbname=$db_name;charset=utf8mb4";
 }
 
 try {
-    $pdo = new PDO("pgsql:host=$db_host;dbname=$db_name", $db_user, $db_pass);
+    $pdo = new PDO($dsn, $db_user, $db_pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    try {
-        $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-    } catch (PDOException $e2) {
-        // Silently fail or log
-    }
+    die("Connection failed: " . $e->getMessage());
 }
 
 function getConfig($key, $default = '') {

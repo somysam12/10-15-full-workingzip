@@ -1,7 +1,7 @@
 modules = ["php-8.2", "postgresql-16"]
 [nix]
 channel = "stable-25_05"
-packages = ["openssl", "postgresql", "unzip"]
+packages = ["openssl", "postgresql", "unzip", "zip"]
 
 [agent]
 expertMode = true
