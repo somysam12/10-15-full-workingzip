@@ -53,7 +53,24 @@ try {
     $app_name = $app_name_stmt->fetchColumn() ?: "Unknown App";
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!isset($_FILES['apk_file']) || $_FILES['apk_file']['error'] !== UPLOAD_ERR_OK) {
+        if (isset($_POST['delete_version'])) {
+            $v_id = (int)$_POST['version_id'];
+            
+            // Get file path before deleting
+            $v_stmt = $pdo->prepare("SELECT apk_url FROM app_versions WHERE id = ? AND app_id = ?");
+            $v_stmt->execute([$v_id, $app_id]);
+            $v_url = $v_stmt->fetchColumn();
+            
+            if ($v_url) {
+                $base_path = dirname($_SERVER['SCRIPT_NAME']);
+                if ($base_path === DIRECTORY_SEPARATOR || $base_path === '.') $base_path = '';
+                $relative_path = str_replace(request_protocol() . '://' . $_SERVER['HTTP_HOST'] . $base_path . '/', '', $v_url);
+                if (file_exists($relative_path)) @unlink($relative_path);
+                
+                $pdo->prepare("DELETE FROM app_versions WHERE id = ?")->execute([$v_id]);
+                $success_msg = "Version deleted successfully!";
+            }
+        } elseif (!isset($_FILES['apk_file']) || $_FILES['apk_file']['error'] !== UPLOAD_ERR_OK) {
             $err_code = $_FILES['apk_file']['error'] ?? 'Unknown';
             $err_detail = "";
             switch($err_code) {
@@ -209,7 +226,15 @@ if (isset($_GET['msg']) && $_GET['msg'] === 'uploaded') { $success_msg = "APK up
                                                 </span>
                                             </td>
                                             <td class="px-4 text-end">
-                                                <a href="<?php echo htmlspecialchars($v['apk_url']); ?>" target="_blank" class="btn btn-sm btn-outline-info">Download</a>
+                                                <div class="d-flex justify-content-end gap-2">
+                                                    <a href="<?php echo htmlspecialchars($v['apk_url']); ?>" target="_blank" class="btn btn-sm btn-outline-info">Download</a>
+                                                    <form method="POST" onsubmit="return confirm('Delete this version? File will be removed from server.');">
+                                                        <input type="hidden" name="version_id" value="<?php echo $v['id']; ?>">
+                                                        <button type="submit" name="delete_version" class="btn btn-sm btn-outline-danger">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
