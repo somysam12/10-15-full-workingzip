@@ -2,7 +2,10 @@
 require_once 'header.php';
 
 $app_id = $_GET['id'] ?? null;
-if (!$app_id) header("Location: apps.php");
+if (!$app_id) {
+    header("Location: apps.php");
+    exit;
+}
 
 $app = $pdo->prepare("SELECT * FROM apps WHERE id = ?");
 $app->execute([$app_id]);
@@ -10,12 +13,14 @@ $app_data = $app->fetch();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_version'])) {
     $v_name = $_POST['version_name'];
-    $v_code = time(); // Auto-generate code
     $apk_url = "";
 
     if (isset($_FILES['apk_file']) && $_FILES['apk_file']['error'] === UPLOAD_ERR_OK) {
         $upload_dir = 'uploads/apks/';
-        $file_name = time() . '_' . basename($_FILES['apk_file']['name']);
+        if (!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+        }
+        $file_name = time() . '_' . preg_replace("/[^a-zA-Z0-9\._-]/", "_", $_FILES['apk_file']['name']);
         $target_file = $upload_dir . $file_name;
         
         if (move_uploaded_file($_FILES['apk_file']['tmp_name'], $target_file)) {
@@ -26,83 +31,96 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_version'])) {
     
     if ($apk_url) {
         $pdo->prepare("UPDATE app_versions SET is_latest = FALSE WHERE app_id = ?")->execute([$app_id]);
-        $stmt = $pdo->prepare("INSERT INTO app_versions (app_id, version_name, version_code, apk_url, is_latest) VALUES (?, ?, ?, ?, TRUE)");
-        $stmt->execute([$app_id, $v_name, $v_code, $apk_url]);
-        $msg = "APK uploaded successfully";
+        $stmt = $pdo->prepare("INSERT INTO app_versions (app_id, version_name, apk_url, is_latest, version_code) VALUES (?, ?, ?, TRUE, ?)");
+        $stmt->execute([$app_id, $v_name, $apk_url, time()]);
+        $msg = "APK Uploaded successfully!";
     } else {
-        $error = "Failed to upload APK";
+        $error = "Upload failed. Check file size or folder permissions.";
     }
 }
 
-$versions = $pdo->prepare("SELECT * FROM app_versions WHERE app_id = ? ORDER BY version_code DESC");
+$versions = $pdo->prepare("SELECT * FROM app_versions WHERE app_id = ? ORDER BY id DESC");
 $versions->execute([$app_id]);
 $version_list = $versions->fetchAll();
 ?>
-<h1 class="h3 mb-4">Manage <?php echo htmlspecialchars($app_data['app_name']); ?></h1>
-
-<div class="row">
-    <div class="col-lg-4">
-        <div class="card shadow mb-4">
-            <div class="card-header">App Details</div>
-            <div class="card-body">
-                <p><strong>Package:</strong> <?php echo $app_data['package_name']; ?></p>
-                <p><strong>Status:</strong> <?php echo $app_data['is_enabled'] ? 'Active' : 'Disabled'; ?></p>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-8">
-        <div class="card shadow mb-4">
-            <div class="card-header d-flex justify-content-between">
-                <span>Versions</span>
-                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addVersionModal">Add Version</button>
-            </div>
-            <div class="card-body">
-                <table class="table">
-                    <thead><tr><th>Version</th><th>Code</th><th>Latest</th><th>Actions</th></tr></thead>
-                    <tbody>
-                        <?php foreach($version_list as $v): ?>
-                        <tr>
-                            <td><?php echo $v['version_name']; ?></td>
-                            <td><?php echo $v['version_code']; ?></td>
-                            <td><?php echo $v['is_latest'] ? '✅' : ''; ?></td>
-                            <td><a href="<?php echo $v['apk_url']; ?>" class="btn btn-sm btn-outline-primary">Link</a></td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-white">Manage APK: <?php echo htmlspecialchars($app_data['app_name']); ?></h1>
+    <a href="apps.php" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
 </div>
 
-<div class="modal fade" id="addVersionModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="POST" enctype="multipart/form-data">
-                <div class="modal-header"><h5>Add New Version / Upload APK</h5></div>
-                <div class="modal-body">
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card shadow mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Upload New APK</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" id="apkUploadForm">
                     <div class="mb-3">
-                        <label class="form-label">APK Name</label>
-                        <input type="text" name="version_name" class="form-control" placeholder="e.g. BGMI v1" required>
+                        <label class="form-label">Display Name</label>
+                        <input type="text" name="version_name" class="form-control" placeholder="e.g. Update v1" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Upload APK File</label>
+                        <label class="form-label">Select APK File</label>
                         <input type="file" name="apk_file" class="form-control" accept=".apk" required id="apkFileInput">
                     </div>
-                    <div class="progress d-none mb-3" id="apkUploadProgress">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%">0%</div>
+                    <div class="progress d-none mb-3" style="height: 25px;" id="apkUploadProgress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%">0%</div>
                     </div>
+                    <button type="submit" name="add_version" class="btn btn-primary w-100" id="uploadApkBtn">
+                        <i class="fas fa-upload me-2"></i> Start Upload
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Uploaded Files History</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Upload Date</th>
+                                <th>Status</th>
+                                <th>Link</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($version_list)): ?>
+                            <tr><td colspan="4" class="text-center">No files uploaded yet.</td></tr>
+                            <?php endif; ?>
+                            <?php foreach($version_list as $v): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($v['version_name']); ?></td>
+                                <td><?php echo date('Y-m-d H:i', strtotime($v['created_at'])); ?></td>
+                                <td>
+                                    <?php if ($v['is_latest']): ?>
+                                        <span class="badge bg-success">Live</span>
+                                    <?php else: ?>
+                                        <span class="badge bg-secondary">Old</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <a href="<?php echo $v['apk_url']; ?>" target="_blank" class="btn btn-sm btn-info text-white">
+                                        <i class="fas fa-external-link-alt"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
-                <div class="modal-footer">
-                    <button type="submit" name="add_version" class="btn btn-primary" id="uploadApkBtn">Upload & Save</button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-document.querySelector('form[enctype="multipart/form-data"]').onsubmit = function(e) {
+document.getElementById('apkUploadForm').onsubmit = function(e) {
     const fileInput = document.getElementById('apkFileInput');
     if (fileInput.files.length > 0) {
         e.preventDefault();
@@ -116,6 +134,7 @@ document.querySelector('form[enctype="multipart/form-data"]').onsubmit = functio
         
         progressBar.classList.remove('d-none');
         uploadBtn.disabled = true;
+        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Uploading...';
         
         xhr.upload.addEventListener('progress', function(e) {
             if (e.lengthComputable) {
@@ -127,7 +146,12 @@ document.querySelector('form[enctype="multipart/form-data"]').onsubmit = functio
         
         xhr.onreadystatechange = function() {
             if (xhr.readyState === 4) {
-                location.reload();
+                if (xhr.status === 200) {
+                    window.location.href = window.location.href + '&msg=success';
+                } else {
+                    alert('Upload failed. Please check file size limits.');
+                    location.reload();
+                }
             }
         };
         
