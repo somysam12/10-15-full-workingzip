@@ -2,11 +2,13 @@
 // config.php - Unified Config for Replit and CPanel
 session_start();
 
+// --- CRITICAL DATABASE CREDENTIALS ---
 $db_host = 'localhost';
 $db_name = 'silentmu_app';
 $db_user = 'silentmu_isam';
 $db_pass = '844121@LuvKush';
 
+// --- CONNECTION LOGIC ---
 if (getenv('DATABASE_URL')) {
     // Replit / Postgres Environment
     $db_url = parse_url(getenv('DATABASE_URL'));
@@ -17,10 +19,6 @@ if (getenv('DATABASE_URL')) {
     $dsn = "pgsql:host=$db_host;dbname=$db_name";
 } else {
     // cPanel / MySQL Environment
-    $db_host = 'localhost';
-    $db_name = 'silentmu_app';
-    $db_user = 'silentmu_isam';
-    $db_pass = '844121@LuvKush';
     $dsn = "mysql:host=$db_host;dbname=$db_name;charset=utf8mb4";
 }
 
@@ -29,28 +27,33 @@ try {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    die("Connection failed: " . $e->getMessage());
+    // Output error for debugging
+    header('Content-Type: text/plain');
+    die("Database Connection Error: " . $e->getMessage());
 }
 
+// --- CORE UTILITIES ---
 function getConfig($key, $default = '') {
     global $pdo;
-    if (!$pdo) return $default;
-    $stmt = $pdo->prepare("SELECT config_value FROM app_config WHERE config_key = ?");
-    $stmt->execute([$key]);
-    $res = $stmt->fetch();
-    return $res ? $res['config_value'] : $default;
+    try {
+        $stmt = $pdo->prepare("SELECT config_value FROM app_config WHERE config_key = ?");
+        $stmt->execute([$key]);
+        $res = $stmt->fetch();
+        return $res ? $res['config_value'] : $default;
+    } catch (Exception $e) { return $default; }
 }
 
 function setConfig($key, $value) {
     global $pdo;
-    if (!$pdo) return;
-    $is_postgres = (getenv('DATABASE_URL')) ? true : false;
-    if ($is_postgres) {
-        $stmt = $pdo->prepare("INSERT INTO app_config (config_key, config_value) VALUES (?, ?) ON CONFLICT (config_key) DO UPDATE SET config_value = EXCLUDED.config_value");
-    } else {
-        $stmt = $pdo->prepare("INSERT INTO app_config (config_key, config_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE config_value = VALUES(config_value)");
-    }
-    $stmt->execute([$key, $value]);
+    try {
+        $is_postgres = (getenv('DATABASE_URL')) ? true : false;
+        if ($is_postgres) {
+            $stmt = $pdo->prepare("INSERT INTO app_config (config_key, config_value) VALUES (?, ?) ON CONFLICT (config_key) DO UPDATE SET config_value = EXCLUDED.config_value");
+        } else {
+            $stmt = $pdo->prepare("INSERT INTO app_config (config_key, config_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE config_value = VALUES(config_value)");
+        }
+        $stmt->execute([$key, $value]);
+    } catch (Exception $e) {}
 }
 
 function isLoggedIn() { return isset($_SESSION['admin_id']); }
@@ -58,18 +61,20 @@ function requireLogin() { if (!isLoggedIn()) { header("Location: login.php"); ex
 
 function getAllConfig() {
     global $pdo;
-    if (!$pdo) return [];
-    $stmt = $pdo->query("SELECT config_key, config_value FROM app_config");
-    $config = [];
-    while ($row = $stmt->fetch()) { $config[$row['config_key']] = $row['config_value']; }
-    return $config;
+    try {
+        $stmt = $pdo->query("SELECT config_key, config_value FROM app_config");
+        $config = [];
+        while ($row = $stmt->fetch()) { $config[$row['config_key']] = $row['config_value']; }
+        return $config;
+    } catch (Exception $e) { return []; }
 }
 
 function getAllPanels() {
     global $pdo;
-    if (!$pdo) return [];
-    $stmt = $pdo->query("SELECT * FROM panels ORDER BY id ASC");
-    return $stmt->fetchAll();
+    try {
+        $stmt = $pdo->query("SELECT * FROM panels ORDER BY id ASC");
+        return $stmt->fetchAll();
+    } catch (Exception $e) { return []; }
 }
 
 function getActiveAnnouncement() {
@@ -77,19 +82,20 @@ function getActiveAnnouncement() {
     if (!$pdo) return null;
     $app_type = $_SESSION['app_type'] ?? 'all';
     
-    // Completely safe query first
     try {
+        // Safe check for column existence and value
         $sql = "SELECT * FROM announcements WHERE active = 1 ORDER BY id DESC LIMIT 1";
         $stmt = $pdo->query($sql);
         $ann = $stmt->fetch();
         
-        // If we found an announcement, check if it has the app_type column and if it matches
-        if ($ann && isset($ann['app_type'])) {
-            if ($ann['app_type'] !== 'all' && $ann['app_type'] !== $app_type) {
-                // If it doesn't match, try to find one that does
-                $stmt = $pdo->prepare("SELECT * FROM announcements WHERE active = 1 AND (app_type = ? OR app_type = 'all') ORDER BY id DESC LIMIT 1");
-                $stmt->execute([$app_type]);
-                return $stmt->fetch();
+        if ($ann) {
+            // If app_type column exists, filter by it
+            if (array_key_exists('app_type', $ann)) {
+                if ($ann['app_type'] !== 'all' && $ann['app_type'] !== $app_type) {
+                    $stmt = $pdo->prepare("SELECT * FROM announcements WHERE active = 1 AND (app_type = ? OR app_type = 'all') ORDER BY id DESC LIMIT 1");
+                    $stmt->execute([$app_type]);
+                    return $stmt->fetch();
+                }
             }
         }
         return $ann;

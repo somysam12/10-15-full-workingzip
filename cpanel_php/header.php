@@ -1,8 +1,10 @@
 <?php
 // header.php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 require_once 'config.php';
 $ann = getActiveAnnouncement();
-$app_enabled = getConfig('app_enabled', 'true') === 'true';
+$app_status = getConfig('app_status', 'ON');
 ?>
 <!DOCTYPE html>
 <html lang="en">
