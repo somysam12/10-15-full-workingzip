@@ -19,16 +19,18 @@ $app_enabled = getConfig('app_enabled', 'true') === 'true';
             --secondary-color: #764ba2;
             --success-color: #1cc88a;
             --dark-blue: #0A0E27;
-            --bg-light: #f4f7fe;
+            --dark-card: #151936;
+            --bg-dark: #070a1f;
+            --text-main: #e2e8f0;
             --sidebar-width: 260px;
         }
         
         body { 
-            background: var(--bg-light); 
+            background: var(--bg-dark); 
             font-family: 'Inter', sans-serif;
             margin: 0;
             padding: 0;
-            color: #2d3748;
+            color: var(--text-main);
         }
         
         .sidebar {
@@ -38,7 +40,8 @@ $app_enabled = getConfig('app_enabled', 'true') === 'true';
             position: fixed;
             width: var(--sidebar-width);
             z-index: 1000;
-            box-shadow: 4px 0 10px rgba(0,0,0,0.05);
+            box-shadow: 4px 0 10px rgba(0,0,0,0.2);
+            border-right: 1px solid rgba(255,255,255,0.05);
         }
         
         .main-content {
@@ -72,22 +75,53 @@ $app_enabled = getConfig('app_enabled', 'true') === 'true';
         .nav-link i { font-size: 1.1rem; width: 25px; margin-right: 15px; }
 
         .card {
-            border: none;
+            background: var(--dark-card);
+            border: 1px solid rgba(255,255,255,0.05);
             border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
             overflow: hidden;
+            color: var(--text-main);
         }
         
         .card-header {
-            background: white;
-            border-bottom: 1px solid #edf2f7;
+            background: rgba(255,255,255,0.02);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
             padding: 20px 25px;
             font-weight: 700;
-            color: #1a202c;
+            color: white;
         }
 
-        .btn { border-radius: 10px; padding: 10px 20px; font-weight: 600; }
+        .h3, h1, h2, h3, h4, h5, h6 { color: white; }
+        .text-gray-800 { color: white !important; }
+        .text-muted { color: #a0aec0 !important; }
+
+        .btn { border-radius: 10px; padding: 10px 20px; font-weight: 600; transition: all 0.2s; }
         .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+
+        .table { color: var(--text-main); }
+        .table-bordered { border-color: rgba(255,255,255,0.1); }
+        .table-bordered td, .table-bordered th { border-color: rgba(255,255,255,0.1); }
+        
+        .form-control, .form-select {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            border-radius: 10px;
+        }
+        .form-control:focus {
+            background: rgba(0,0,0,0.3);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .navbar {
+            background: var(--dark-blue) !important;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            margin-bottom: 30px !important;
+        }
+        .navbar-text { color: rgba(255,255,255,0.8) !important; }
     </style>
 </head>
 <body>

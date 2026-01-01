@@ -19,15 +19,15 @@ $app_status = getConfig('app_status', 'ON');
 <div class="row">
     <!-- Total Apps Card -->
     <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-primary h-100 py-2">
+        <div class="card h-100 py-2 border-start border-primary border-4">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Apps</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $total_apps; ?></div>
+                        <div class="h5 mb-0 font-weight-bold text-white"><?php echo $total_apps; ?></div>
                     </div>
                     <div class="col-auto">
-                        <i class="fas fa-mobile-screen fa-2x text-gray-300"></i>
+                        <i class="fas fa-mobile-screen fa-2x text-primary opacity-50"></i>
                     </div>
                 </div>
             </div>
@@ -36,15 +36,15 @@ $app_status = getConfig('app_status', 'ON');
 
     <!-- Total Downloads Card -->
     <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-success h-100 py-2">
+        <div class="card h-100 py-2 border-start border-success border-4">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Downloads</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $total_downloads; ?></div>
+                        <div class="h5 mb-0 font-weight-bold text-white"><?php echo $total_downloads; ?></div>
                     </div>
                     <div class="col-auto">
-                        <i class="fas fa-download fa-2x text-gray-300"></i>
+                        <i class="fas fa-download fa-2x text-success opacity-50"></i>
                     </div>
                 </div>
             </div>
@@ -53,15 +53,15 @@ $app_status = getConfig('app_status', 'ON');
 
     <!-- Active Panels Card -->
     <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-info h-100 py-2">
+        <div class="card h-100 py-2 border-start border-info border-4">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Active Panels</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $total_panels; ?></div>
+                        <div class="h5 mb-0 font-weight-bold text-white"><?php echo $total_panels; ?></div>
                     </div>
                     <div class="col-auto">
-                        <i class="fas fa-layer-group fa-2x text-gray-300"></i>
+                        <i class="fas fa-layer-group fa-2x text-info opacity-50"></i>
                     </div>
                 </div>
             </div>
