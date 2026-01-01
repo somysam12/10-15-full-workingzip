@@ -1,95 +1,128 @@
 <?php
 require_once 'header.php';
 
-$all_config = getAllConfig();
+$upload_dir = 'uploads/branding/';
+if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
 
+$error_msg = "";
+$success_msg = "";
+
+// Handle Uploads
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['update_branding'])) {
-        setConfig('theme_mode', $_POST['theme_mode']);
-        setConfig('theme_locked', isset($_POST['theme_locked']) ? 'yes' : 'no');
-        setConfig('splash_text', $_POST['splash_text']);
-        setConfig('splash_text_color', $_POST['splash_text_color']);
-        setConfig('splash_text_position', $_POST['splash_text_position']);
-        setConfig('bg_color', $_POST['bg_color']);
-        $msg = "Branding & Theme updated!";
-    }
-    
-    if (isset($_FILES['splash_logo']) && $_FILES['splash_logo']['error'] === 0) {
-        move_uploaded_file($_FILES['splash_logo']['tmp_name'], __DIR__ . '/splash_logo.png');
-        setConfig('splash_logo_url', 'splash_logo.png');
-        $msg = "Splash logo uploaded!";
+    try {
+        if (isset($_POST['update_main_logo'])) {
+            if (!isset($_FILES['main_logo']) || $_FILES['main_logo']['error'] !== UPLOAD_ERR_OK) {
+                throw new Exception("Logo upload failed.");
+            }
+            $file_ext = pathinfo($_FILES['main_logo']['name'], PATHINFO_EXTENSION);
+            $file_name = 'main_logo_' . time() . '.' . $file_ext;
+            $target = $upload_dir . $file_name;
+            
+            if (move_uploaded_file($_FILES['main_logo']['tmp_name'], $target)) {
+                $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
+                $base_path = dirname($_SERVER['SCRIPT_NAME']);
+                if ($base_path === DIRECTORY_SEPARATOR || $base_path === '.') $base_path = '';
+                $url = $protocol . "://" . $_SERVER['HTTP_HOST'] . $base_path . '/' . $target;
+                
+                $stmt = $pdo->prepare("INSERT INTO app_config (config_key, config_value) VALUES ('main_logo_url', ?) ON DUPLICATE KEY UPDATE config_value = ?");
+                $stmt->execute([$url, $url]);
+                $success_msg = "Main logo updated!";
+            }
+        } elseif (isset($_POST['update_app_icon'])) {
+            $app_id = (int)$_POST['app_id'];
+            if (!isset($_FILES['app_icon']) || $_FILES['app_icon']['error'] !== UPLOAD_ERR_OK) {
+                throw new Exception("Icon upload failed.");
+            }
+            $file_ext = pathinfo($_FILES['app_icon']['name'], PATHINFO_EXTENSION);
+            $file_name = 'app_icon_' . $app_id . '_' . time() . '.' . $file_ext;
+            $target = $upload_dir . $file_name;
+            
+            if (move_uploaded_file($_FILES['app_icon']['tmp_name'], $target)) {
+                $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
+                $base_path = dirname($_SERVER['SCRIPT_NAME']);
+                if ($base_path === DIRECTORY_SEPARATOR || $base_path === '.') $base_path = '';
+                $url = $protocol . "://" . $_SERVER['HTTP_HOST'] . $base_path . '/' . $target;
+                
+                $stmt = $pdo->prepare("UPDATE apps SET iconUrl = ? WHERE id = ?");
+                $stmt->execute([$url, $app_id]);
+                $success_msg = "App icon updated!";
+            }
+        }
+    } catch (Exception $e) {
+        $error_msg = $e->getMessage();
     }
 }
 
 $all_config = getAllConfig();
+$apps = $pdo->query("SELECT id, app_name, iconUrl FROM apps ORDER BY app_name ASC")->fetchAll();
 ?>
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800">Theme & Splash Manager</h1>
-</div>
 
-<div class="row">
-    <div class="col-lg-6">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Theme Control</h6>
-            </div>
-            <div class="card-body">
-                <form method="POST">
-                    <div class="mb-3">
-                        <label class="form-label">Theme Mode</label>
-                        <select name="theme_mode" class="form-select">
-                            <option value="Light" <?php echo ($all_config['theme_mode'] ?? '') == 'Light' ? 'selected' : ''; ?>>Light</option>
-                            <option value="Dark" <?php echo ($all_config['theme_mode'] ?? '') == 'Dark' ? 'selected' : ''; ?>>Dark</option>
-                            <option value="System" <?php echo ($all_config['theme_mode'] ?? '') == 'System' ? 'selected' : ''; ?>>System</option>
-                        </select>
-                    </div>
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" name="theme_locked" <?php echo ($all_config['theme_locked'] ?? 'no') == 'yes' ? 'checked' : ''; ?>>
-                        <label class="form-check-label">Lock Theme (Users can't change)</label>
-                    </div>
-                    <hr>
-                    <div class="mb-3">
-                        <label class="form-label">Welcome Text</label>
-                        <input type="text" name="splash_text" class="form-control" value="<?php echo htmlspecialchars($all_config['splash_text'] ?? ''); ?>">
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Text Color</label>
-                            <input type="color" name="splash_text_color" class="form-control form-control-color w-100" value="<?php echo $all_config['splash_text_color'] ?? '#ffffff'; ?>">
+<div class="container-fluid py-4">
+    <h1 class="h3 mb-4 text-white">App Branding & Icons</h1>
+
+    <?php if ($error_msg): ?><div class="alert alert-danger"><?php echo $error_msg; ?></div><?php endif; ?>
+    <?php if ($success_msg): ?><div class="alert alert-success"><?php echo $success_msg; ?></div><?php endif; ?>
+
+    <div class="row">
+        <!-- Main Logo Section -->
+        <div class="col-md-4 mb-4">
+            <div class="card bg-dark border-secondary shadow">
+                <div class="card-header bg-dark border-secondary text-primary fw-bold">Main Banner Logo</div>
+                <div class="card-body text-center">
+                    <?php if (!empty($all_config['main_logo_url'])): ?>
+                        <div class="mb-3 p-3 bg-white rounded">
+                            <img src="<?php echo htmlspecialchars($all_config['main_logo_url']); ?>" class="img-fluid" style="max-height: 100px;">
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Text Position</label>
-                            <select name="splash_text_position" class="form-select">
-                                <option value="top" <?php echo ($all_config['splash_text_position'] ?? '') == 'top' ? 'selected' : ''; ?>>Top</option>
-                                <option value="center" <?php echo ($all_config['splash_text_position'] ?? 'center') == 'center' ? 'selected' : ''; ?>>Center</option>
-                                <option value="bottom" <?php echo ($all_config['splash_text_position'] ?? '') == 'bottom' ? 'selected' : ''; ?>>Bottom</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Background Color</label>
-                        <input type="color" name="bg_color" class="form-control form-control-color w-100" value="<?php echo $all_config['bg_color'] ?? '#0A0E27'; ?>">
-                    </div>
-                    <button type="submit" name="update_branding" class="btn btn-primary">Save Theme Settings</button>
-                </form>
+                    <?php else: ?>
+                        <div class="py-4 text-white-50 small">No logo set</div>
+                    <?php endif; ?>
+                    
+                    <form method="POST" enctype="multipart/form-data">
+                        <input type="file" name="main_logo" class="form-control form-control-sm bg-dark text-white border-secondary mb-2" accept="image/*" required>
+                        <button type="submit" name="update_main_logo" class="btn btn-primary btn-sm w-100">Upload Main Logo</button>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="col-lg-6">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Splash Assets</h6>
-            </div>
-            <div class="card-body text-center">
-                <h6>Current Splash Logo</h6>
-                <img src="splash_logo.png?v=<?php echo time(); ?>" class="img-fluid border mb-3" style="max-height: 150px; background: <?php echo $all_config['bg_color'] ?? '#eee'; ?>;">
-                <form method="POST" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <input type="file" name="splash_logo" class="form-control" accept="image/*">
+        <!-- App Icons Section -->
+        <div class="col-md-8">
+            <div class="card bg-dark border-secondary shadow">
+                <div class="card-header bg-dark border-secondary text-primary fw-bold">Individual App Icons</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover mb-0">
+                            <thead class="small text-uppercase text-white-50">
+                                <tr>
+                                    <th class="border-secondary px-4">App Name</th>
+                                    <th class="border-secondary text-center">Current Icon</th>
+                                    <th class="border-secondary px-4">Update Icon</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($apps as $app): ?>
+                                    <tr>
+                                        <td class="px-4 align-middle text-white fw-bold"><?php echo htmlspecialchars($app['app_name']); ?></td>
+                                        <td class="text-center align-middle">
+                                            <?php if (!empty($app['iconUrl'])): ?>
+                                                <img src="<?php echo htmlspecialchars($app['iconUrl']); ?>" class="rounded border border-secondary" style="width: 40px; height: 40px; object-fit: cover;">
+                                            <?php else: ?>
+                                                <span class="text-white-50 small">None</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="px-4 align-middle">
+                                            <form method="POST" enctype="multipart/form-data" class="d-flex gap-2">
+                                                <input type="hidden" name="app_id" value="<?php echo $app['id']; ?>">
+                                                <input type="file" name="app_icon" class="form-control form-control-sm bg-dark text-white border-secondary" accept="image/*" required>
+                                                <button type="submit" name="update_app_icon" class="btn btn-info btn-sm text-white">Upload</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
                     </div>
-                    <button type="submit" class="btn btn-outline-primary w-100">Upload Splash Logo</button>
-                </form>
+                </div>
             </div>
         </div>
     </div>

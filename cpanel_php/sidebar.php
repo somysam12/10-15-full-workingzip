@@ -18,6 +18,9 @@
         <a href="announcements.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'announcements.php' ? 'active' : ''; ?>">
             <i class="fas fa-bullhorn"></i> Announcements
         </a>
+        <a href="branding.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'branding.php' ? 'active' : ''; ?>">
+            <i class="fas fa-palette"></i> Branding & Icons
+        </a>
         <a href="analytics.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'analytics.php' ? 'active' : ''; ?>">
             <i class="fas fa-chart-line"></i> Analytics
         </a>
