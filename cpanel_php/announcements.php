@@ -10,10 +10,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $target_app = $_POST['target_app'];
         
         // Deactivate old announcements for the same target
-        $pdo->prepare("UPDATE announcements SET active = 0 WHERE app_type = ? OR app_type = 'all'")->execute([$target_app]);
+        try {
+            $pdo->prepare("UPDATE announcements SET active = 0 WHERE app_type = ? OR app_type = 'all'")->execute([$target_app]);
+        } catch (Exception $e) {
+            $pdo->prepare("UPDATE announcements SET active = 0")->execute();
+        }
         
-        $stmt = $pdo->prepare("INSERT INTO announcements (message, title, button_text, button_link, type, start_time, end_time, app_type, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)");
-        $stmt->execute([$_POST['ann_text'], $_POST['ann_title'], $_POST['btn_text'], $_POST['btn_link'], $_POST['ann_type'], $start_time, $end_time, $target_app]);
+        try {
+            $stmt = $pdo->prepare("INSERT INTO announcements (message, title, button_text, button_link, type, start_time, end_time, app_type, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)");
+            $stmt->execute([$_POST['ann_text'], $_POST['ann_title'], $_POST['btn_text'], $_POST['btn_link'], $_POST['ann_type'], $start_time, $end_time, $target_app]);
+        } catch (Exception $e) {
+            $stmt = $pdo->prepare("INSERT INTO announcements (message, title, button_text, button_link, type, start_time, end_time, active) VALUES (?, ?, ?, ?, ?, ?, ?, 1)");
+            $stmt->execute([$_POST['ann_text'], $_POST['ann_title'], $_POST['btn_text'], $_POST['btn_link'], $_POST['ann_type'], $start_time, $end_time]);
+        }
         $msg = "Announcement successfully published for " . ($target_app === 'all' ? 'All Apps' : ucfirst($target_app) . ' App') . "!";
     }
     if (isset($_POST['delete_announcement'])) {
