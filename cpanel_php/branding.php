@@ -65,60 +65,86 @@ $apps = $pdo->query("SELECT id, app_name, iconUrl FROM apps ORDER BY app_name AS
 
     <div class="row">
         <!-- Main Logo Section -->
-        <div class="col-md-4 mb-4">
-            <div class="card bg-dark border-secondary shadow">
-                <div class="card-header bg-dark border-secondary text-primary fw-bold">Main Banner Logo</div>
+        <div class="col-md-5 mb-4">
+            <div class="card bg-dark border-secondary shadow-lg">
+                <div class="card-header bg-dark border-secondary py-3">
+                    <h5 class="m-0 font-weight-bold text-primary"><i class="fas fa-image me-2"></i>Main Banner Logo</h5>
+                </div>
                 <div class="card-body text-center">
-                    <?php if (!empty($all_config['main_logo_url'])): ?>
-                        <div class="mb-3 p-3 bg-white rounded">
-                            <img src="<?php echo htmlspecialchars($all_config['main_logo_url']); ?>" class="img-fluid" style="max-height: 100px;">
-                        </div>
-                    <?php else: ?>
-                        <div class="py-4 text-white-50 small">No logo set</div>
-                    <?php endif; ?>
+                    <p class="text-white-50 small mb-4">This logo appears at the top of your Android app.</p>
+                    <div class="mb-4 p-4 bg-light rounded shadow-sm d-flex align-items-center justify-content-center" style="min-height: 150px; background-image: linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px;">
+                        <?php if (!empty($all_config['main_logo_url'])): ?>
+                            <img src="<?php echo htmlspecialchars($all_config['main_logo_url']); ?>" class="img-fluid" style="max-height: 120px;">
+                        <?php else: ?>
+                            <div class="text-muted">
+                                <i class="fas fa-photo-film fa-3x mb-2"></i><br>
+                                <span>No Logo Uploaded</span>
+                            </div>
+                        <?php endif; ?>
+                    </div>
                     
-                    <form method="POST" enctype="multipart/form-data">
-                        <input type="file" name="main_logo" class="form-control form-control-sm bg-dark text-white border-secondary mb-2" accept="image/*" required>
-                        <button type="submit" name="update_main_logo" class="btn btn-primary btn-sm w-100">Upload Main Logo</button>
+                    <form method="POST" enctype="multipart/form-data" class="border-top border-secondary pt-4">
+                        <div class="mb-3 text-start">
+                            <label class="form-label text-white-50 small">Choose Logo File (PNG/JPG)</label>
+                            <input type="file" name="main_logo" class="form-control bg-dark text-white border-secondary" accept="image/*" required>
+                        </div>
+                        <button type="submit" name="update_main_logo" class="btn btn-primary w-100 py-2 fw-bold">
+                            <i class="fas fa-cloud-arrow-up me-2"></i>Update Main Logo
+                        </button>
                     </form>
                 </div>
             </div>
         </div>
 
         <!-- App Icons Section -->
-        <div class="col-md-8">
-            <div class="card bg-dark border-secondary shadow">
-                <div class="card-header bg-dark border-secondary text-primary fw-bold">Individual App Icons</div>
+        <div class="col-md-7">
+            <div class="card bg-dark border-secondary shadow-lg">
+                <div class="card-header bg-dark border-secondary py-3">
+                    <h5 class="m-0 font-weight-bold text-primary"><i class="fas fa-th-large me-2"></i>Individual App Icons</h5>
+                </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-dark table-hover mb-0">
-                            <thead class="small text-uppercase text-white-50">
+                        <table class="table table-dark table-hover mb-0 align-middle">
+                            <thead class="small text-uppercase text-white-50 bg-black">
                                 <tr>
-                                    <th class="border-secondary px-4">App Name</th>
+                                    <th class="border-secondary px-4 py-3">App Name</th>
                                     <th class="border-secondary text-center">Current Icon</th>
-                                    <th class="border-secondary px-4">Update Icon</th>
+                                    <th class="border-secondary px-4">Upload New Icon</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($apps as $app): ?>
-                                    <tr>
-                                        <td class="px-4 align-middle text-white fw-bold"><?php echo htmlspecialchars($app['app_name']); ?></td>
-                                        <td class="text-center align-middle">
-                                            <?php if (!empty($app['iconUrl'])): ?>
-                                                <img src="<?php echo htmlspecialchars($app['iconUrl']); ?>" class="rounded border border-secondary" style="width: 40px; height: 40px; object-fit: cover;">
-                                            <?php else: ?>
-                                                <span class="text-white-50 small">None</span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td class="px-4 align-middle">
-                                            <form method="POST" enctype="multipart/form-data" class="d-flex gap-2">
-                                                <input type="hidden" name="app_id" value="<?php echo $app['id']; ?>">
-                                                <input type="file" name="app_icon" class="form-control form-control-sm bg-dark text-white border-secondary" accept="image/*" required>
-                                                <button type="submit" name="update_app_icon" class="btn btn-info btn-sm text-white">Upload</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
+                                <?php if (empty($apps)): ?>
+                                    <tr><td colspan="3" class="text-center py-5 text-white-50">No apps found. Create an app first in APK Management.</td></tr>
+                                <?php else: ?>
+                                    <?php foreach ($apps as $app): ?>
+                                        <tr>
+                                            <td class="px-4">
+                                                <div class="text-white fw-bold"><?php echo htmlspecialchars($app['app_name']); ?></div>
+                                                <small class="text-white-50">ID: #<?php echo $app['id']; ?></small>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="d-inline-block p-1 bg-secondary rounded shadow-sm">
+                                                    <?php if (!empty($app['iconUrl'])): ?>
+                                                        <img src="<?php echo htmlspecialchars($app['iconUrl']); ?>" class="rounded" style="width: 50px; height: 50px; object-fit: cover;">
+                                                    <?php else: ?>
+                                                        <div class="rounded bg-dark d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                                            <i class="fas fa-image text-white-50"></i>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </td>
+                                            <td class="px-4">
+                                                <form method="POST" enctype="multipart/form-data" class="input-group input-group-sm">
+                                                    <input type="hidden" name="app_id" value="<?php echo $app['id']; ?>">
+                                                    <input type="file" name="app_icon" class="form-control bg-dark text-white border-secondary" accept="image/*" required>
+                                                    <button type="submit" name="update_app_icon" class="btn btn-info text-white">
+                                                        <i class="fas fa-upload"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>

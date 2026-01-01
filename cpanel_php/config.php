@@ -70,7 +70,19 @@ function getAllPanels() {
 function getActiveAnnouncement() {
     global $pdo;
     if (!$pdo) return null;
-    $stmt = $pdo->query("SELECT * FROM announcements WHERE active = 1 ORDER BY id DESC LIMIT 1");
-    return $stmt->fetch();
+    $is_postgres = (getenv('DATABASE_URL')) ? true : false;
+    $active_val = $is_postgres ? 1 : 1; // Both MySQL and Postgres can handle 1, but Postgres needs casting if the col is boolean
+    $sql = "SELECT * FROM announcements WHERE active = 1 ORDER BY id DESC LIMIT 1";
+    try {
+        $stmt = $pdo->query($sql);
+        return $stmt->fetch();
+    } catch (PDOException $e) {
+        // Fallback for Postgres if col is boolean
+        if (strpos($e->getMessage(), 'boolean = integer') !== false) {
+            $stmt = $pdo->query("SELECT * FROM announcements WHERE active = TRUE ORDER BY id DESC LIMIT 1");
+            return $stmt->fetch();
+        }
+        throw $e;
+    }
 }
 ?>
