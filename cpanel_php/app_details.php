@@ -51,20 +51,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_version'])) {
                 
                 // FINAL PATH FIX FOR CPANEL
                 $host = $_SERVER['HTTP_HOST'];
-                $script_path = $_SERVER['SCRIPT_NAME']; // e.g. /app_details.php or /folder/app_details.php
+                $script_path = $_SERVER['SCRIPT_NAME'];
                 $current_dir = dirname($script_path);
                 if ($current_dir === DIRECTORY_SEPARATOR || $current_dir === '.') $current_dir = '';
                 
                 $apk_url = $protocol . "://" . $host . $current_dir . '/' . $target_path;
                 
                 try {
-                    // Use 0 and 1 for MySQL compatibility
+                    // FORCE INTEGER FOR CPANEL/MYSQL
                     $pdo->prepare("UPDATE app_versions SET is_latest = 0 WHERE app_id = ?")->execute([$app_id]);
                     $stmt = $pdo->prepare("INSERT INTO app_versions (app_id, version_name, apk_url, is_latest, version_code, created_at) VALUES (?, ?, ?, 1, ?, NOW())");
-                    $stmt->execute([$app_id, $v_name, $apk_url, time()]);
+                    $stmt->execute([$app_id, $v_name, $apk_url, (int)time()]);
                     
-                    // Final confirmation log
-                    error_log("SUCCESS: Saved APK history for app_id: $app_id. Name: $v_name");
+                    // CLEAR ANY CACHE OR BUFFERS
+                    if (ob_get_length()) ob_clean();
                     
                     if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
                         echo json_encode(['success' => true]);
@@ -117,12 +117,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_version'])) {
 }
 
 // 3. Fetch History
-$history_stmt = $pdo->prepare("SELECT id, version_name, apk_url, is_latest, created_at FROM app_versions WHERE app_id = ? ORDER BY id DESC");
-$history_stmt->execute([$app_id]);
-$history = $history_stmt->fetchAll();
-
-// Log count for debugging
-error_log("History found for app_id $app_id: " . count($history));
+$history = [];
+try {
+    $history_stmt = $pdo->prepare("SELECT id, version_name, apk_url, is_latest, created_at FROM app_versions WHERE app_id = ? ORDER BY id DESC");
+    $history_stmt->execute([$app_id]);
+    $history = $history_stmt->fetchAll();
+    
+    // Forced logging to see what is happening in cPanel error logs
+    if (empty($history)) {
+        error_log("DATABASE_EMPTY: No versions found for app_id: " . $app_id);
+    }
+} catch (Exception $e) {
+    error_log("DATABASE_ERROR: " . $e->getMessage());
+    $error_msg = "Database Error: " . $e->getMessage();
+}
 
 if (isset($_GET['msg']) && $_GET['msg'] === 'uploaded') $success_msg = "APK Uploaded successfully!";
 ?>

@@ -48,13 +48,12 @@ CREATE TABLE IF NOT EXISTS apps (
 
 CREATE TABLE IF NOT EXISTS app_versions (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    app_id INT,
-    version_name VARCHAR(255),
-    apk_url VARCHAR(500),
-    is_latest TINYINT(1) DEFAULT 0,
-    version_code BIGINT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (app_id) REFERENCES apps(id)
+    app_id INT NOT NULL,
+    version_name VARCHAR(255) NOT NULL,
+    apk_url VARCHAR(500) NOT NULL,
+    is_latest INT DEFAULT 0,
+    version_code BIGINT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS download_stats (
