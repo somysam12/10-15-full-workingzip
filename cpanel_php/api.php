@@ -7,9 +7,15 @@ try {
     
     // Filter announcement by app_type if provided
     $req_app_type = $_GET['app_type'] ?? 'all';
-    $stmt_ann = $pdo->prepare("SELECT * FROM announcements WHERE active = 1 AND (app_type = ? OR app_type = 'all') ORDER BY id DESC LIMIT 1");
-    $stmt_ann->execute([$req_app_type]);
-    $ann = $stmt_ann->fetch();
+    try {
+        $stmt_ann = $pdo->prepare("SELECT * FROM announcements WHERE active = 1 AND (app_type = ? OR app_type = 'all') ORDER BY id DESC LIMIT 1");
+        $stmt_ann->execute([$req_app_type]);
+        $ann = $stmt_ann->fetch();
+    } catch (Exception $e) {
+        // Fallback if app_type column doesn't exist yet in the live DB
+        $stmt_ann = $pdo->query("SELECT * FROM announcements WHERE active = 1 ORDER BY id DESC LIMIT 1");
+        $ann = $stmt_ann->fetch();
+    }
 
     // The only change is ensuring latestVersion is a string
     $apps_stmt = $pdo->query("

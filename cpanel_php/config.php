@@ -78,23 +78,20 @@ function getActiveAnnouncement() {
     $is_postgres = (getenv('DATABASE_URL')) ? true : false;
     $app_type = $_SESSION['app_type'] ?? 'all';
     
-    // Determine context: if it's an API call, we might not have a session, 
-    // but the API should probably receive the app_type as a parameter.
-    // For now, let's allow it to be filtered if provided in session or default to 'all'
-    
-    $sql = "SELECT * FROM announcements WHERE active = 1 AND (app_type = ? OR app_type = 'all') ORDER BY id DESC LIMIT 1";
     try {
+        $sql = "SELECT * FROM announcements WHERE active = 1 AND (app_type = ? OR app_type = 'all') ORDER BY id DESC LIMIT 1";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$app_type]);
         return $stmt->fetch();
     } catch (PDOException $e) {
-        // Fallback for Postgres if col is boolean
-        if (strpos($e->getMessage(), 'boolean = integer') !== false) {
-            $stmt = $pdo->prepare("SELECT * FROM announcements WHERE active = TRUE AND (app_type = ? OR app_type = 'all') ORDER BY id DESC LIMIT 1");
-            $stmt->execute([$app_type]);
+        // Fallback for missing app_type column or Postgres boolean issues
+        try {
+            $sql = "SELECT * FROM announcements WHERE active = 1 ORDER BY id DESC LIMIT 1";
+            $stmt = $pdo->query($sql);
             return $stmt->fetch();
+        } catch (Exception $e2) {
+            return null;
         }
-        throw $e;
     }
 }
 ?>
