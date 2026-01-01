@@ -1,0 +1,79 @@
+Important: Website Changes Required
+To power these new features, you need to make some small but crucial changes to your website's database and API.
+1. Database Changes
+You need to add two new columns to your apps table in your database. Run the following SQL command in your phpMyAdmin or other database tool:
+C
+ALTER TABLE apps
+ADD COLUMN packageName VARCHAR(255) NULL,
+ADD COLUMN iconUrl VARCHAR(500) NULL;
+•
+packageName: This is essential. It's the unique ID of an Android app (e.g., com.tencent.ig). You must fill this in for each app on your website for the "Open" and status-checking features to work.
+•
+iconUrl: This is the direct URL to the logo for each specific app.
+2. api.php Update
+You need to update your api.php file to include the new mainLogoUrl and the new per-app fields (packageName and iconUrl).
+Please replace the entire content of your api.php file with this new version:
+Resource XML
+<?php
+require_once 'config.php';header('Content-Type: application/json');
+
+try {
+    $all_config = getAllConfig();
+    $ann = getActiveAnnouncement();
+
+    $apps_stmt = $pdo->query("
+        SELECT
+            a.id,
+            a.app_name AS name,
+            a.packageName,      -- Added
+            a.iconUrl,          -- Added
+            v.version_name AS latestVersion,
+            v.apk_url AS downloadUrl,
+            c.name AS category,
+            v.version_code AS versionCode,
+            v.created_at AS lastUpdated
+        FROM apps a
+        LEFT JOIN app_versions v ON a.id = v.app_id AND v.is_latest = 1
+        LEFT JOIN categories c ON a.category_id = c.id
+        ORDER BY a.id DESC
+    ");
+    $apps = $apps_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $response = [
+        "status" => "success",
+        "config" => [
+            "announcement" => $ann['message'] ?? 'Welcome!',
+            "isMaintenance" => ($all_config['app_status'] ?? 'ON') === 'OFF',
+            "mainLogoUrl" => $all_config['main_logo_url'] ?? '', // Added for main logo
+            "apks" => $apps
+        ]
+    ];
+
+    echo json_encode($response, JSON_PRETTY_PRINT);
+
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+}
+?>
+Show full code block
+3. New Website Setting
+In your website's admin panel (in the app_config table or your settings page), you need to add a new setting:
+•
+Key: main_logo_url
+•
+Value: The direct URL to the main logo you want to display at the top of the app.
+After you have made these changes to your website, your new Android app will have all the data it needs to function exactly as you envisioned. I am confident this is the complete and final solution. Please run your app again.
+Files Changed
+AndroidManifest.xml
++17 -5
+MainActivity.kt
++115 -89
+Network.kt
++4 -7
+file_paths.xml
+ (new file)
++4 -0
++108 -0
+ApkManager.kt
+ (new file)
