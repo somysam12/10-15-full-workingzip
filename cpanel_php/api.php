@@ -6,12 +6,13 @@ try {
     $all_config = getAllConfig();
     $ann = getActiveAnnouncement();
 
+    // The only change is ensuring latestVersion is a string
     $apps_stmt = $pdo->query("
         SELECT
             a.id,
             a.app_name AS name,
-            a.packageName,      -- Added
-            a.iconUrl,          -- Added
+            a.packageName,
+            a.iconUrl,
             v.version_name AS latestVersion,
             v.apk_url AS downloadUrl,
             c.name AS category,
@@ -22,14 +23,21 @@ try {
         LEFT JOIN categories c ON a.category_id = c.id
         ORDER BY a.id DESC
     ");
-    $apps = $apps_stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Ensure all fields are correctly typed for JSON
+    $apps = array_map(function($row) {
+        $row['id'] = (string)$row['id'];
+        $row['versionCode'] = (int)$row['versionCode'];
+        $row['latestVersion'] = (string)$row['latestVersion'];
+        return $row;
+    }, $apps_stmt->fetchAll(PDO::FETCH_ASSOC));
 
     $response = [
         "status" => "success",
         "config" => [
             "announcement" => $ann['message'] ?? 'Welcome!',
             "isMaintenance" => ($all_config['app_status'] ?? 'ON') === 'OFF',
-            "mainLogoUrl" => $all_config['main_logo_url'] ?? '', // Added for main logo
+            "mainLogoUrl" => $all_config['main_logo_url'] ?? '',
             "apks" => $apps
         ]
     ];
