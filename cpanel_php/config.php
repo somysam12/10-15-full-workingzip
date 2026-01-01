@@ -75,23 +75,26 @@ function getAllPanels() {
 function getActiveAnnouncement() {
     global $pdo;
     if (!$pdo) return null;
-    $is_postgres = (getenv('DATABASE_URL')) ? true : false;
     $app_type = $_SESSION['app_type'] ?? 'all';
     
+    // Completely safe query first
     try {
-        $sql = "SELECT * FROM announcements WHERE active = 1 AND (app_type = ? OR app_type = 'all') ORDER BY id DESC LIMIT 1";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$app_type]);
-        return $stmt->fetch();
-    } catch (PDOException $e) {
-        // Fallback for missing app_type column or Postgres boolean issues
-        try {
-            $sql = "SELECT * FROM announcements WHERE active = 1 ORDER BY id DESC LIMIT 1";
-            $stmt = $pdo->query($sql);
-            return $stmt->fetch();
-        } catch (Exception $e2) {
-            return null;
+        $sql = "SELECT * FROM announcements WHERE active = 1 ORDER BY id DESC LIMIT 1";
+        $stmt = $pdo->query($sql);
+        $ann = $stmt->fetch();
+        
+        // If we found an announcement, check if it has the app_type column and if it matches
+        if ($ann && isset($ann['app_type'])) {
+            if ($ann['app_type'] !== 'all' && $ann['app_type'] !== $app_type) {
+                // If it doesn't match, try to find one that does
+                $stmt = $pdo->prepare("SELECT * FROM announcements WHERE active = 1 AND (app_type = ? OR app_type = 'all') ORDER BY id DESC LIMIT 1");
+                $stmt->execute([$app_type]);
+                return $stmt->fetch();
+            }
         }
+        return $ann;
+    } catch (Exception $e) {
+        return null;
     }
 }
 ?>
