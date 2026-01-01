@@ -10,10 +10,9 @@ $app_data = $app->fetch();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_version'])) {
     $v_name = $_POST['version_name'];
-    $v_code = $_POST['version_code'];
-    $apk_url = $_POST['apk_url'];
+    $v_code = time(); // Auto-generate code
+    $apk_url = "";
 
-    // Handle File Upload
     if (isset($_FILES['apk_file']) && $_FILES['apk_file']['error'] === UPLOAD_ERR_OK) {
         $upload_dir = 'uploads/apks/';
         $file_name = time() . '_' . basename($_FILES['apk_file']['name']);
@@ -25,10 +24,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_version'])) {
         }
     }
     
-    $pdo->prepare("UPDATE app_versions SET is_latest = FALSE WHERE app_id = ?")->execute([$app_id]);
-    $stmt = $pdo->prepare("INSERT INTO app_versions (app_id, version_name, version_code, apk_url, is_latest) VALUES (?, ?, ?, ?, TRUE)");
-    $stmt->execute([$app_id, $v_name, $v_code, $apk_url]);
-    $msg = "Version added successfully";
+    if ($apk_url) {
+        $pdo->prepare("UPDATE app_versions SET is_latest = FALSE WHERE app_id = ?")->execute([$app_id]);
+        $stmt = $pdo->prepare("INSERT INTO app_versions (app_id, version_name, version_code, apk_url, is_latest) VALUES (?, ?, ?, ?, TRUE)");
+        $stmt->execute([$app_id, $v_name, $v_code, $apk_url]);
+        $msg = "APK uploaded successfully";
+    } else {
+        $error = "Failed to upload APK";
+    }
 }
 
 $versions = $pdo->prepare("SELECT * FROM app_versions WHERE app_id = ? ORDER BY version_code DESC");
@@ -79,29 +82,58 @@ $version_list = $versions->fetchAll();
                 <div class="modal-header"><h5>Add New Version / Upload APK</h5></div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Version Name</label>
-                        <input type="text" name="version_name" class="nav-control form-control mb-2" placeholder="e.g. 1.0.1" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Version Code</label>
-                        <input type="number" name="version_code" class="form-control mb-2" placeholder="e.g. 2" required>
+                        <label class="form-label">APK Name</label>
+                        <input type="text" name="version_name" class="form-control" placeholder="e.g. BGMI v1" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Upload APK File</label>
-                        <input type="file" name="apk_file" class="form-control mb-2" accept=".apk">
-                        <div class="text-muted small">Or provide external URL below</div>
+                        <input type="file" name="apk_file" class="form-control" accept=".apk" required id="apkFileInput">
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">External APK URL</label>
-                        <input type="text" name="apk_url" class="form-control" placeholder="https://site.com/app.apk">
+                    <div class="progress d-none mb-3" id="apkUploadProgress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%">0%</div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal">Cancel</button>
-                    <button type="submit" name="add_version" class="btn btn-primary">Upload & Save</button>
+                    <button type="submit" name="add_version" class="btn btn-primary" id="uploadApkBtn">Upload & Save</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+document.querySelector('form[enctype="multipart/form-data"]').onsubmit = function(e) {
+    const fileInput = document.getElementById('apkFileInput');
+    if (fileInput.files.length > 0) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        formData.append('add_version', '1');
+        
+        const xhr = new XMLHttpRequest();
+        const progressBar = document.getElementById('apkUploadProgress');
+        const progressInner = progressBar.querySelector('.progress-bar');
+        const uploadBtn = document.getElementById('uploadApkBtn');
+        
+        progressBar.classList.remove('d-none');
+        uploadBtn.disabled = true;
+        
+        xhr.upload.addEventListener('progress', function(e) {
+            if (e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 100);
+                progressInner.style.width = percent + '%';
+                progressInner.innerText = percent + '%';
+            }
+        });
+        
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                location.reload();
+            }
+        };
+        
+        xhr.open('POST', window.location.href, true);
+        xhr.send(formData);
+    }
+};
+</script>
 <?php require_once 'footer.php'; ?>

@@ -4,7 +4,7 @@ require_once 'header.php';
 // Handle App creation
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_app'])) {
     $name = $_POST['app_name'];
-    $package = $_POST['package_name'];
+    $package = "com.silentpanel." . time(); // Auto-generate
     $stmt = $pdo->prepare("INSERT INTO apps (app_name, package_name) VALUES (?, ?)");
     $stmt->execute([$name, $package]);
     $msg = "App added successfully";
@@ -66,10 +66,6 @@ $apps = $pdo->query("SELECT * FROM apps ORDER BY created_at DESC")->fetchAll();
                     <div class="mb-3">
                         <label class="form-label">App Name</label>
                         <input type="text" name="app_name" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Package Name</label>
-                        <input type="text" name="package_name" class="form-control" placeholder="com.example.app" required>
                     </div>
                 </div>
                 <div class="modal-footer">
