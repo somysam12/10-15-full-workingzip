@@ -4,7 +4,12 @@ header('Content-Type: application/json');
 
 try {
     $all_config = getAllConfig();
-    $ann = getActiveAnnouncement();
+    
+    // Filter announcement by app_type if provided
+    $req_app_type = $_GET['app_type'] ?? 'all';
+    $stmt_ann = $pdo->prepare("SELECT * FROM announcements WHERE active = 1 AND (app_type = ? OR app_type = 'all') ORDER BY id DESC LIMIT 1");
+    $stmt_ann->execute([$req_app_type]);
+    $ann = $stmt_ann->fetch();
 
     // The only change is ensuring latestVersion is a string
     $apps_stmt = $pdo->query("
