@@ -12,15 +12,9 @@ $app_status = getConfig('app_status', 'ON');
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800"><?php echo ucfirst($app_type); ?> Dashboard</h1>
-    <div class="status-toggle-wrapper">
-        <span class="status-label">SERVER STATUS</span>
-        <label class="switch">
-            <input type="checkbox" id="appStatusToggle" <?php echo $app_status == 'ON' ? 'checked' : ''; ?>>
-            <span class="slider"></span>
-        </label>
-        <span id="statusIndicator" class="status-badge <?php echo $app_status == 'ON' ? 'status-on' : 'status-off'; ?>">
-            <?php echo $app_status; ?>
-        </span>
+    <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="appStatusToggle" <?php echo $app_status == 'ON' ? 'checked' : ''; ?>>
+        <label class="form-check-label" for="appStatusToggle">App Online Status</label>
     </div>
 </div>
 
@@ -91,14 +85,8 @@ $app_status = getConfig('app_status', 'ON');
                 <?php if ($ann): ?>
                     <h5><?php echo htmlspecialchars($ann['title']); ?></h5>
                     <p><?php echo htmlspecialchars($ann['message']); ?></p>
-                    <?php 
-                    $priority = $ann['priority'] ?? 'info';
-                    $badge_class = 'bg-info';
-                    if ($priority == 'urgent') $badge_class = 'bg-danger';
-                    elseif ($priority == 'warning') $badge_class = 'bg-warning';
-                    ?>
-                    <span class="badge <?php echo $badge_class; ?>">
-                        <?php echo ucfirst($priority); ?>
+                    <span class="badge bg-<?php echo $ann['priority'] == 'urgent' ? 'danger' : ($ann['priority'] == 'warning' ? 'warning' : 'info'); ?>">
+                        <?php echo ucfirst($ann['priority']); ?>
                     </span>
                 <?php else: ?>
                     <p class="text-muted">No active announcement.</p>

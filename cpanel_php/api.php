@@ -2,16 +2,7 @@
 require_once 'config.php';
 header('Content-Type: application/json');
 
-    // Action handling
-    $action = $_GET['action'] ?? '';
-    if ($action === 'toggle_server') {
-        $data = json_decode(file_get_contents('php://input'), true);
-        $status = (isset($data['enabled']) && $data['enabled']) ? 'ON' : 'OFF';
-        setConfig('app_status', $status);
-        echo json_encode(['success' => true, 'status' => $status]);
-        exit;
-    }
-
+try {
     $all_config = getAllConfig();
     
     // Filter announcement by app_type if provided
@@ -69,7 +60,6 @@ header('Content-Type: application/json');
         "config" => [
             "announcement" => $ann['message'] ?? 'Welcome!',
             "isMaintenance" => ($all_config['app_status'] ?? 'ON') === 'OFF',
-            "status" => $all_config['app_status'] ?? 'ON',
             "mainLogoUrl" => $all_config['main_logo_url'] ?? '',
             "apks" => $apps
         ]
