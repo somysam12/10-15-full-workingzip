@@ -17,43 +17,54 @@ $error_msg = "";
 $success_msg = "";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_version'])) {
+    // Increase limits at runtime if possible
+    @ini_set('upload_max_filesize', '128M');
+    @ini_set('post_max_size', '128M');
+    @ini_set('max_execution_time', '300');
+
     $v_name = $_POST['version_name'] ?? 'New Update';
     
-    if (isset($_FILES['apk_file']) && $_FILES['apk_file']['error'] === UPLOAD_ERR_OK) {
-        $upload_dir = 'uploads/apks/';
-        if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
-        
-        $file_ext = pathinfo($_FILES['apk_file']['name'], PATHINFO_EXTENSION);
-        $clean_name = preg_replace("/[^a-zA-Z0-9]/", "_", $v_name);
-        $file_name = time() . "_" . $clean_name . "." . $file_ext;
-        $target_path = $upload_dir . $file_name;
-        
-        if (move_uploaded_file($_FILES['apk_file']['tmp_name'], $target_path)) {
-            $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
-            $apk_url = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/' . $target_path;
+    if (isset($_FILES['apk_file'])) {
+        if ($_FILES['apk_file']['error'] === UPLOAD_ERR_OK) {
+            $upload_dir = 'uploads/apks/';
+            if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
             
-            try {
-                // Deactivate old versions
-                $pdo->prepare("UPDATE app_versions SET is_latest = FALSE WHERE app_id = ?")->execute([$app_id]);
+            $file_ext = pathinfo($_FILES['apk_file']['name'], PATHINFO_EXTENSION);
+            $clean_name = preg_replace("/[^a-zA-Z0-9]/", "_", $v_name);
+            $file_name = time() . "_" . $clean_name . "." . $file_ext;
+            $target_path = $upload_dir . $file_name;
+            
+            if (move_uploaded_file($_FILES['apk_file']['tmp_name'], $target_path)) {
+                $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
+                $apk_url = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/' . $target_path;
                 
-                // Insert new version
-                $stmt = $pdo->prepare("INSERT INTO app_versions (app_id, version_name, apk_url, is_latest, version_code, created_at) VALUES (?, ?, ?, TRUE, ?, NOW())");
-                $stmt->execute([$app_id, $v_name, $apk_url, time()]);
-                
-                header("Location: app_details.php?id=$app_id&msg=uploaded&v=" . time());
-                exit;
-            } catch (Exception $e) {
-                $error_msg = "Database Error: " . $e->getMessage();
+                try {
+                    $pdo->prepare("UPDATE app_versions SET is_latest = FALSE WHERE app_id = ?")->execute([$app_id]);
+                    $stmt = $pdo->prepare("INSERT INTO app_versions (app_id, version_name, apk_url, is_latest, version_code, created_at) VALUES (?, ?, ?, TRUE, ?, NOW())");
+                    $stmt->execute([$app_id, $v_name, $apk_url, time()]);
+                    
+                    header("Location: app_details.php?id=$app_id&msg=uploaded&v=" . time());
+                    exit;
+                } catch (Exception $e) {
+                    $error_msg = "Database Error: " . $e->getMessage();
+                }
+            } else {
+                $error_msg = "Could not save file to disk. Check permissions.";
             }
         } else {
-            $error_msg = "Could not save file to disk.";
+            $err_code = $_FILES['apk_file']['error'];
+            if ($err_code === 1 || $err_code === 2) {
+                $error_msg = "File is too large! Maximum allowed is 128MB. (PHP Error Code: $err_code)";
+            } else {
+                $error_msg = "File upload failed (PHP Error code: $err_code)";
+            }
         }
     } else {
-        $error_msg = "File upload failed (Error code: " . ($_FILES['apk_file']['error'] ?? 'None') . ")";
+        $error_msg = "No file received. Make sure the file isn't too large for the server.";
     }
 }
 
-// 3. Fetch History (Direct & Reliable)
+// 3. Fetch History
 $history_stmt = $pdo->prepare("SELECT * FROM app_versions WHERE app_id = ? ORDER BY id DESC");
 $history_stmt->execute([$app_id]);
 $history = $history_stmt->fetchAll();
@@ -66,11 +77,21 @@ if (isset($_GET['msg']) && $_GET['msg'] === 'uploaded') $success_msg = "APK Uplo
         <a href="apps.php" class="btn btn-outline-light btn-sm">Back to Apps</a>
     </div>
 
-    <?php if ($error_msg): ?><div class="alert alert-danger"><?php echo $error_msg; ?></div><?php endif; ?>
-    <?php if ($success_msg): ?><div class="alert alert-success"><?php echo $success_msg; ?></div><?php endif; ?>
+    <?php if ($error_msg): ?>
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-triangle me-2"></i> <?php echo $error_msg; ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+    
+    <?php if ($success_msg): ?>
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle me-2"></i> <?php echo $success_msg; ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
 
     <div class="row">
-        <!-- Upload Card -->
         <div class="col-md-5">
             <div class="card bg-dark border-secondary shadow mb-4">
                 <div class="card-header bg-dark border-secondary text-primary font-weight-bold">New APK Upload</div>
@@ -81,7 +102,7 @@ if (isset($_GET['msg']) && $_GET['msg'] === 'uploaded') $success_msg = "APK Uplo
                             <input type="text" name="version_name" class="form-control bg-dark text-white border-secondary" placeholder="e.g. BGMI v1.2" required>
                         </div>
                         <div class="mb-3">
-                            <label class="text-white-50 small">Select APK</label>
+                            <label class="text-white-50 small">Select APK (Max 128MB)</label>
                             <input type="file" name="apk_file" class="form-control bg-dark text-white border-secondary" accept=".apk" required>
                         </div>
                         <button type="submit" name="add_version" class="btn btn-primary w-100">Upload & Activate</button>
@@ -90,7 +111,6 @@ if (isset($_GET['msg']) && $_GET['msg'] === 'uploaded') $success_msg = "APK Uplo
             </div>
         </div>
 
-        <!-- History Card -->
         <div class="col-md-7">
             <div class="card bg-dark border-secondary shadow">
                 <div class="card-header bg-dark border-secondary text-primary font-weight-bold">
@@ -108,7 +128,7 @@ if (isset($_GET['msg']) && $_GET['msg'] === 'uploaded') $success_msg = "APK Uplo
                             </thead>
                             <tbody>
                                 <?php if (empty($history)): ?>
-                                    <tr><td colspan="3" class="text-center py-5 text-white-50">No uploads found for this app folder.</td></tr>
+                                    <tr><td colspan="3" class="text-center py-5 text-white-50">No uploads found.</td></tr>
                                 <?php endif; ?>
                                 <?php foreach ($history as $v): ?>
                                     <tr>
