@@ -3,8 +3,6 @@ require_once 'config.php';
 header('Content-Type: application/json');
 
 // --- START: CACHE-BUSTING FIX ---
-// This function gets the last modified time of a file to create a unique version number.
-// This forces the app to re-download the image whenever the file changes.
 function get_cache_buster($file_path) {
     if (file_exists($file_path)) {
         return '?v=' . filemtime($file_path);
@@ -58,7 +56,6 @@ $response = [
         "locked" => ($all_config['theme_locked'] ?? 'no') === 'yes'
     ],
     "branding" => [
-        // FIX: Appended the unique version number to the image URLs
         "splash_logo" => $base_url . "/splash_logo.png" . $splash_logo_cache_buster,
         "app_logo" => $base_url . "/logo.png" . $app_logo_cache_buster,
         "loader_animation_url" => $all_config['loader_url'] ?? '',
@@ -71,10 +68,13 @@ $response = [
 ];
 
 foreach ($panels as $p) {
+    // MODIFIED PART: Added package_name and version
     $response['panels'][] = [
         "name" => $p['name'],
         "url" => $p['url'],
-        "key" => $p['site_key']
+        "key" => $p['site_key'],
+        "package_name" => $p['package_name'] ?? '', // Make sure your database provides this
+        "version" => $p['version'] ?? '1.0.0'      // Make sure your database provides this
     ];
 }
 
