@@ -32,34 +32,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_version'])) {
     if ($apk_url) {
         try {
             $pdo->beginTransaction();
-            // Ensure app_versions exists (should have been created by SQL migration, but let's be safe)
-            $pdo->exec("CREATE TABLE IF NOT EXISTS app_versions (
-                id SERIAL PRIMARY KEY,
-                app_id INTEGER REFERENCES apps(id),
-                version_name VARCHAR(255),
-                version_code BIGINT,
-                apk_url TEXT NOT NULL,
-                is_latest BOOLEAN DEFAULT FALSE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )");
-
+            
+            // Explicitly set is_latest = FALSE for all previous versions of this app
             $pdo->prepare("UPDATE app_versions SET is_latest = FALSE WHERE app_id = ?")->execute([$app_id]);
+            
+            // Insert the new version
             $stmt = $pdo->prepare("INSERT INTO app_versions (app_id, version_name, apk_url, is_latest, version_code, created_at) VALUES (?, ?, ?, TRUE, ?, CURRENT_TIMESTAMP)");
             $stmt->execute([$app_id, $v_name, $apk_url, time()]);
+            
             $pdo->commit();
-            
-            // Double check insertion
-            $check = $pdo->prepare("SELECT COUNT(*) FROM app_versions WHERE app_id = ?");
-            $check->execute([$app_id]);
-            $count = $check->fetchColumn();
-            
-            error_log("APK Uploaded for App ID $app_id. Total versions now: $count");
-            $msg = "APK Uploaded successfully! (Total: $count)";
+            $msg = "APK Uploaded successfully!";
         } catch (Exception $e) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
             }
-            error_log("Database error in APK upload: " . $e->getMessage());
             $error = "Database error: " . $e->getMessage();
         }
     } else {
@@ -67,30 +53,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_version'])) {
     }
 }
 
+// Fetch versions using a more reliable query
 $versions = $pdo->prepare("SELECT * FROM app_versions WHERE app_id = ? ORDER BY created_at DESC, id DESC");
 $versions->execute([$app_id]);
 $version_list = $versions->fetchAll();
 ?>
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-white">Manage APK: <?php echo htmlspecialchars($app_data['app_name']); ?></h1>
+    <h1 class="h3 mb-0 text-white">Manage APK: <?php echo htmlspecialchars($app_data['app_name'] ?? 'Unknown App'); ?></h1>
     <a href="apps.php" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
 </div>
 
+<?php if (isset($msg)): ?>
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <?php echo $msg; ?>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+<?php endif; ?>
+
+<?php if (isset($error)): ?>
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <?php echo $error; ?>
+    <button type="button" class="btn-close" data-bs-alert="alert" aria-label="Close"></button>
+</div>
+<?php endif; ?>
+
 <div class="row">
     <div class="col-lg-12">
-        <div class="card shadow mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="card shadow mb-4 bg-dark border-0">
+            <div class="card-header bg-dark border-secondary py-3">
                 <h6 class="m-0 font-weight-bold text-primary">Upload New APK</h6>
             </div>
             <div class="card-body">
                 <form method="POST" enctype="multipart/form-data" id="apkUploadForm">
                     <div class="mb-3">
-                        <label class="form-label">Display Name</label>
-                        <input type="text" name="version_name" class="form-control" placeholder="e.g. Update v1" required>
+                        <label class="form-label text-white">Display Name</label>
+                        <input type="text" name="version_name" class="form-control bg-dark text-white border-secondary" placeholder="e.g. Update v1" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Select APK File</label>
-                        <input type="file" name="apk_file" class="form-control" accept=".apk" required id="apkFileInput">
+                        <label class="form-label text-white">Select APK File</label>
+                        <input type="file" name="apk_file" class="form-control bg-dark text-white border-secondary" accept=".apk" required id="apkFileInput">
                     </div>
                     <div class="progress d-none mb-3" style="height: 25px;" id="apkUploadProgress">
                         <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%">0%</div>
@@ -102,14 +103,14 @@ $version_list = $versions->fetchAll();
             </div>
         </div>
 
-        <div class="card shadow mb-4">
-            <div class="card-header">
+        <div class="card shadow mb-4 bg-dark border-0">
+            <div class="card-header bg-dark border-secondary py-3">
                 <h6 class="m-0 font-weight-bold text-primary">Uploaded Files History</h6>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-dark table-hover">
-                        <thead>
+                    <table class="table table-dark table-hover mb-0">
+                        <thead class="text-white">
                             <tr>
                                 <th>Name</th>
                                 <th>Upload Date</th>
@@ -117,13 +118,13 @@ $version_list = $versions->fetchAll();
                                 <th>Link</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="text-muted">
                             <?php if (empty($version_list)): ?>
-                            <tr><td colspan="4" class="text-center">No files uploaded yet.</td></tr>
+                            <tr><td colspan="4" class="text-center py-4">No files uploaded yet.</td></tr>
                             <?php endif; ?>
                             <?php foreach($version_list as $v): ?>
                             <tr>
-                                <td><?php echo htmlspecialchars($v['version_name']); ?></td>
+                                <td class="text-white"><?php echo htmlspecialchars($v['version_name']); ?></td>
                                 <td><?php echo date('Y-m-d H:i', strtotime($v['created_at'])); ?></td>
                                 <td>
                                     <?php if ($v['is_latest']): ?>
@@ -175,7 +176,8 @@ document.getElementById('apkUploadForm').onsubmit = function(e) {
         xhr.onreadystatechange = function() {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
-                    window.location.href = window.location.href + '&msg=success';
+                    // Force refresh to bypass potential cache
+                    window.location.href = 'app_details.php?id=<?php echo $app_id; ?>&msg=success&t=' + new Date().getTime();
                 } else {
                     alert('Upload failed. Please check file size limits.');
                     location.reload();
