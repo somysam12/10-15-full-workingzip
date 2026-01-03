@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS announcements (
     type VARCHAR(50) DEFAULT 'banner',
     start_time TIMESTAMP NULL,
     end_time TIMESTAMP NULL,
-    active TINYINT(1) DEFAULT 0
+    active TINYINT(1) DEFAULT 0,
+    app_type VARCHAR(50) NOT NULL DEFAULT 'all'
 );
 
 CREATE TABLE IF NOT EXISTS panels (
