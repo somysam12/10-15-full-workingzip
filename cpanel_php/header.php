@@ -53,85 +53,51 @@ $app_status = getConfig('app_status', 'ON');
         }
         
         @media (max-width: 992px) {
-            .sidebar { width: 0; overflow: hidden; }
-            .main-content { margin-left: 0; padding: 20px; }
+            .sidebar { 
+                transform: translateX(calc(-1 * var(--sidebar-width)));
+                transition: transform 0.3s ease;
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                visibility: visible !important;
+                width: var(--sidebar-width) !important;
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .main-content { margin-left: 0 !important; padding: 20px; }
+            .mobile-header { display: flex !important; }
         }
         
-        .nav-link {
-            color: rgba(255,255,255,0.6) !important;
-            padding: 14px 25px !important;
-            font-weight: 500;
-            display: flex;
+        .mobile-header {
+            display: none;
+            background: var(--dark-blue);
+            padding: 15px 20px;
             align-items: center;
-            border-radius: 0 !important;
-            border-left: 4px solid transparent;
-            transition: all 0.3s;
-        }
-        
-        .nav-link:hover, .nav-link.active {
-            color: white !important;
-            background: rgba(255,255,255,0.05);
-            border-left: 4px solid var(--primary-color);
-        }
-        
-        .nav-link i { font-size: 1.1rem; width: 25px; margin-right: 15px; }
-
-        .card {
-            background: var(--dark-card);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            overflow: hidden;
-            color: var(--text-main);
-        }
-        
-        .card-header {
-            background: rgba(255,255,255,0.02);
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1100;
             border-bottom: 1px solid rgba(255,255,255,0.05);
-            padding: 20px 25px;
-            font-weight: 700;
-            color: white;
         }
 
-        .h3, h1, h2, h3, h4, h5, h6 { color: white; }
-        .text-gray-800 { color: white !important; }
-        .text-muted { color: #a0aec0 !important; }
-
-        .btn { border-radius: 10px; padding: 10px 20px; font-weight: 600; transition: all 0.2s; }
-        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
-
-        .table { color: var(--text-main); }
-        .table-bordered { border-color: rgba(255,255,255,0.1); }
-        .table-bordered td, .table-bordered th { border-color: rgba(255,255,255,0.1); }
-        
-        .form-control, .form-select {
-            background: rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: white;
-            border-radius: 10px;
-        }
-        .form-control:focus {
-            background: rgba(0,0,0,0.3);
-            color: white;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-        }
-
-        .navbar {
-            background: var(--dark-blue) !important;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            margin-bottom: 30px !important;
-        }
-        .navbar-text { color: rgba(255,255,255,0.8) !important; }
+        .sidebar { overflow-y: auto; }
     </style>
 </head>
 <body>
+<div class="mobile-header">
+    <button class="btn text-white p-0" id="mobile-toggle">
+        <i class="fas fa-bars fa-lg"></i>
+    </button>
+    <h5 class="mb-0 fw-bold">Silent Panel</h5>
+    <div style="width: 24px;"></div>
+</div>
 <div class="container-fluid p-0">
     <div class="d-flex">
         <div class="sidebar-container">
             <?php require_once 'sidebar.php'; ?>
         </div>
-        <div class="main-content">
+        <div class="main-content w-100">
 <?php if (isset($msg)): ?><div class="alert alert-success alert-dismissible fade show"><i class="fas fa-check-circle"></i> <?php echo $msg; ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><?php endif; ?>
 <?php if (isset($error)): ?><div class="alert alert-danger alert-dismissible fade show"><i class="fas fa-exclamation-triangle"></i> <?php echo $error; ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><?php endif; ?>
