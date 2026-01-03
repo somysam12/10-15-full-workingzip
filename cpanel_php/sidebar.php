@@ -29,12 +29,17 @@ $app_type = $_SESSION['app_type'] ?? 'master';
         <a href="announcements.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'announcements.php' ? 'active' : ''; ?>">
             <i class="fas fa-bullhorn"></i> Announcements
         </a>
-        <a href="branding.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'branding.php' ? 'active' : ''; ?>">
-            <i class="fas fa-palette"></i> Branding & Icons
+        
+        <a href="in_app_logo.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'in_app_logo.php' ? 'active' : ''; ?>">
+            <i class="fas fa-image"></i> In-App Logo
         </a>
+
+        <?php if ($app_type === 'master'): ?>
         <a href="analytics.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'analytics.php' ? 'active' : ''; ?>">
             <i class="fas fa-chart-line"></i> Analytics
         </a>
+        <?php endif; ?>
+
         <a href="settings.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'settings.php' ? 'active' : ''; ?>">
             <i class="fas fa-cog"></i> Settings
         </a>

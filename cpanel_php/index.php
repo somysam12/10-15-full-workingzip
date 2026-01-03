@@ -4,10 +4,13 @@ require_once 'header.php';
 $app_type = $_SESSION['app_type'] ?? 'master';
 
 // Fetch stats
+$app_type = $_SESSION['app_type'] ?? 'master';
 $total_apps = $pdo->query("SELECT COUNT(*) FROM apps")->fetchColumn();
 $total_downloads = $pdo->query("SELECT COUNT(*) FROM download_stats")->fetchColumn();
 $total_panels = $pdo->query("SELECT COUNT(*) FROM panels")->fetchColumn();
-$app_status = getConfig('app_status', 'ON');
+
+$status_key = ($app_type === 'panel') ? 'panel_app_status' : 'app_status';
+$app_status = getConfig($status_key, 'ON');
 ?>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
