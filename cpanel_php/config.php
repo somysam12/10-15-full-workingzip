@@ -4,8 +4,8 @@ session_start();
 
 // --- CRITICAL DATABASE CREDENTIALS ---
 $db_host = 'localhost';
-$db_name = 'silentmu_app';
-$db_user = 'silentmu_isam';
+$db_name = 'shaitaanhh_controlpanel';
+$db_user = 'shaitaanhh_isam';
 $db_pass = '844121@LuvKush';
 
 // --- CONNECTION LOGIC ---
