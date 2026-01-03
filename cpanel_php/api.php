@@ -31,27 +31,35 @@ try {
     ];
 
     if ($req_app_type === 'master') {
+        // --- START: SIMPLIFIED AND FIXED QUERY ---
         $apps_stmt = $pdo->query("
             SELECT
                 a.id, a.app_name AS name, a.packageName, a.iconUrl,
                 v.version_name AS latestVersion, v.apk_url AS downloadUrl,
-                c.name AS category, v.version_code AS versionCode, v.created_at AS lastUpdated
+                v.version_code AS versionCode, v.created_at AS lastUpdated
             FROM apps a
             LEFT JOIN app_versions v ON a.id = v.app_id AND v.is_latest = 1
-            LEFT JOIN categories c ON a.category_id = c.id
             ORDER BY a.id DESC
         ");
+
+        if ($apps_stmt === false) {
+            throw new Exception('Database query for fetching apps failed.');
+        }
+        // --- END: SIMPLIFIED AND FIXED QUERY ---
+        
         $apps = array_map(function($row) {
             $row['id'] = (string)$row['id'];
             $row['versionCode'] = (int)$row['versionCode'];
             return $row;
         }, $apps_stmt->fetchAll(PDO::FETCH_ASSOC));
         $response['config']['apks'] = $apps;
+
     } else {
         $response['config']['panels'] = getAllPanels();
     }
 
     echo json_encode($response, JSON_PRETTY_PRINT);
+
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
