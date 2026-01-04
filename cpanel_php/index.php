@@ -95,11 +95,6 @@ $app_status = getConfig($status_key, 'ON');
                     <div class="p-4 rounded" style="background: rgba(168, 85, 247, 0.05); border: 1px dashed rgba(168, 85, 247, 0.2);">
                         <h4 class="text-white mb-2"><?php echo htmlspecialchars($ann['title']); ?></h4>
                         <p class="text-main mb-0 fs-5"><?php echo htmlspecialchars($ann['message']); ?></p>
-                        <div class="mt-3">
-                            <span class="badge bg-primary">
-                                <?php echo htmlspecialchars($ann['app_type'] ?? 'all'); ?>
-                            </span>
-                        </div>
                     </div>
                 <?php else: ?>
                     <p class="text-muted text-center py-4">No active announcement for <?php echo ucfirst($app_type); ?> app.</p>

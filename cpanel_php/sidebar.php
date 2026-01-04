@@ -1,7 +1,7 @@
 <?php
 $app_type = $_SESSION['app_type'] ?? 'master';
 ?>
-<div class="sidebar" style="visibility: visible !important;">
+<div class="sidebar">
     <div class="p-4 text-center border-bottom border-secondary mb-3">
         <h4 class="mb-0 fw-bold text-white"><i class="fas fa-shield-halved me-2"></i> Silent Panel</h4>
         <small class="text-muted"><?php echo ucfirst($app_type); ?> App</small>

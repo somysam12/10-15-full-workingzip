@@ -72,12 +72,12 @@ $apps = $pdo->query("SELECT id, app_name, iconUrl FROM apps ORDER BY app_name AS
                 </div>
                 <div class="card-body text-center">
                     <p class="text-white-50 small mb-4">This logo appears at the top of your Android app.</p>
-                    <div class="mb-4 p-4 rounded shadow-sm d-flex align-items-center justify-content-center" style="min-height: 150px; background: #090415; border: 1px dashed rgba(168, 85, 247, 0.3);">
+                    <div class="mb-4 p-4 bg-light rounded shadow-sm d-flex align-items-center justify-content-center" style="min-height: 150px; background-image: linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px;">
                         <?php if (!empty($all_config['main_logo_url'])): ?>
-                            <img src="<?php echo htmlspecialchars($all_config['main_logo_url']); ?>?v=<?php echo time(); ?>" class="img-fluid" style="max-height: 120px;" onerror="this.src='https://placehold.co/400x200/090415/a855f7?text=Logo+Error';">
+                            <img src="<?php echo htmlspecialchars($all_config['main_logo_url']); ?>" class="img-fluid" style="max-height: 120px;">
                         <?php else: ?>
                             <div class="text-muted">
-                                <i class="fas fa-image fa-3x mb-2" style="color: rgba(168, 85, 247, 0.2);"></i><br>
+                                <i class="fas fa-photo-film fa-3x mb-2"></i><br>
                                 <span>No Logo Uploaded</span>
                             </div>
                         <?php endif; ?>
