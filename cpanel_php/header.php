@@ -17,14 +17,17 @@ $app_status = getConfig('app_status', 'ON');
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #667eea;
-            --secondary-color: #764ba2;
-            --success-color: #1cc88a;
-            --dark-blue: #0A0E27;
-            --dark-card: #151936;
-            --bg-dark: #070a1f;
-            --text-main: #e2e8f0;
+            --primary-color: #a855f7;
+            --secondary-color: #7c3aed;
+            --success-color: #10b981;
+            --dark-purple: #0f0720;
+            --dark-card: #1c1039;
+            --sidebar-bg: #150b2e;
+            --bg-dark: #090415;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
             --sidebar-width: 260px;
+            --accent-glow: rgba(168, 85, 247, 0.4);
         }
         
         body { 
@@ -33,18 +36,59 @@ $app_status = getConfig('app_status', 'ON');
             margin: 0;
             padding: 0;
             color: var(--text-main);
+            letter-spacing: -0.011em;
         }
         
         .sidebar {
-            background: var(--dark-blue);
+            background: var(--sidebar-bg);
             min-height: 100vh;
             color: white;
             position: fixed;
             width: var(--sidebar-width);
             z-index: 1000;
-            box-shadow: 4px 0 10px rgba(0,0,0,0.2);
-            border-right: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+            border-right: 1px solid rgba(168, 85, 247, 0.1);
         }
+
+        .card {
+            background: var(--dark-card) !important;
+            border: 1px solid rgba(168, 85, 247, 0.2) !important;
+            border-radius: 16px !important;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3) !important;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 15px 30px rgba(168, 85, 247, 0.15) !important;
+        }
+
+        .text-gray-800 { color: var(--text-main) !important; font-weight: 700; }
+        .text-primary { color: var(--primary-color) !important; }
+        .btn-primary { 
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+            border: none !important;
+            padding: 10px 24px !important;
+            border-radius: 12px !important;
+            font-weight: 600 !important;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3) !important;
+        }
+
+        .form-control, .form-select {
+            background: #150b2e !important;
+            border: 1px solid rgba(168, 85, 247, 0.3) !important;
+            color: white !important;
+            border-radius: 10px !important;
+        }
+
+        .form-control:focus {
+            box-shadow: 0 0 0 3px var(--accent-glow) !important;
+            border-color: var(--primary-color) !important;
+        }
+
+        .table { color: var(--text-main) !important; }
+        .table-bordered { border-color: rgba(168, 85, 247, 0.1) !important; }
         
         .main-content {
             margin-left: var(--sidebar-width);
@@ -72,17 +116,20 @@ $app_status = getConfig('app_status', 'ON');
         
         .mobile-header {
             display: none;
-            background: var(--dark-blue);
+            background: var(--sidebar-bg);
             padding: 15px 20px;
             align-items: center;
             justify-content: space-between;
             position: sticky;
             top: 0;
             z-index: 1100;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(168, 85, 247, 0.2);
         }
 
         .sidebar { overflow-y: auto; }
+        h1, h2, h3, h4, h5, h6 { color: white !important; }
+        p, span, label { color: var(--text-muted) !important; }
+        .badge { font-weight: 600; padding: 6px 12px; border-radius: 8px; }
     </style>
 </head>
 <body>

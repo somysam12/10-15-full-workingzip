@@ -25,15 +25,17 @@ $app_status = getConfig($status_key, 'ON');
     <?php if ($app_type === 'master'): ?>
     <!-- Total Apps Card -->
     <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card h-100 py-2 border-start border-primary border-4">
+        <div class="card h-100 py-2 border-0">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Apps</div>
-                        <div class="h5 mb-0 font-weight-bold text-white"><?php echo $total_apps; ?></div>
+                        <div class="h3 mb-0 font-weight-bold text-white"><?php echo $total_apps; ?></div>
                     </div>
                     <div class="col-auto">
-                        <i class="fas fa-mobile-screen fa-2x text-primary opacity-50"></i>
+                        <div class="icon-circle bg-primary-subtle p-3 rounded-circle" style="background: rgba(168, 85, 247, 0.1);">
+                            <i class="fas fa-mobile-screen fa-2x text-primary"></i>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -42,15 +44,17 @@ $app_status = getConfig($status_key, 'ON');
 
     <!-- Total Downloads Card -->
     <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card h-100 py-2 border-start border-success border-4">
+        <div class="card h-100 py-2 border-0">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Downloads</div>
-                        <div class="h5 mb-0 font-weight-bold text-white"><?php echo $total_downloads; ?></div>
+                        <div class="h3 mb-0 font-weight-bold text-white"><?php echo $total_downloads; ?></div>
                     </div>
                     <div class="col-auto">
-                        <i class="fas fa-download fa-2x text-success opacity-50"></i>
+                        <div class="icon-circle bg-success-subtle p-3 rounded-circle" style="background: rgba(16, 185, 129, 0.1);">
+                            <i class="fas fa-download fa-2x text-success"></i>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -61,15 +65,17 @@ $app_status = getConfig($status_key, 'ON');
     <?php if ($app_type === 'panel'): ?>
     <!-- Active Panels Card -->
     <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card h-100 py-2 border-start border-info border-4">
+        <div class="card h-100 py-2 border-0">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Active Panels</div>
-                        <div class="h5 mb-0 font-weight-bold text-white"><?php echo $total_panels; ?></div>
+                        <div class="h3 mb-0 font-weight-bold text-white"><?php echo $total_panels; ?></div>
                     </div>
                     <div class="col-auto">
-                        <i class="fas fa-layer-group fa-2x text-info opacity-50"></i>
+                        <div class="icon-circle bg-info-subtle p-3 rounded-circle" style="background: rgba(13, 202, 240, 0.1);">
+                            <i class="fas fa-layer-group fa-2x text-info"></i>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -79,20 +85,19 @@ $app_status = getConfig($status_key, 'ON');
 </div>
 
 <div class="row">
-    <div class="col-lg-6">
+    <div class="col-lg-12">
         <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Active Announcement</h6>
+            <div class="card-header py-3 bg-transparent border-bottom border-secondary">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-bullhorn me-2"></i>Active Announcement</h6>
             </div>
             <div class="card-body">
                 <?php if ($ann): ?>
-                    <h5><?php echo htmlspecialchars($ann['title']); ?></h5>
-                    <p><?php echo htmlspecialchars($ann['message']); ?></p>
-                    <span class="badge bg-<?php echo $ann['priority'] == 'urgent' ? 'danger' : ($ann['priority'] == 'warning' ? 'warning' : 'info'); ?>">
-                        <?php echo ucfirst($ann['priority']); ?>
-                    </span>
+                    <div class="p-4 rounded" style="background: rgba(168, 85, 247, 0.05); border: 1px dashed rgba(168, 85, 247, 0.2);">
+                        <h4 class="text-white mb-2"><?php echo htmlspecialchars($ann['title']); ?></h4>
+                        <p class="text-main mb-0 fs-5"><?php echo htmlspecialchars($ann['message']); ?></p>
+                    </div>
                 <?php else: ?>
-                    <p class="text-muted">No active announcement.</p>
+                    <p class="text-muted text-center py-4">No active announcement for <?php echo ucfirst($app_type); ?> app.</p>
                 <?php endif; ?>
             </div>
         </div>
