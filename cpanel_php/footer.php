@@ -3,20 +3,38 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-document.getElementById('mobile-toggle').addEventListener('click', function() {
-    document.querySelector('.sidebar').classList.toggle('active');
-});
+const sidebar = document.querySelector('.sidebar');
+const toggleBtn = document.getElementById('sidebarToggle');
+const overlay = document.getElementById('sidebarOverlay');
 
-// Close sidebar when clicking outside on mobile
-document.addEventListener('click', function(event) {
-    const sidebar = document.querySelector('.sidebar');
-    const toggle = document.getElementById('mobile-toggle');
-    if (window.innerWidth <= 992 && 
-        !sidebar.contains(event.target) && 
-        !toggle.contains(event.target) && 
-        sidebar.classList.contains('active')) {
-        sidebar.classList.remove('active');
+function toggleSidebar() {
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+    
+    const icon = toggleBtn.querySelector('i');
+    if (sidebar.classList.contains('active')) {
+        icon.classList.remove('fa-bars');
+        icon.classList.add('fa-times');
+    } else {
+        icon.classList.remove('fa-times');
+        icon.classList.add('fa-bars');
     }
+}
+
+if (toggleBtn) {
+    toggleBtn.addEventListener('click', toggleSidebar);
+}
+
+if (overlay) {
+    overlay.addEventListener('click', toggleSidebar);
+}
+
+// Active link highlight with smooth transition
+document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', function() {
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+    });
 });
 </script>
 </body>

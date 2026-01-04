@@ -2,9 +2,19 @@
 $app_type = $_SESSION['app_type'] ?? 'master';
 ?>
 <div class="sidebar">
-    <div class="p-4 text-center border-bottom border-secondary mb-3">
-        <h4 class="mb-0 fw-bold text-white"><i class="fas fa-shield-halved me-2"></i> Silent Panel</h4>
-        <small class="text-muted"><?php echo ucfirst($app_type); ?> App</small>
+    <div class="p-4 text-center border-bottom border-secondary border-opacity-25 mb-3">
+        <?php 
+        $main_logo = getConfig('main_logo_url');
+        if ($main_logo): ?>
+            <img src="<?php echo htmlspecialchars($main_logo); ?>" class="img-fluid mb-2" style="max-height: 45px; filter: drop-shadow(0 0 8px var(--accent-glow));">
+        <?php else: ?>
+            <h4 class="mb-0 fw-bold text-white"><i class="fas fa-shield-halved text-primary me-2"></i> Silent Panel</h4>
+        <?php endif; ?>
+        <div class="mt-2">
+            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill small">
+                <i class="fas fa-crown me-1 small"></i> <?php echo strtoupper($app_type); ?>
+            </span>
+        </div>
     </div>
     <nav>
         <a href="index.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''; ?>">

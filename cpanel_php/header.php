@@ -26,7 +26,7 @@ $app_status = getConfig('app_status', 'ON');
             --bg-dark: #090415;
             --text-main: #f3f4f6;
             --text-muted: #9ca3af;
-            --sidebar-width: 260px;
+            --sidebar-width: 280px;
             --accent-glow: rgba(168, 85, 247, 0.4);
         }
         
@@ -37,17 +37,93 @@ $app_status = getConfig('app_status', 'ON');
             padding: 0;
             color: var(--text-main);
             letter-spacing: -0.011em;
+            overflow-x: hidden;
         }
-        
+
+        /* Sidebar Styling */
         .sidebar {
             background: var(--sidebar-bg);
             min-height: 100vh;
             color: white;
             position: fixed;
             width: var(--sidebar-width);
-            z-index: 1000;
+            left: 0;
+            top: 0;
+            z-index: 1050;
             box-shadow: 10px 0 30px rgba(0,0,0,0.5);
             border-right: 1px solid rgba(168, 85, 247, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        /* Hamburger Button */
+        .hamburger-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1100;
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
+            transition: all 0.3s ease;
+            display: none; /* Desktop hidden by default */
+        }
+
+        .hamburger-btn:hover {
+            transform: scale(1.05);
+            background: var(--secondary-color);
+        }
+
+        /* Overlay */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1040;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                left: calc(-1 * var(--sidebar-width));
+            }
+            .sidebar.active {
+                left: 0;
+            }
+            .main-content {
+                margin-left: 0 !important;
+            }
+            .hamburger-btn {
+                display: flex;
+            }
+            .mobile-header {
+                display: none !important; /* Remove old header */
+            }
         }
 
         .card {
@@ -165,16 +241,14 @@ $app_status = getConfig('app_status', 'ON');
     </style>
 </head>
 <body>
-<div class="mobile-header">
-    <button class="btn text-white p-0" id="mobile-toggle">
-        <i class="fas fa-bars fa-lg"></i>
-    </button>
-    <h5 class="mb-0 fw-bold">Silent Panel</h5>
-    <div style="width: 24px;"></div>
-</div>
+<button class="hamburger-btn" id="sidebarToggle">
+    <i class="fas fa-bars"></i>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
 <div class="container-fluid p-0">
     <div class="d-flex">
-        <div class="sidebar-container">
+        <div class="sidebar-wrapper">
             <?php require_once 'sidebar.php'; ?>
         </div>
         <div class="main-content w-100">
