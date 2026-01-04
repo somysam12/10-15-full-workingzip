@@ -95,7 +95,7 @@ $current_logo = getConfig($current_key, '');
                 <div class="mt-4">
                     <h6 class="text-primary mb-3"><i class="fas fa-eye me-2"></i>Current Preview:</h6>
                     <div class="p-4 rounded text-center" style="background: #090415; border: 1px dashed rgba(168, 85, 247, 0.3);">
-                        <img src="<?php echo htmlspecialchars($current_logo); ?>?v=<?php echo time(); ?>" alt="Logo Preview" style="max-height: 200px; max-width: 100%; filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.2));">
+                        <img src="<?php echo htmlspecialchars($current_logo); ?>?v=<?php echo time(); ?>" alt="Logo Preview" style="max-height: 200px; max-width: 100%; filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.2));" onerror="this.src='https://placehold.co/400x200/090415/a855f7?text=Image+Not+Found';">
                         <div class="mt-3 p-2 bg-dark rounded border border-secondary">
                             <code class="small text-info text-break"><?php echo htmlspecialchars($current_logo); ?></code>
                         </div>
