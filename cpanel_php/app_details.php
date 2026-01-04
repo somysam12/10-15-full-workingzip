@@ -98,7 +98,9 @@ try {
         $target_path = $upload_dir . $file_name;
 
         if (!move_uploaded_file($_FILES['apk_file']['tmp_name'], $target_path)) {
-            throw new Exception("Failed to move uploaded file. Check server write permissions.");
+            // Log move error
+            error_log("Failed to move uploaded file: " . $_FILES['apk_file']['tmp_name'] . " to " . $target_path);
+            throw new Exception("Failed to move uploaded file. Check folder permissions (777) on uploads/apks/ and ensure the disk is not full.");
         }
         
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
