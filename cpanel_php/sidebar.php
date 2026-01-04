@@ -34,6 +34,10 @@ $app_type = $_SESSION['app_type'] ?? 'master';
             <i class="fas fa-image"></i> In-App Logo
         </a>
 
+        <a href="features.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'features.php' ? 'active' : ''; ?>">
+            <i class="fas fa-star"></i> Pro Features
+        </a>
+
         <?php if ($app_type === 'master'): ?>
         <a href="analytics.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'analytics.php' ? 'active' : ''; ?>">
             <i class="fas fa-chart-line"></i> Analytics
