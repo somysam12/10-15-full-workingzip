@@ -28,6 +28,9 @@ $app_type = $_SESSION['app_type'] ?? 'master';
         <a href="categories.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'categories.php' ? 'active' : ''; ?>">
             <i class="fas fa-tags"></i> Categories
         </a>
+        <a href="app_logos.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'app_logos.php' ? 'active' : ''; ?>">
+            <i class="fas fa-image"></i> App Logos
+        </a>
         <?php endif; ?>
 
         <?php if ($app_type === 'panel'): ?>
