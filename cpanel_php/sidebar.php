@@ -49,10 +49,11 @@ $app_type = $_SESSION['app_type'] ?? 'master';
         </a>
 
         <div class="mt-auto px-3 mb-3">
-            <hr class="border-secondary">
+            <hr class="border-secondary opacity-25">
             <form action="switch_app.php" method="POST">
-                <button type="submit" name="switch_type" value="<?php echo $app_type === 'master' ? 'panel' : 'master'; ?>" class="btn btn-outline-info w-100 btn-sm">
-                    <i class="fas fa-exchange-alt me-2"></i> Switch to <?php echo $app_type === 'master' ? 'Panel' : 'Master'; ?>
+                <button type="submit" name="switch_type" value="<?php echo $app_type === 'master' ? 'panel' : 'master'; ?>" class="btn btn-outline-info w-100 py-3 d-flex align-items-center justify-content-center">
+                    <i class="fas fa-sync-alt me-2"></i> 
+                    <span>Switch to <?php echo $app_type === 'master' ? 'Panel' : 'Master'; ?></span>
                 </button>
             </form>
         </div>
