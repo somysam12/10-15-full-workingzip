@@ -169,6 +169,34 @@ if (isset($_GET['msg']) && $_GET['msg'] === 'uploaded') { $success_msg = "APK up
     <div class="row">
         <div class="col-md-5">
             <div class="card bg-dark border-secondary shadow mb-4">
+                <div class="card-header bg-dark border-secondary text-primary font-weight-bold">App Icon / Logo</div>
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <?php 
+                        $icon_stmt = $pdo->prepare("SELECT iconUrl FROM apps WHERE id = ?");
+                        $icon_stmt->execute([$app_id]);
+                        $icon_url = $icon_stmt->fetchColumn();
+                        if ($icon_url): ?>
+                            <img src="<?php echo htmlspecialchars($icon_url); ?>" class="rounded shadow-sm" style="width: 100px; height: 100px; object-fit: cover; border: 2px solid var(--primary-color);">
+                        <?php else: ?>
+                            <div class="rounded bg-dark border border-secondary d-flex align-items-center justify-content-center mx-auto" style="width: 100px; height: 100px;">
+                                <i class="fas fa-image fa-2x text-white-50"></i>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    <form method="POST" action="branding.php" enctype="multipart/form-data">
+                        <input type="hidden" name="app_id" value="<?php echo $app_id; ?>">
+                        <div class="mb-3">
+                            <input type="file" name="app_icon" class="form-control form-control-sm bg-dark text-white border-secondary" accept="image/*" required>
+                        </div>
+                        <button type="submit" name="update_app_icon" class="btn btn-outline-primary btn-sm w-100">
+                            <i class="fas fa-sync-alt me-1"></i> Update Icon
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card bg-dark border-secondary shadow mb-4">
                 <div class="card-header bg-dark border-secondary text-primary font-weight-bold">New APK Upload</div>
                 <div class="card-body">
                     <form id="uploadForm" method="POST" enctype="multipart/form-data">
