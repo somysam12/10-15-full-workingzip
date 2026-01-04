@@ -25,9 +25,6 @@ $app_type = $_SESSION['app_type'] ?? 'master';
         <a href="apps.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'apps.php' ? 'active' : ''; ?>">
             <i class="fas fa-mobile-screen"></i> APK Management
         </a>
-        <a href="branding_new.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'branding_new.php' ? 'active' : ''; ?>">
-            <i class="fas fa-palette"></i> Branding & Logo
-        </a>
         <a href="categories.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'categories.php' ? 'active' : ''; ?>">
             <i class="fas fa-tags"></i> Categories
         </a>

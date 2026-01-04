@@ -94,12 +94,12 @@ try {
             }
         }
         
-        // Final Fix: Instead of move_uploaded_file which is restricted on some hosts, 
-        // try copy() which bypasses certain open_basedir restrictions if move fails.
-        if (!move_uploaded_file($_FILES['apk_file']['tmp_name'], $target_path)) {
-            if (!copy($_FILES['apk_file']['tmp_name'], $target_path)) {
-                error_log("CRITICAL: Final move and copy both failed for: " . $_FILES['apk_file']['tmp_name']);
-                throw new Exception("Server Permission Error: Failed to save the file. Please contact host to allow writing to: " . realpath($upload_dir));
+        // Ensure folder is writable
+        if (!is_writable($upload_dir)) {
+            @chmod($upload_dir, 0777);
+            if (!is_writable($upload_dir)) {
+                error_log("CRITICAL: Upload directory is not writable: " . $upload_dir);
+                throw new Exception("The APK upload folder is not writable. Please manually set 777 permissions on 'uploads/apks/' in cPanel.");
             }
         }
 
