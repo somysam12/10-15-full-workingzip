@@ -21,9 +21,11 @@ function addLog($action) {
             <div class="card bg-dark border-secondary h-100">
                 <div class="card-body text-center">
                     <div class="mb-3 text-primary"><i class="fas fa-tools fa-3x"></i></div>
-                    <h5 class="card-title">Maintenance Control</h5>
+                    <h5 class="card-title text-white">Maintenance Control</h5>
                     <p class="text-white-50 small">Independently manage maintenance modes for Master and Panel apps with custom messages.</p>
-                    <a href="settings.php" class="btn btn-outline-primary btn-sm">Configure</a>
+                    <a href="settings.php" class="btn btn-primary btn-sm w-100 py-2">
+                        <i class="fas fa-cog me-1"></i> Configure Now
+                    </a>
                 </div>
             </div>
         </div>
@@ -33,9 +35,11 @@ function addLog($action) {
             <div class="card bg-dark border-secondary h-100">
                 <div class="card-body text-center">
                     <div class="mb-3 text-success"><i class="fas fa-chart-line fa-3x"></i></div>
-                    <h5 class="card-title">Smart Analytics</h5>
+                    <h5 class="card-title text-white">Smart Analytics</h5>
                     <p class="text-white-50 small">Track download counts and active panels in real-time with geographic data (IP tracking).</p>
-                    <a href="analytics.php" class="btn btn-outline-success btn-sm">View Stats</a>
+                    <a href="index.php" class="btn btn-success btn-sm w-100 py-2">
+                        <i class="fas fa-eye me-1"></i> View Live Feed
+                    </a>
                 </div>
             </div>
         </div>
@@ -45,9 +49,11 @@ function addLog($action) {
             <div class="card bg-dark border-secondary h-100">
                 <div class="card-body text-center">
                     <div class="mb-3 text-info"><i class="fas fa-shield-halved fa-3x"></i></div>
-                    <h5 class="card-title">Security Center</h5>
-                    <p class="text-white-50 small">Force logout all users, reset in-app caches remotely, and monitor admin access.</p>
-                    <button class="btn btn-outline-info btn-sm" disabled>Coming Soon</button>
+                    <h5 class="card-title text-white">Security Center</h5>
+                    <p class="text-white-50 small">Force logout all users, reset in-app caches remotely, and monitor admin access logs.</p>
+                    <a href="settings.php#security" class="btn btn-info text-white btn-sm w-100 py-2">
+                        <i class="fas fa-lock me-1"></i> Manage Security
+                    </a>
                 </div>
             </div>
         </div>

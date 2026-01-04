@@ -88,7 +88,7 @@ $maintenance_msg = getConfig($msg_key, 'System is under maintenance.');
             </div>
         </div>
 
-        <div class="card shadow mb-4">
+        <div class="card shadow mb-4" id="security">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-danger"><i class="fas fa-shield-halved me-2"></i>Security Center</h6>
             </div>
