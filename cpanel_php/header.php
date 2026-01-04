@@ -45,138 +45,46 @@ $app_status = getConfig('app_status', 'ON');
             color: white;
             position: fixed;
             width: var(--sidebar-width);
-            z-index: 1000;
+            z-index: 1050;
             box-shadow: 10px 0 30px rgba(0,0,0,0.5);
             border-right: 1px solid rgba(168, 85, 247, 0.1);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .card {
-            background: var(--dark-card) !important;
-            border: 1px solid rgba(168, 85, 247, 0.2) !important;
-            border-radius: 16px !important;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3) !important;
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 40px;
+            min-height: 100vh;
+            width: calc(100% - var(--sidebar-width));
+            display: block;
         }
-
-        .card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary-color) !important;
-            box-shadow: 0 15px 30px rgba(168, 85, 247, 0.15) !important;
+        
+        @media (max-width: 992px) {
+            .sidebar { 
+                transform: translateX(calc(-1 * var(--sidebar-width)));
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .main-content { 
+                margin-left: 0 !important; 
+                width: 100% !important;
+                padding: 20px; 
+            }
+            .mobile-header { display: flex !important; }
         }
-
-        .text-gray-800 { color: var(--text-main) !important; font-weight: 700; }
-        .text-primary { color: var(--primary-color) !important; }
-        .btn-primary { 
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
-            border: none !important;
-            padding: 12px 28px !important;
-            border-radius: 14px !important;
-            font-weight: 700 !important;
-            box-shadow: 0 8px 20px rgba(168, 85, 247, 0.4) !important;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-3px) scale(1.02) !important;
-            box-shadow: 0 12px 25px rgba(168, 85, 247, 0.6) !important;
-            filter: brightness(1.1);
-        }
-
-        .btn-outline-info {
-            border: 2px solid var(--primary-color) !important;
-            background: rgba(168, 85, 247, 0.1) !important;
-            color: white !important;
-            border-radius: 14px !important;
-            font-weight: 700 !important;
-            padding: 12px 24px !important;
-            transition: all 0.3s ease !important;
-            text-transform: uppercase;
-        }
-
-        .btn-outline-info:hover {
-            background: var(--primary-color) !important;
-            box-shadow: 0 0 20px var(--accent-glow) !important;
-            transform: scale(1.02);
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, #ef4444, #b91c1c) !important;
-            border: none !important;
-            border-radius: 14px !important;
-            font-weight: 700 !important;
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3) !important;
-        }
-
-        .btn-danger:hover {
-            transform: translateY(-2px) !important;
-            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.5) !important;
-        }
-
-        .form-check-input {
-            width: 3.5em !important;
-            height: 1.8em !important;
-            background-color: var(--dark-purple) !important;
-            border-color: var(--primary-color) !important;
-            cursor: pointer;
-        }
-
-        .form-check-input:checked {
-            background-color: var(--primary-color) !important;
-            border-color: var(--secondary-color) !important;
-            box-shadow: 0 0 15px var(--accent-glow) !important;
-        }
-
-        /* Mobile specific fixes */
-        @media (max-width: 576px) {
-            .main-content { padding: 15px !important; }
-            .card { border-radius: 12px !important; }
-            h1 { font-size: 1.5rem !important; }
-            .btn { width: 100% !important; margin-bottom: 10px; }
-            .sidebar { width: 280px !important; }
-        }
-
-        .sidebar nav a {
-            padding: 14px 24px;
-            margin: 4px 12px;
-            border-radius: 12px;
-            display: flex;
+        
+        .mobile-header {
+            display: none;
+            background: var(--sidebar-bg);
+            padding: 15px 20px;
             align-items: center;
-            color: var(--text-muted);
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.2s ease;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1045;
+            border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+            width: 100%;
         }
-
-        .sidebar nav a i { margin-right: 12px; width: 20px; text-align: center; font-size: 1.1rem; }
-
-        .sidebar nav a:hover, .sidebar nav a.active {
-            background: rgba(168, 85, 247, 0.15);
-            color: white;
-            box-shadow: inset 0 0 10px rgba(168, 85, 247, 0.1);
-        }
-
-        .sidebar nav a.active {
-            background: linear-gradient(90deg, rgba(168, 85, 247, 0.3), transparent);
-            border-left: 4px solid var(--primary-color);
-            color: var(--primary-color);
-        }
-    </style>
-</head>
-<body>
-<div class="mobile-header">
-    <button class="btn text-white p-0" id="mobile-toggle">
-        <i class="fas fa-bars fa-lg"></i>
-    </button>
-    <h5 class="mb-0 fw-bold">Silent Panel</h5>
-    <div style="width: 24px;"></div>
-</div>
-<div class="container-fluid p-0">
-    <div class="d-flex">
-        <div class="sidebar-container">
-            <?php require_once 'sidebar.php'; ?>
-        </div>
-        <div class="main-content w-100">
 <?php if (isset($msg)): ?><div class="alert alert-success alert-dismissible fade show"><i class="fas fa-check-circle"></i> <?php echo $msg; ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><?php endif; ?>
 <?php if (isset($error)): ?><div class="alert alert-danger alert-dismissible fade show"><i class="fas fa-exclamation-triangle"></i> <?php echo $error; ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><?php endif; ?>
