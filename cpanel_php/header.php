@@ -57,6 +57,8 @@ $app_status = getConfig('app_status', 'ON');
             min-height: 100vh;
             width: calc(100% - var(--sidebar-width));
             display: block;
+            position: relative;
+            z-index: 1;
         }
         
         @media (max-width: 992px) {
