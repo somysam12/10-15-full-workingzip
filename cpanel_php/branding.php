@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($base_path === DIRECTORY_SEPARATOR || $base_path === '.') $base_path = '';
                 $url = $protocol . "://" . $_SERVER['HTTP_HOST'] . $base_path . '/' . $target;
                 
-                $stmt = $pdo->prepare("INSERT INTO app_config (config_key, config_value) VALUES ('main_logo_url', ?) ON DUPLICATE KEY UPDATE config_value = ?");
+                $stmt = $pdo->prepare("INSERT INTO app_config (config_key, config_value) VALUES ('main_logo_url', ?) ON CONFLICT (config_key) DO UPDATE SET config_value = EXCLUDED.config_value");
                 $stmt->execute([$url, $url]);
                 $success_msg = "Main logo updated!";
             }
