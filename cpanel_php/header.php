@@ -14,7 +14,10 @@ $app_status = getConfig('app_status', 'ON');
     <title>Silent Panel Control</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         :root {
             --primary-color: #a855f7;
@@ -30,6 +33,12 @@ $app_status = getConfig('app_status', 'ON');
             --accent-glow: rgba(168, 85, 247, 0.4);
         }
         
+        * {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            box-sizing: border-box;
+        }
+
         body { 
             background: var(--bg-dark); 
             font-family: 'Inter', sans-serif;
@@ -38,6 +47,7 @@ $app_status = getConfig('app_status', 'ON');
             color: var(--text-main);
             letter-spacing: -0.011em;
             overflow-x: hidden;
+            scroll-behavior: smooth;
         }
 
         /* Sidebar Styling */
@@ -52,40 +62,42 @@ $app_status = getConfig('app_status', 'ON');
             z-index: 1050;
             box-shadow: 10px 0 30px rgba(0,0,0,0.5);
             border-right: 1px solid rgba(168, 85, 247, 0.1);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform;
         }
 
         .main-content {
             margin-left: var(--sidebar-width);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             padding: 2rem;
             min-height: 100vh;
+            will-change: margin-left;
         }
 
         /* Hamburger Button */
         .hamburger-btn {
             position: fixed;
-            top: 20px;
-            left: 20px;
+            top: 15px;
+            left: 15px;
             z-index: 1100;
             background: var(--primary-color);
             border: none;
             color: white;
-            width: 45px;
-            height: 45px;
-            border-radius: 12px;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
-            transition: all 0.3s ease;
-            display: none; /* Desktop hidden by default */
+            transition: transform 0.2s ease, background 0.2s ease;
+            display: none;
+            will-change: transform;
         }
 
-        .hamburger-btn:hover {
-            transform: scale(1.05);
-            background: var(--secondary-color);
+        .hamburger-btn:active {
+            transform: scale(0.95);
         }
 
         /* Overlay */
@@ -93,14 +105,16 @@ $app_status = getConfig('app_status', 'ON');
             position: fixed;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0,0,0,0.7);
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
             backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
             z-index: 1040;
             display: none;
             opacity: 0;
             transition: opacity 0.3s ease;
+            will-change: opacity;
         }
 
         .sidebar-overlay.active {
@@ -110,28 +124,35 @@ $app_status = getConfig('app_status', 'ON');
 
         @media (max-width: 992px) {
             .sidebar {
-                left: calc(-1 * var(--sidebar-width));
+                transform: translateX(-100%);
             }
             .sidebar.active {
-                left: 0;
+                transform: translateX(0);
             }
             .main-content {
                 margin-left: 0 !important;
+                padding: 1rem;
+                padding-top: 4.5rem;
             }
             .hamburger-btn {
                 display: flex;
-            }
-            .mobile-header {
-                display: none !important; /* Remove old header */
             }
         }
 
         .card {
             background: var(--dark-card) !important;
-            border: 1px solid rgba(168, 85, 247, 0.2) !important;
+            border: 1px solid rgba(168, 85, 247, 0.15) !important;
             border-radius: 16px !important;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3) !important;
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2) !important;
+            overflow: hidden;
+            will-change: transform;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 12px 24px rgba(168, 85, 247, 0.15) !important;
         }
 
         .card:hover {

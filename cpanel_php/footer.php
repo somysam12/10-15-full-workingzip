@@ -13,27 +13,19 @@ function toggleSidebar() {
     
     const icon = toggleBtn.querySelector('i');
     if (sidebar.classList.contains('active')) {
-        icon.classList.remove('fa-bars');
-        icon.classList.add('fa-times');
+        icon.classList.replace('fa-bars', 'fa-times');
     } else {
-        icon.classList.remove('fa-times');
-        icon.classList.add('fa-bars');
+        icon.classList.replace('fa-times', 'fa-bars');
     }
 }
 
-if (toggleBtn) {
-    toggleBtn.addEventListener('click', toggleSidebar);
-}
+if (toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
+if (overlay) overlay.addEventListener('click', toggleSidebar);
 
-if (overlay) {
-    overlay.addEventListener('click', toggleSidebar);
-}
-
-// Active link highlight with smooth transition
+// Smooth navigation indicator
 document.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', function() {
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        this.classList.add('active');
+    link.addEventListener('click', () => {
+        if (window.innerWidth <= 992) toggleSidebar();
     });
 });
 </script>

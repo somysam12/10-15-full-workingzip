@@ -18,7 +18,7 @@ $app_type = $_SESSION['app_type'] ?? 'master';
     </div>
     <nav>
         <a href="index.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''; ?>">
-            <i class="fas fa-tachometer-alt"></i> Dashboard
+            <i class="fas fa-home"></i> Dashboard
         </a>
         
         <?php if ($app_type === 'master'): ?>
