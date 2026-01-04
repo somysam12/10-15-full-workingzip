@@ -32,6 +32,11 @@ try {
     $stmt_ann->execute([$req_app_type]);
     $ann = $stmt_ann->fetch();
 
+    // Base URL for absolute paths
+    $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
+    $base_url = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']);
+    $base_url = rtrim($base_url, '/\\') . '/';
+
     $response = [
         "status" => "success",
         "config" => [
@@ -57,9 +62,15 @@ try {
             ORDER BY a.id DESC
         ");
         
-        $apps = array_map(function($row) {
+        $apps = array_map(function($row) use ($base_url) {
             $row['id'] = (string)$row['id'];
             $row['versionCode'] = (int)$row['versionCode'];
+            
+            // Ensure absolute URL for downloadUrl
+            if (!empty($row['downloadUrl']) && !filter_var($row['downloadUrl'], FILTER_VALIDATE_URL)) {
+                $row['downloadUrl'] = $base_url . $row['downloadUrl'];
+            }
+            
             return $row;
         }, $apps_stmt->fetchAll(PDO::FETCH_ASSOC));
         $response['config']['apks'] = $apps;
