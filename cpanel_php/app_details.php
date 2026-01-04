@@ -87,8 +87,20 @@ try {
         }
 
         $upload_dir = 'uploads/apks/';
-        if (!is_dir($upload_dir) && !mkdir($upload_dir, 0777, true)) {
-            throw new Exception("Failed to create upload directory. Check permissions.");
+        if (!is_dir($upload_dir)) {
+            if (!mkdir($upload_dir, 0777, true)) {
+                error_log("CRITICAL: Failed to create directory: " . $upload_dir);
+                throw new Exception("Failed to create upload directory. Check permissions (777) on the 'uploads' folder.");
+            }
+        }
+        
+        // Ensure folder is writable
+        if (!is_writable($upload_dir)) {
+            @chmod($upload_dir, 0777);
+            if (!is_writable($upload_dir)) {
+                error_log("CRITICAL: Upload directory is not writable: " . $upload_dir);
+                throw new Exception("The APK upload folder is not writable. Please manually set 777 permissions on 'uploads/apks/' in cPanel.");
+            }
         }
 
         $version_name = $_POST['version_name'] ?? 'New Version';
@@ -305,6 +317,7 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
 
     xhr.onreadystatechange = function() {
         if (xhr.readyState === XMLHttpRequest.DONE) {
+            console.log("Upload Response:", xhr.responseText); // Debug
             if (xhr.status === 200) {
                 try {
                     const res = JSON.parse(xhr.responseText);
