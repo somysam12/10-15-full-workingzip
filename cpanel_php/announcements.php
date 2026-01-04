@@ -5,8 +5,8 @@ $current_app_type = $_SESSION['app_type'] ?? 'master';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_ann'])) {
-        $stmt = $pdo->prepare("INSERT INTO announcements (title, message, priority, active, app_type) VALUES (?, ?, ?, 1, ?)");
-        $stmt->execute([$_POST['title'], $_POST['message'], $_POST['priority'], $current_app_type]);
+        $stmt = $pdo->prepare("INSERT INTO announcements (title, message, active, app_type) VALUES (?, ?, 1, ?)");
+        $stmt->execute([$_POST['title'], $_POST['message'], $current_app_type]);
         $msg = "Announcement added successfully";
     }
     if (isset($_POST['delete_ann'])) {
@@ -37,7 +37,6 @@ $anns = $stmt->fetchAll();
                     <tr>
                         <th>Title</th>
                         <th>Message</th>
-                        <th>Priority</th>
                         <th>Target</th>
                         <th>Action</th>
                     </tr>
@@ -47,7 +46,6 @@ $anns = $stmt->fetchAll();
                     <tr>
                         <td><?php echo htmlspecialchars($ann['title']); ?></td>
                         <td><?php echo htmlspecialchars($ann['message']); ?></td>
-                        <td><span class="badge bg-info"><?php echo $ann['priority']; ?></span></td>
                         <td><?php echo $ann['app_type']; ?></td>
                         <td>
                             <form method="POST" onsubmit="return confirm('Delete?');">
@@ -77,14 +75,6 @@ $anns = $stmt->fetchAll();
                     <div class="mb-3">
                         <label>Message</label>
                         <textarea name="message" class="form-control" rows="3" required></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label>Priority</label>
-                        <select name="priority" class="form-select">
-                            <option value="info">Info</option>
-                            <option value="warning">Warning</option>
-                            <option value="urgent">Urgent</option>
-                        </select>
                     </div>
                 </div>
                 <div class="modal-footer">
