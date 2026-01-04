@@ -70,7 +70,21 @@ CREATE TABLE IF NOT EXISTS download_stats (
     FOREIGN KEY (version_id) REFERENCES app_versions(id)
 );
 
--- Default Admin (admin123)
+CREATE TABLE IF NOT EXISTS security_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    admin_id INT,
+    action VARCHAR(255) NOT NULL,
+    details TEXT,
+    ip_address VARCHAR(45),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS panel_status (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    panel_id INT,
+    is_online TINYINT(1) DEFAULT 1,
+    last_check TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 INSERT INTO admins (username, password_hash) 
 VALUES ('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi')
 ON DUPLICATE KEY UPDATE username=username;

@@ -11,8 +11,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         setConfig($msg_key, $_POST['maintenance_msg']);
         
         // Security Center: Log settings update
+        $admin_id = $_SESSION['admin_id'] ?? 0;
         $stmt = $pdo->prepare("INSERT INTO security_logs (admin_id, action, details, ip_address) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$_SESSION['admin_id'], 'UPDATE_SETTINGS', "Changed maintenance status to " . $_POST['app_status'], $_SERVER['REMOTE_ADDR']]);
+        $stmt->execute([$admin_id, 'UPDATE_SETTINGS', "Changed maintenance status to " . $_POST['app_status'], $_SERVER['REMOTE_ADDR']]);
         
         $msg = "Settings updated successfully!";
     }
@@ -22,8 +23,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare("UPDATE admins SET last_login = NULL");
         $stmt->execute();
         
+        $admin_id = $_SESSION['admin_id'] ?? 0;
         $stmt = $pdo->prepare("INSERT INTO security_logs (admin_id, action, details, ip_address) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$_SESSION['admin_id'], 'FORCE_LOGOUT_ALL', "Admin triggered global logout", $_SERVER['REMOTE_ADDR']]);
+        $stmt->execute([$admin_id, 'FORCE_LOGOUT_ALL', "Admin triggered global logout", $_SERVER['REMOTE_ADDR']]);
         $msg = "All users session reset triggered!";
     }
 
@@ -31,8 +33,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // App-specific cache reset via config flag
         setConfig('reset_cache_flag_' . $app_type, time());
         
+        $admin_id = $_SESSION['admin_id'] ?? 0;
         $stmt = $pdo->prepare("INSERT INTO security_logs (admin_id, action, details, ip_address) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$_SESSION['admin_id'], 'RESET_CACHE', "Admin reset in-app cache for $app_type", $_SERVER['REMOTE_ADDR']]);
+        $stmt->execute([$admin_id, 'RESET_CACHE', "Admin reset in-app cache for $app_type", $_SERVER['REMOTE_ADDR']]);
         $msg = "App cache reset signal sent!";
     }
     
@@ -45,8 +48,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$new_user, $hash, $_SESSION['admin_id']]);
             $_SESSION['username'] = $new_user;
             
+            $admin_id = $_SESSION['admin_id'] ?? 0;
             $stmt = $pdo->prepare("INSERT INTO security_logs (admin_id, action, details, ip_address) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$_SESSION['admin_id'], 'UPDATE_ADMIN', "Admin credentials updated", $_SERVER['REMOTE_ADDR']]);
+            $stmt->execute([$admin_id, 'UPDATE_ADMIN', "Admin credentials updated", $_SERVER['REMOTE_ADDR']]);
             $msg = "Admin credentials updated successfully";
         }
     }
