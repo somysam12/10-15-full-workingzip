@@ -1,6 +1,8 @@
 <?php
 // config.php - Unified Config for Replit and CPanel
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // --- CRITICAL DATABASE CREDENTIALS ---
 $db_host = 'localhost';

@@ -1,7 +1,8 @@
 <?php
-require_once 'header.php';
+require_once 'config.php';
 requireLogin();
 
+$app_type = $_SESSION['app_type'] ?? 'master';
 $config = getAllConfig();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_viewport'])) {
@@ -13,16 +14,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_viewport'])) {
     foreach ($keys as $key) {
         if (isset($_POST[$key])) setConfig($key, $_POST[$key]);
     }
-    $msg = "Viewport settings updated!";
-    $config = getAllConfig();
+    header("Location: viewport.php?success=1");
+    exit();
 }
+
+if (isset($_GET['success'])) {
+    $msg = "Viewport settings updated!";
+}
+
+require_once 'header.php';
 
 $layout_preset = $config['layout_preset'] ?? 'RIGHT_FOCUS';
 ?>
-
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-white">Viewport & Layout Control</h1>
-</div>
 
 <div class="row">
     <div class="col-lg-12">

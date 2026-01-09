@@ -30,7 +30,8 @@ try {
         "modes" => [
             "focus_mode" => ($config['modes_focus_mode'] ?? 'true') === 'true',
             "lock_reveal" => ($config['modes_lock_reveal'] ?? 'true') === 'true'
-        ]
+        ],
+        "layout_preset" => $config['layout_preset'] ?? 'RIGHT_FOCUS'
     ];
 
     echo json_encode($response, JSON_PRETTY_PRINT);

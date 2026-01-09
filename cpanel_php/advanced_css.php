@@ -1,7 +1,8 @@
 <?php
-require_once 'header.php';
+require_once 'config.php';
 requireLogin();
 
+$app_type = $_SESSION['app_type'] ?? 'master';
 $config = getAllConfig();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_css'])) {
@@ -15,14 +16,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_css'])) {
         if ($val === 'on') $val = 'true';
         setConfig($key, $val);
     }
-    $msg = "CSS & Advanced settings updated!";
-    $config = getAllConfig();
+    header("Location: advanced_css.php?success=1");
+    exit();
 }
-?>
 
+if (isset($_GET['success'])) {
+    $msg = "CSS & Advanced settings updated!";
+}
+
+require_once 'header.php';
+?>
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-white">CSS & Advanced Injection</h1>
-</div>
 
 <div class="row">
     <div class="col-lg-12">
