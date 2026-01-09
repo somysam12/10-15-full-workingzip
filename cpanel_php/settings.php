@@ -80,65 +80,6 @@ $layout_preset = $config['layout_preset'] ?? 'RIGHT_FOCUS';
 </div>
 
 <div class="row">
-    <div class="col-lg-12">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-layer-group me-2"></i>Layout & Viewport Config</h6>
-            </div>
-            <div class="card-body">
-                <form method="POST">
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label text-white-50">Layout Preset</label>
-                            <select name="layout_preset" class="form-select bg-dark text-white border-secondary">
-                                <option value="CENTER_CROP" <?php echo $layout_preset == 'CENTER_CROP' ? 'selected' : ''; ?>>CENTER_CROP</option>
-                                <option value="RIGHT_FOCUS" <?php echo $layout_preset == 'RIGHT_FOCUS' ? 'selected' : ''; ?>>RIGHT_FOCUS</option>
-                                <option value="LEFT_FOCUS" <?php echo $layout_preset == 'LEFT_FOCUS' ? 'selected' : ''; ?>>LEFT_FOCUS</option>
-                                <option value="FULL_FIT" <?php echo $layout_preset == 'FULL_FIT' ? 'selected' : ''; ?>>FULL_FIT</option>
-                                <option value="CUSTOM" <?php echo $layout_preset == 'CUSTOM' ? 'selected' : ''; ?>>CUSTOM</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label text-white-50">App Scale</label>
-                            <input type="text" name="viewport_app_scale" class="form-control bg-dark text-white border-secondary" value="<?php echo htmlspecialchars($config['viewport_app_scale'] ?? '1.32'); ?>">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label text-white-50">Shift Right (DP)</label>
-                            <input type="number" name="viewport_shift_right_dp" class="form-control bg-dark text-white border-secondary" value="<?php echo htmlspecialchars($config['viewport_shift_right_dp'] ?? '140'); ?>">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label text-white-50">CSS Zoom Scale</label>
-                            <input type="text" name="css_zoom_scale" class="form-control bg-dark text-white border-secondary" value="<?php echo htmlspecialchars($config['css_zoom_scale'] ?? '1.15'); ?>">
-                        </div>
-                        <div class="col-md-8 mb-3">
-                            <label class="form-label text-white-50">Hide Selectors (comma separated)</label>
-                            <input type="text" name="css_hide_selectors" class="form-control bg-dark text-white border-secondary" value="<?php echo htmlspecialchars($config['css_hide_selectors'] ?? 'header,.top-banner,.banner,.vmos-header,.vmos-top'); ?>">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-3 mb-3">
-                            <div class="form-check form-switch mt-4">
-                                <input class="form-check-input" type="checkbox" name="css_enable" value="true" <?php echo ($config['css_enable'] ?? 'true') === 'true' ? 'checked' : ''; ?>>
-                                <label class="form-check-label text-white-50">Enable CSS</label>
-                            </div>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <div class="form-check form-switch mt-4">
-                                <input class="form-check-input" type="checkbox" name="modes_lock_reveal" value="true" <?php echo ($config['modes_lock_reveal'] ?? 'true') === 'true' ? 'checked' : ''; ?>>
-                                <label class="form-check-label text-white-50">Lock Reveal</label>
-                            </div>
-                        </div>
-                    </div>
-                    <button type="submit" name="update_advanced_settings" class="btn btn-primary">Update Advanced Config</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
     <div class="col-lg-6">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
