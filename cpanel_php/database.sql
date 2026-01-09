@@ -1,20 +1,20 @@
--- Silent Panel Database Schema (PostgreSQL Optimized)
+-- Silent Panel Database Schema (MySQL Optimized for cPanel)
 
 CREATE TABLE IF NOT EXISTS admins (
-    id SERIAL PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     last_login TIMESTAMP NULL
 );
 
 CREATE TABLE IF NOT EXISTS app_config (
-    id SERIAL PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     config_key VARCHAR(255) UNIQUE NOT NULL,
     config_value TEXT
 );
 
 CREATE TABLE IF NOT EXISTS announcements (
-    id SERIAL PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255),
     message TEXT,
     button_text VARCHAR(255),
@@ -22,12 +22,12 @@ CREATE TABLE IF NOT EXISTS announcements (
     type VARCHAR(50) DEFAULT 'banner',
     start_time TIMESTAMP NULL,
     end_time TIMESTAMP NULL,
-    active SMALLINT DEFAULT 0,
+    active TINYINT(1) DEFAULT 0,
     app_type VARCHAR(50) NOT NULL DEFAULT 'all'
 );
 
 CREATE TABLE IF NOT EXISTS panels (
-    id SERIAL PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     url VARCHAR(500),
     site_key VARCHAR(255),
@@ -36,12 +36,12 @@ CREATE TABLE IF NOT EXISTS panels (
 );
 
 CREATE TABLE IF NOT EXISTS categories (
-    id SERIAL PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS apps (
-    id SERIAL PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     app_name VARCHAR(255) NOT NULL,
     category_id INT,
     packageName VARCHAR(255) NULL,
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS apps (
 );
 
 CREATE TABLE IF NOT EXISTS app_versions (
-    id SERIAL PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     app_id INT NOT NULL,
     version_name VARCHAR(255) NOT NULL,
     apk_url VARCHAR(500) NOT NULL,
@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS app_versions (
 );
 
 CREATE TABLE IF NOT EXISTS download_stats (
-    id SERIAL PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     app_id INT,
     version_id INT,
     downloaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -70,26 +70,10 @@ CREATE TABLE IF NOT EXISTS download_stats (
     FOREIGN KEY (version_id) REFERENCES app_versions(id)
 );
 
-CREATE TABLE IF NOT EXISTS security_logs (
-    id SERIAL PRIMARY KEY,
-    admin_id INT,
-    action VARCHAR(255) NOT NULL,
-    details TEXT,
-    ip_address VARCHAR(45),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS panel_status (
-    id SERIAL PRIMARY KEY,
-    panel_id INT,
-    is_online SMALLINT DEFAULT 1,
-    last_check TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Default Admin (Password: admin123)
 INSERT INTO admins (username, password_hash) 
 VALUES ('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi')
-ON CONFLICT (username) DO NOTHING;
+ON DUPLICATE KEY UPDATE username=username;
 
 -- Initial Config Keys
 INSERT INTO app_config (config_key, config_value) VALUES
@@ -109,4 +93,4 @@ INSERT INTO app_config (config_key, config_value) VALUES
 ('css_hide_selectors', 'header,.top-banner,.banner,.vmos-header'),
 ('modes_focus_mode', 'true'),
 ('modes_lock_reveal', 'true')
-ON CONFLICT (config_key) DO NOTHING;
+ON DUPLICATE KEY UPDATE config_key=config_key;
