@@ -1,0 +1,228 @@
+Good — now you finally pasted the actual PHP, so we can stop guessing.
+I’ll do this in 4 clear parts:
+
+Why your panel changes are NOT affecting the app (exact bug)
+
+What is wrong in your current PHP APIs
+
+How to FIX the architecture (single source of truth)
+
+FINAL copy-paste PHP code for cPanel (clean + working)
+
+No fluff. Straight engineering.
+
+1️⃣ WHY YOUR PANEL → APP IS NOT WORKING (ROOT CAUSE)
+❌ You have THREE DIFFERENT APIs returning config
+
+api.php
+
+api_config.php
+
+app_config.php
+
+And NONE of them are actually the one your Android app is using for viewport/CSS.
+
+🔴 Critical problems
+❌ Problem A — Android app is calling app_config.php
+
+But:
+
+app_config.php DOES NOT include viewport / css / crop config
+
+So even if panel saves values → app never sees them
+
+❌ Problem B — api_config.php is correct BUT unused
+
+This file contains viewport + css + crop
+
+Android never calls it
+
+Result = no effect
+
+❌ Problem C — Duplicate & conflicting config keys
+
+You have:
+
+"layout_preset" => ...
+
+
+defined twice in api_config.php
+(PHP overwrites silently — bad practice)
+
+2️⃣ WHAT IS ACTUALLY WRONG (MARK THIS FOR YOUR AGENT)
+❌ Your architecture today
+Admin Panel
+   ↓ saves DB
+api_config.php  (correct data)
+   ❌ NOT USED
+
+Android App
+   ↓ calls
+app_config.php  (missing viewport/css)
+
+
+So:
+
+Panel works ✔
+Database updates ✔
+App receives nothing ❌
+
+3️⃣ THE ONLY CORRECT FIX (DO NOT SKIP)
+✅ Rule: ONE API = ONE SOURCE OF TRUTH
+
+You must:
+
+MERGE api_config.php INTO app_config.php
+
+Android should call ONLY app_config.php
+
+Remove viewport logic from anywhere else
+
+4️⃣ FINAL FIX — COPY-PASTE CODE (cPanel)
+
+Below is a FULLY FIXED app_config.php
+It includes:
+
+✔ Global control
+✔ Branding
+✔ Panels
+✔ Viewport (scale / shift / black area)
+✔ CSS injection config
+✔ Auto banner crop
+✔ Future-proof
+
+✅ FINAL app_config.php (REPLACE COMPLETELY)
+<?php
+require_once 'config.php';
+header('Content-Type: application/json');
+
+try {
+
+    $config = getAllConfig();
+    $ann = getActiveAnnouncement();
+    $panels = getAllPanels();
+
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
+    $base_url = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']);
+
+    // ---------- CORE RESPONSE ----------
+    $response = [
+
+        /* ================= GLOBAL CONTROL ================= */
+        "global_control" => [
+            "app_status" => $config['app_status'] ?? 'ON',
+            "maintenance_message" => $config['maintenance_message'] ?? '',
+            "force_logout" => ($config['force_logout_flag'] ?? 'no') === 'yes'
+        ],
+
+        /* ================= VERSION CONTROL ================= */
+        "version_management" => [
+            "latest_version" => $config['latest_version'] ?? '1.0.0',
+            "min_required_version" => (int)($config['min_required_version'] ?? 1),
+            "update_url" => $config['update_url'] ?? '',
+            "update_message" => $config['update_message'] ?? ''
+        ],
+
+        /* ================= VIEWPORT CONTROL ================= */
+        "viewport" => [
+            "layout_preset" => $config['layout_preset'] ?? 'RIGHT_FOCUS',
+
+            "app_scale" => (float)($config['viewport_app_scale'] ?? 1.25),
+            "shift_right_dp" => (int)($config['viewport_shift_right_dp'] ?? 120),
+            "shift_down_dp" => (int)($config['viewport_shift_down_dp'] ?? 120),
+            "black_left_dp" => (int)($config['viewport_black_left_dp'] ?? 50),
+
+            "container_width_percent" => (int)($config['viewport_container_width_percent'] ?? 92),
+            "container_height_percent" => (int)($config['viewport_container_height_percent'] ?? 100)
+        ],
+
+        /* ================= AUTO CROP ================= */
+        "crop" => [
+            "auto_detect_banner" => ($config['crop_auto_detect_banner'] ?? 'true') === 'true',
+            "min_banner_height_px" => (int)($config['crop_min_banner_height_px'] ?? 50)
+        ],
+
+        /* ================= CSS INJECTION ================= */
+        "css" => [
+            "enable" => ($config['css_enable'] ?? 'true') === 'true',
+            "zoom_scale" => (float)($config['css_zoom_scale'] ?? 1.15),
+            "hide_selectors" => array_map(
+                'trim',
+                explode(',', $config['css_hide_selectors'] ?? 'header,.top-banner,.banner,.vmos-header,.vmos-top')
+            )
+        ],
+
+        /* ================= MODES ================= */
+        "modes" => [
+            "focus_mode" => ($config['modes_focus_mode'] ?? 'true') === 'true',
+            "lock_reveal" => ($config['modes_lock_reveal'] ?? 'true') === 'true'
+        ],
+
+        /* ================= BRANDING ================= */
+        "branding" => [
+            "splash_logo" => $base_url . "/splash_logo.png",
+            "app_logo" => $base_url . "/logo.png",
+            "bg_color" => $config['bg_color'] ?? '#0A0E27'
+        ],
+
+        /* ================= ANNOUNCEMENT ================= */
+        "announcement" => $ann ? [
+            "title" => $ann['title'],
+            "message" => $ann['message'],
+            "button_text" => $ann['button_text'],
+            "button_link" => $ann['button_link']
+        ] : null,
+
+        /* ================= PANELS ================= */
+        "panels" => []
+    ];
+
+    foreach ($panels as $p) {
+        $response['panels'][] = [
+            "name" => $p['name'],
+            "url" => $p['url'],
+            "key" => $p['site_key'],
+            "package_name" => $p['package_name'] ?? '',
+            "version" => $p['version'] ?? '1.0.0'
+        ];
+    }
+
+    echo json_encode($response, JSON_PRETTY_PRINT);
+
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode([
+        "status" => "error",
+        "message" => $e->getMessage()
+    ]);
+}
+
+5️⃣ WHAT YOUR ANDROID AGENT MUST DO (VERY IMPORTANT)
+
+Tell him exactly this:
+
+❗ Stop using api.php and api_config.php
+✅ Fetch ONLY app_config.php
+✅ Parse viewport, css, crop blocks
+✅ Apply them dynamically on launch + refresh
+❌ Do NOT hardcode scale/shift anymore
+
+If he doesn’t do this → panel will never work.
+
+FINAL VERDICT (HONEST)
+
+❌ Website is NOT the issue
+
+❌ VMOS is NOT the issue
+
+❌ CSS zoom value is NOT the issue
+
+✅ Broken API integration was the issue
+
+Now you have:
+
+Correct backend
+
+Clean config
+
+Future-proof control panel

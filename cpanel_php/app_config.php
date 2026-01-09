@@ -2,81 +2,103 @@
 require_once 'config.php';
 header('Content-Type: application/json');
 
-// --- START: CACHE-BUSTING FIX ---
-function get_cache_buster($file_path) {
-    if (file_exists($file_path)) {
-        return '?v=' . filemtime($file_path);
-    }
-    return '';
-}
+try {
 
-$splash_logo_path = __DIR__ . '/splash_logo.png';
-$app_logo_path = __DIR__ . '/logo.png';
+    $config = getAllConfig();
+    $ann = getActiveAnnouncement();
+    $panels = getAllPanels();
 
-$splash_logo_cache_buster = get_cache_buster($splash_logo_path);
-$app_logo_cache_buster = get_cache_buster($app_logo_path);
-// --- END: CACHE-BUSTING FIX ---
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
+    $base_url = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']);
 
-$all_config = getAllConfig();
-$ann = getActiveAnnouncement();
-$panels = getAllPanels();
+    // ---------- CORE RESPONSE ----------
+    $response = [
 
-$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
-$base_url = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']);
+        /* ================= GLOBAL CONTROL ================= */
+        "global_control" => [
+            "app_status" => $config['app_status'] ?? 'ON',
+            "maintenance_message" => $config['maintenance_message'] ?? '',
+            "force_logout" => ($config['force_logout_flag'] ?? 'no') === 'yes'
+        ],
 
-// Format response to match all new features
-$response = [
-    "global_control" => [
-        "app_status" => $all_config['app_status'] ?? 'ON',
-        "maintenance_message" => $all_config['maintenance_message'] ?? '',
-        "force_logout" => ($all_config['force_logout_flag'] ?? 'no') === 'yes'
-    ],
-    "version_management" => [
-        "latest_version" => $all_config['latest_version'] ?? '1.0.0',
-        "min_required_version" => (int)($all_config['min_required_version'] ?? 1),
-        "update_url" => $all_config['update_url'] ?? '',
-        "update_message" => $all_config['update_message'] ?? ''
-    ],
-    "remote_reset" => [
-        "reset_cache" => ($all_config['reset_cache_flag'] ?? 'no') === 'yes',
-        "reset_time" => $all_config['reset_time'] ?? ''
-    ],
-    "announcement" => $ann ? [
-        "id" => $ann['id'],
-        "title" => $ann['title'],
-        "message" => $ann['message'],
-        "button_text" => $ann['button_text'],
-        "button_link" => $ann['button_link'],
-        "type" => $ann['type'],
-        "start" => $ann['start_time'],
-        "end" => $ann['end_time']
-    ] : null,
-    "theme" => [
-        "mode" => $all_config['theme_mode'] ?? 'System',
-        "locked" => ($all_config['theme_locked'] ?? 'no') === 'yes'
-    ],
-    "branding" => [
-        "splash_logo" => $base_url . "/splash_logo.png" . $splash_logo_cache_buster,
-        "app_logo" => $base_url . "/logo.png" . $app_logo_cache_buster,
-        "loader_animation_url" => $all_config['loader_url'] ?? '',
-        "splash_text" => $all_config['splash_text'] ?? '',
-        "splash_text_color" => $all_config['splash_text_color'] ?? '#ffffff',
-        "splash_text_position" => $all_config['splash_text_position'] ?? 'center',
-        "bg_color" => $all_config['bg_color'] ?? '#0A0E27'
-    ],
-    "panels" => []
-];
+        /* ================= VERSION CONTROL ================= */
+        "version_management" => [
+            "latest_version" => $config['latest_version'] ?? '1.0.0',
+            "min_required_version" => (int)($config['min_required_version'] ?? 1),
+            "update_url" => $config['update_url'] ?? '',
+            "update_message" => $config['update_message'] ?? ''
+        ],
 
-foreach ($panels as $p) {
-    // MODIFIED PART: Added package_name and version
-    $response['panels'][] = [
-        "name" => $p['name'],
-        "url" => $p['url'],
-        "key" => $p['site_key'],
-        "package_name" => $p['package_name'] ?? '', // Make sure your database provides this
-        "version" => $p['version'] ?? '1.0.0'      // Make sure your database provides this
+        /* ================= VIEWPORT CONTROL ================= */
+        "viewport" => [
+            "layout_preset" => $config['layout_preset'] ?? 'RIGHT_FOCUS',
+
+            "app_scale" => (float)($config['viewport_app_scale'] ?? 1.25),
+            "shift_right_dp" => (int)($config['viewport_shift_right_dp'] ?? 120),
+            "shift_down_dp" => (int)($config['viewport_shift_down_dp'] ?? 120),
+            "black_left_dp" => (int)($config['viewport_black_left_dp'] ?? 50),
+
+            "container_width_percent" => (int)($config['viewport_container_width_percent'] ?? 92),
+            "container_height_percent" => (int)($config['viewport_container_height_percent'] ?? 100)
+        ],
+
+        /* ================= AUTO CROP ================= */
+        "crop" => [
+            "auto_detect_banner" => ($config['crop_auto_detect_banner'] ?? 'true') === 'true',
+            "min_banner_height_px" => (int)($config['crop_min_banner_height_px'] ?? 50)
+        ],
+
+        /* ================= CSS INJECTION ================= */
+        "css" => [
+            "enable" => ($config['css_enable'] ?? 'true') === 'true',
+            "zoom_scale" => (float)($config['css_zoom_scale'] ?? 1.15),
+            "hide_selectors" => array_map(
+                'trim',
+                explode(',', $config['css_hide_selectors'] ?? 'header,.top-banner,.banner,.vmos-header,.vmos-top')
+            )
+        ],
+
+        /* ================= MODES ================= */
+        "modes" => [
+            "focus_mode" => ($config['modes_focus_mode'] ?? 'true') === 'true',
+            "lock_reveal" => ($config['modes_lock_reveal'] ?? 'true') === 'true'
+        ],
+
+        /* ================= BRANDING ================= */
+        "branding" => [
+            "splash_logo" => $base_url . "/splash_logo.png",
+            "app_logo" => $base_url . "/logo.png",
+            "bg_color" => $config['bg_color'] ?? '#0A0E27'
+        ],
+
+        /* ================= ANNOUNCEMENT ================= */
+        "announcement" => $ann ? [
+            "title" => $ann['title'],
+            "message" => $ann['message'],
+            "button_text" => $ann['button_text'],
+            "button_link" => $ann['button_link']
+        ] : null,
+
+        /* ================= PANELS ================= */
+        "panels" => []
     ];
-}
 
-echo json_encode($response, JSON_PRETTY_PRINT);
-?>
+    foreach ($panels as $p) {
+        $response['panels'][] = [
+            "name" => $p['name'],
+            "url" => $p['url'],
+            "key" => $p['site_key'],
+            "package_name" => $p['package_name'] ?? '',
+            "version" => $p['version'] ?? '1.0.0'
+        ];
+    }
+
+    echo json_encode($response, JSON_PRETTY_PRINT);
+
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode([
+        "status" => "error",
+        "message" => $e->getMessage()
+    ]);
+}
