@@ -1,0 +1,189 @@
+1️⃣ Final Admin Panel JSON format (clean + extensible)
+2️⃣ Easy “Container Layout Preset” system (1 click control)
+3️⃣ CSS-based zoom + hide (Stylus-like power inside your app)
+
+Ye sab tumhare current working architecture ke upar hi based hai.
+
+1️⃣ ADMIN PANEL – FINAL JSON CONFIG (RECOMMENDED)
+✅ Master Config (single API response)
+{
+  "status": "ok",
+
+  "viewport": {
+    "app_scale": 1.32,
+    "shift_right_dp": 140,
+    "shift_down_dp": 0,
+    "container_width_percent": 92,
+    "container_height_percent": 100,
+    "black_left_dp": 40
+  },
+
+  "crop": {
+    "auto_detect_banner": true,
+    "min_banner_height_px": 50
+  },
+
+  "css": {
+    "enable": true,
+    "zoom_scale": 1.15,
+    "hide_selectors": [
+      "header",
+      ".top-banner",
+      ".banner",
+      ".vmos-header",
+      ".vmos-top"
+    ]
+  },
+
+  "modes": {
+    "focus_mode": true,
+    "lock_reveal": true
+  }
+}
+
+🔥 Why this is powerful
+
+Everything remotely tunable
+
+Works even if VMOS changes UI
+
+You can hot-fix layout issues in seconds
+
+2️⃣ 🔘 CONTAINER SIZE CONTROL (ADMIN FRIENDLY FEATURE)
+❓ Problem
+
+Manually tuning:
+
+scale
+
+shift
+
+black area
+
+is annoying.
+
+✅ Solution: Layout Presets
+🎛 Admin Panel UI (simple dropdown)
+
+Layout Preset:
+
+CENTER_CROP
+
+RIGHT_FOCUS
+
+LEFT_FOCUS
+
+FULL_FIT
+
+CUSTOM
+
+🧩 JSON with Preset
+{
+  "layout_preset": "RIGHT_FOCUS"
+}
+
+🔧 App-side Mapping (Java logic)
+private void applyLayoutPreset(String preset) {
+    switch (preset) {
+        case "CENTER_CROP":
+            applyAppTransform(1.28f, 80);
+            break;
+
+        case "RIGHT_FOCUS":
+            applyAppTransform(1.32f, 140);
+            break;
+
+        case "LEFT_FOCUS":
+            applyAppTransform(1.32f, -40);
+            break;
+
+        case "FULL_FIT":
+            applyAppTransform(1.20f, 0);
+            break;
+
+        default:
+            // CUSTOM → use values from JSON
+            break;
+    }
+}
+
+✅ Admin ko bas preset choose karna hai
+
+No math. No dp guessing.
+
+3️⃣ 🔥 CSS ZOOM + HIDE (STYLUS-LIKE POWER INSIDE APP)
+
+This is exactly Stylus, but embedded.
+
+🎨 Admin JSON (CSS section)
+"css": {
+  "enable": true,
+  "zoom_scale": 1.18,
+  "hide_selectors": [
+    "header",
+    ".top-banner",
+    ".banner",
+    ".promo",
+    ".vmos-header"
+  ]
+}
+
+🔧 Injected CSS + JS (WebView)
+private void injectCssControl(float zoomScale, List<String> selectors) {
+
+    StringBuilder css = new StringBuilder();
+    css.append("body { transform: scale(")
+       .append(zoomScale)
+       .append("); transform-origin: top left; }");
+
+    for (String s : selectors) {
+        css.append(s).append("{ display:none !important; }");
+    }
+
+    String js =
+        "(function() {" +
+        "  var style = document.createElement('style');" +
+        "  style.innerHTML = `" + css + "`;" +
+        "  document.head.appendChild(style);" +
+        "})();";
+
+    webView.evaluateJavascript(js, null);
+}
+
+✅ Benefits
+
+Zoom from TOP, not center
+
+Banner actually removed, not just scrolled
+
+No white gaps
+
+Users feel native UI
+
+4️⃣ 🧠 EXTRA POWER FEATURE (RECOMMENDED)
+🔒 “Lock Reveal” Mode (Anti-branding)
+"modes": {
+  "lock_reveal": true
+}
+
+Effect:
+
+If user zooms out → app re-applies layout
+
+Branding never revealed
+
+Works silently
+
+5️⃣ 🧪 HOW YOUR AGENT SHOULD INTEGRATE
+Flow:
+App Start
+ ↓
+Fetch Admin Config API
+ ↓
+Apply layout preset OR custom values
+ ↓
+Apply app transform (scale + shift)
+ ↓
+Inject CSS + auto-crop guard
+ ↓
+Lock reveal if enabled
