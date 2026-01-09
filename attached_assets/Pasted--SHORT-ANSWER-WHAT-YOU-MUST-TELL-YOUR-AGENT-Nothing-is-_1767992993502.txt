@@ -1,0 +1,144 @@
+✅ SHORT ANSWER (WHAT YOU MUST TELL YOUR AGENT)
+
+Nothing is wrong with Android.
+Nothing is wrong with the admin panel UI.
+The ONLY problem is app_config.php is not sending viewport / css / crop data.
+
+Your app cannot react to panel changes because the JSON does not contain those keys.
+
+🔴 WHAT IS MISSING IN YOUR CURRENT app_config.php
+
+Your current response ENDS HERE:
+
+"branding" => [ ... ],
+"panels" => []
+
+
+But your app + admin panel were designed to also use:
+
+❌ viewport
+❌ css
+❌ crop
+❌ modes
+
+Because these sections are missing, the app has:
+
+No zoom value
+
+No shift right
+
+No container resize
+
+No CSS hide selectors
+
+No banner auto-crop
+
+No focus / lock modes
+
+So updating panel does nothing → expected behavior.
+
+✅ EXACT CHANGE YOUR AGENT MUST DO
+1️⃣ Extend app_config.php (DO NOT CREATE NEW API FILE)
+
+Tell your agent:
+
+Add viewport, css, crop, modes to $response in app_config.php
+using values from $all_config (getAllConfig).
+
+Conceptually, this must be added before "panels":
+"viewport" => [
+    "layout_preset" => $all_config['layout_preset'] ?? 'RIGHT_FOCUS',
+    "app_scale" => (float)($all_config['viewport_app_scale'] ?? 1.25),
+    "shift_right_dp" => (int)($all_config['viewport_shift_right_dp'] ?? 120),
+    "shift_down_dp" => (int)($all_config['viewport_shift_down_dp'] ?? 120),
+    "container_width_percent" => (int)($all_config['viewport_container_width_percent'] ?? 92),
+    "container_height_percent" => (int)($all_config['viewport_container_height_percent'] ?? 100),
+    "black_left_dp" => (int)($all_config['viewport_black_left_dp'] ?? 50)
+],
+
+"crop" => [
+    "auto_detect_banner" => ($all_config['crop_auto_detect_banner'] ?? 'true') === 'true',
+    "min_banner_height_px" => (int)($all_config['crop_min_banner_height_px'] ?? 5)
+],
+
+"css" => [
+    "enable" => ($all_config['css_enable'] ?? 'true') === 'true',
+    "zoom_scale" => (float)($all_config['css_zoom_scale'] ?? 1.85),
+    "hide_selectors" => explode(',', $all_config['css_hide_selectors']
+        ?? 'header,.top-banner,.banner,.vmos-header,.vmos-top')
+],
+
+"modes" => [
+    "focus_mode" => ($all_config['modes_focus_mode'] ?? 'true') === 'true',
+    "lock_reveal" => ($all_config['modes_lock_reveal'] ?? 'true') === 'true'
+],
+
+
+⚠️ NO Android change is required until this appears in JSON.
+
+2️⃣ What the API MUST look like after fix
+
+When you open:
+
+https://xxpanel.shop/app_config.php
+
+
+You MUST see:
+
+"viewport": {
+  "app_scale": 1.25,
+  "shift_right_dp": 120,
+  "shift_down_dp": 120,
+  "container_width_percent": 92,
+  "container_height_percent": 100,
+  "black_left_dp": 50
+},
+"css": {
+  "enable": true,
+  "zoom_scale": 1.85,
+  "hide_selectors": ["header",".top-banner"]
+},
+"crop": {
+  "auto_detect_banner": true,
+  "min_banner_height_px": 5
+}
+
+
+If you don’t see this → STOP → app will not change.
+
+🗑️ SHOULD YOU DELETE api.php AND api_config.php?
+✅ YES — but ONLY AFTER this:
+Correct architecture (final):
+app_config.php   ← ONLY config API for app
+
+What to do:
+File	Action
+app_config.php	✅ KEEP (single source of truth)
+api.php	❌ DELETE (legacy, redundant)
+api_config.php	❌ DELETE (duplicate responsibility)
+
+⚠️ Do NOT delete until:
+
+App is already fetching from app_config.php
+
+Android code no longer calls other endpoints
+
+🧠 WHY THIS DESIGN IS CORRECT (FOR FUTURE)
+
+With this fix you gain:
+
+✔ One API
+✔ Live layout control
+✔ Remote branding hide
+✔ Emergency fixes without APK update
+✔ VMOS-safe manipulation
+✔ Predictable behavior
+
+Your admin panel UI already supports this — the wire was missing.
+
+🗣️ FINAL MESSAGE TO SEND YOUR AGENT (COPY-PASTE)
+
+The issue is not Android.
+app_config.php does not output viewport, css, crop, and modes.
+Admin panel saves values but API never sends them.
+Extend app_config.php JSON using getAllConfig() and remove other config APIs after verification.

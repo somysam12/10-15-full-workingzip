@@ -3,7 +3,6 @@ require_once 'config.php';
 header('Content-Type: application/json');
 
 try {
-
     $config = getAllConfig();
     $ann = getActiveAnnouncement();
     $panels = getAllPanels();
@@ -13,7 +12,6 @@ try {
 
     // ---------- CORE RESPONSE ----------
     $response = [
-
         /* ================= GLOBAL CONTROL ================= */
         "global_control" => [
             "app_status" => $config['app_status'] ?? 'ON',
@@ -32,12 +30,10 @@ try {
         /* ================= VIEWPORT CONTROL ================= */
         "viewport" => [
             "layout_preset" => $config['layout_preset'] ?? 'RIGHT_FOCUS',
-
             "app_scale" => (float)($config['viewport_app_scale'] ?? 1.25),
             "shift_right_dp" => (int)($config['viewport_shift_right_dp'] ?? 120),
             "shift_down_dp" => (int)($config['viewport_shift_down_dp'] ?? 120),
             "black_left_dp" => (int)($config['viewport_black_left_dp'] ?? 50),
-
             "container_width_percent" => (int)($config['viewport_container_width_percent'] ?? 92),
             "container_height_percent" => (int)($config['viewport_container_height_percent'] ?? 100)
         ],
@@ -45,13 +41,13 @@ try {
         /* ================= AUTO CROP ================= */
         "crop" => [
             "auto_detect_banner" => ($config['crop_auto_detect_banner'] ?? 'true') === 'true',
-            "min_banner_height_px" => (int)($config['crop_min_banner_height_px'] ?? 50)
+            "min_banner_height_px" => (int)($config['crop_min_banner_height_px'] ?? 5)
         ],
 
         /* ================= CSS INJECTION ================= */
         "css" => [
             "enable" => ($config['css_enable'] ?? 'true') === 'true',
-            "zoom_scale" => (float)($config['css_zoom_scale'] ?? 1.15),
+            "zoom_scale" => (float)($config['css_zoom_scale'] ?? 1.85),
             "hide_selectors" => array_map(
                 'trim',
                 explode(',', $config['css_hide_selectors'] ?? 'header,.top-banner,.banner,.vmos-header,.vmos-top')

@@ -1,0 +1,137 @@
+Yes — you DO need to add new database config keys.
+Right now your admin panel saves values, but getAllConfig() cannot return keys that don’t exist in DB.
+
+That’s the root cause.
+
+I’ll explain this clearly, then give you exact SQL and exact instructions for your agent.
+
+✅ WHY SQL CHANGES ARE REQUIRED (IMPORTANT)
+
+Your system works like this:
+
+Admin Panel → saves into `config` table
+getAllConfig() → reads from `config` table
+app_config.php → outputs JSON
+Android app → applies layout
+
+
+If a key does not exist in DB, then:
+
+Admin panel UI shows values ✔️
+
+Save button appears to work ✔️
+
+BUT getAllConfig() returns NOTHING ❌
+
+So app gets NO viewport / css data ❌
+
+This is exactly what you’re seeing.
+
+🔴 WHAT IS MISSING IN DATABASE
+
+Your DB does NOT yet have these config keys:
+
+Viewport / Container
+
+layout_preset
+
+viewport_app_scale
+
+viewport_shift_right_dp
+
+viewport_shift_down_dp
+
+viewport_container_width_percent
+
+viewport_container_height_percent
+
+viewport_black_left_dp
+
+Crop / Banner
+
+crop_auto_detect_banner
+
+crop_min_banner_height_px
+
+CSS Injection
+
+css_enable
+
+css_zoom_scale
+
+css_hide_selectors
+
+Modes
+
+modes_focus_mode
+
+modes_lock_reveal
+
+✅ EXACT SQL YOUR AGENT MUST RUN (COPY–PASTE)
+
+Tell your agent to run this ONCE in phpMyAdmin:
+
+INSERT IGNORE INTO config (config_key, config_value) VALUES
+-- Viewport
+('layout_preset', 'RIGHT_FOCUS'),
+('viewport_app_scale', '1.25'),
+('viewport_shift_right_dp', '120'),
+('viewport_shift_down_dp', '120'),
+('viewport_container_width_percent', '92'),
+('viewport_container_height_percent', '100'),
+('viewport_black_left_dp', '50'),
+
+-- Auto Crop
+('crop_auto_detect_banner', 'true'),
+('crop_min_banner_height_px', '5'),
+
+-- CSS Injection
+('css_enable', 'true'),
+('css_zoom_scale', '1.85'),
+('css_hide_selectors', 'header,.top-banner,.banner,.vmos-header,.vmos-top'),
+
+-- Modes
+('modes_focus_mode', 'true'),
+('modes_lock_reveal', 'true');
+
+Why INSERT IGNORE?
+
+✔ Safe to run multiple times
+✔ Won’t break existing config
+✔ Won’t duplicate keys
+
+🧪 HOW TO VERIFY (VERY IMPORTANT)
+
+After SQL is run:
+
+1️⃣ Open
+
+https://xxpanel.shop/app_config.php
+
+
+2️⃣ You MUST SEE these blocks:
+
+"viewport": { ... }
+"css": { ... }
+"crop": { ... }
+"modes": { ... }
+
+
+If you don’t → SQL was not applied correctly.
+
+🗣️ FINAL MESSAGE TO SEND YOUR AGENT (COPY THIS)
+
+Yes, new SQL is required.
+Admin panel saves viewport/CSS values but config table does not have keys.
+Run the provided INSERT IGNORE SQL to add missing config keys.
+Then app_config.php will start returning viewport, css, crop, and modes.
+
+🧠 AFTER THIS — WHAT WILL START WORKING
+
+✔ Right-shift container
+✔ App-level zoom
+✔ Black-left masking
+✔ Banner auto crop
+✔ CSS logo hiding
+✔ Live layout changes from panel
+✔ No APK rebuild needed
