@@ -104,16 +104,11 @@ include 'sidebar.php';
                                 $timezone = new DateTimeZone('Asia/Kolkata');
                                 $last_login = new DateTime($u['last_login_at']);
                                 $last_login->setTimezone($timezone);
-
-                                // Fetch sessions for this user
-                                $stmt_sess = $pdo->prepare("SELECT session_start, duration_seconds FROM user_sessions WHERE license_key = ? AND device_id = ? ORDER BY session_start DESC LIMIT 5");
-                                $stmt_sess->execute([$u['license_key'], $u['device_id']]);
-                                $sessions = $stmt_sess->fetchAll();
                             ?>
                                 <tr>
                                     <td class="fw-bold"><?php echo htmlspecialchars($u['user_name']); ?></td>
                                     <td><code class="text-info"><?php echo htmlspecialchars($u['license_key']); ?></code></td>
-                                    <td class="d-none d-md-table-cell"><code class="text-warning small" style="color: #ffc107 !important;"><?php echo htmlspecialchars($u['device_id']); ?></code></td>
+                                    <td class="d-none d-md-table-cell"><small class="text-muted"><?php echo substr($u['device_id'], 0, 12); ?>...</small></td>
                                     <td><small><?php echo $last_login->format('M d, H:i'); ?></small></td>
                                     <td><span class="badge bg-secondary"><?php echo sprintf("%02d:%02d", $hours, $mins); ?></span></td>
                                     <td>
@@ -125,33 +120,10 @@ include 'sidebar.php';
                                     </td>
                                     <td>
                                         <div class="btn-group">
-                                            <button type="button" class="btn btn-sm btn-outline-info me-1" data-bs-toggle="collapse" data-bs-target="#sessions-<?php echo $u['id']; ?>">
-                                                <i class="fas fa-history"></i>
-                                            </button>
                                             <?php if ($u['is_blocked']): ?>
                                                 <a href="?action=unblock&id=<?php echo $u['id']; ?>" class="btn btn-sm btn-outline-success"><i class="fas fa-unlock"></i></a>
                                             <?php else: ?>
                                                 <a href="?action=block&id=<?php echo $u['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Block this user?')"><i class="fas fa-ban"></i></a>
-                                            <?php endif; ?>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr class="collapse" id="sessions-<?php echo $u['id']; ?>">
-                                    <td colspan="7" class="bg-dark p-3">
-                                        <div class="text-start small text-info mb-2">Recent Sessions (Last 5):</div>
-                                        <div class="row text-start small">
-                                            <?php foreach ($sessions as $s): 
-                                                $s_mins = floor($s['duration_seconds'] / 60);
-                                                $s_secs = $s['duration_seconds'] % 60;
-                                            ?>
-                                                <div class="col-md-4 mb-1">
-                                                    <i class="far fa-clock me-1 text-muted"></i>
-                                                    <?php echo date('M d, H:i', strtotime($s['session_start'])); ?> 
-                                                    <span class="text-success ms-2"><?php echo sprintf("%02dm %02ds", $s_mins, $s_secs); ?></span>
-                                                </div>
-                                            <?php endforeach; ?>
-                                            <?php if (empty($sessions)): ?>
-                                                <div class="col-12 text-muted">No session records found.</div>
                                             <?php endif; ?>
                                         </div>
                                     </td>

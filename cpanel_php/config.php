@@ -88,45 +88,24 @@ function getActiveAnnouncement() {
     $app_type = $_SESSION['app_type'] ?? 'all';
     
     try {
-        $sql = "SELECT * FROM announcements WHERE active = 1 AND (app_type = ? OR app_type = 'all') ORDER BY id DESC LIMIT 1";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$app_type]);
+        // Safe check for column existence and value
+        $sql = "SELECT * FROM announcements WHERE active = 1 ORDER BY id DESC LIMIT 1";
+        $stmt = $pdo->query($sql);
         $ann = $stmt->fetch();
         
-        if (!$ann) return null;
-
+        if ($ann) {
+            // If app_type column exists, filter by it
+            if (array_key_exists('app_type', $ann)) {
+                if ($ann['app_type'] !== 'all' && $ann['app_type'] !== $app_type) {
+                    $stmt = $pdo->prepare("SELECT * FROM announcements WHERE active = 1 AND (app_type = ? OR app_type = 'all') ORDER BY id DESC LIMIT 1");
+                    $stmt->execute([$app_type]);
+                    return $stmt->fetch();
+                }
+            }
+        }
         return $ann;
     } catch (Exception $e) {
         return null;
     }
-}
-
-function getAppConfigJSON() {
-    global $pdo;
-    $config = getAllConfig();
-    $app_type = $_SESSION['app_type'] ?? 'all';
-    
-    $ann = getActiveAnnouncement();
-    
-    $status_key = ($app_type === 'panel') ? 'panel_app_status' : 'app_status';
-    $msg_key = ($app_type === 'panel') ? 'panel_maintenance_msg' : 'master_maintenance_msg';
-    
-    $app_status = $config[$status_key] ?? 'OFF';
-    $maintenance_enabled = ($app_status === 'ON');
-    $maintenance_message = $config[$msg_key] ?? 'System is under maintenance.';
-
-    return json_encode([
-        "maintenance" => [
-            "enabled" => $maintenance_enabled,
-            "message" => $maintenance_message
-        ],
-        "announcement" => [
-            "enabled" => $ann ? true : false,
-            "title" => $ann['title'] ?? "",
-            "message" => $ann['message'] ?? "",
-            "type" => $ann['type'] ?? "info"
-        ],
-        "config" => $config
-    ]);
 }
 ?>

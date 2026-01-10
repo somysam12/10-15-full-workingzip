@@ -1,6 +1,6 @@
 <?php
 /**
- * Silent Panel - User Registration API
+ * Silent Panel - Heartbeat API
  * FINAL STABLE API CONTRACT
  */
 
@@ -13,42 +13,37 @@ require_once '../config.php';
 
 try {
     $key = strtoupper(trim($_POST['license_key'] ?? $_POST['key'] ?? ''));
-    $name = trim($_POST['user_name'] ?? '');
     $device = trim($_POST['device_id'] ?? '');
 
-    if ($key === '' || $name === '' || $device === '') {
+    if ($key === '' || $device === '') {
         ob_clean();
-        echo json_encode(["status"=>"error","message"=>"Missing fields"]);
+        echo json_encode(["status"=>"error"]);
         exit;
     }
 
     global $pdo;
 
-    // Check if user is blocked
+    // Check block status
     $stmt = $pdo->prepare("SELECT is_blocked FROM app_users WHERE UPPER(license_key) = ? AND device_id = ? LIMIT 1");
     $stmt->execute([$key, $device]);
     $user = $stmt->fetch();
 
     if ($user && $user['is_blocked']) {
         ob_clean();
-        echo json_encode(["status"=>"blocked"]);
+        echo json_encode(["status" => "blocked"]);
         exit;
     }
 
-    // Register/Update User
+    // Update usage
     $stmt = $pdo->prepare("
-        INSERT INTO app_users (license_key, user_name, device_id, first_login_at, last_login_at)
-        VALUES (?, ?, ?, NOW(), NOW())
-        ON CONFLICT (license_key, device_id) DO UPDATE SET user_name = EXCLUDED.user_name, last_login_at = NOW()
+        UPDATE app_users 
+        SET last_login_at = NOW(), total_usage_seconds = total_usage_seconds + 60
+        WHERE UPPER(license_key)=? AND device_id=? AND is_blocked=0
     ");
-    $stmt->execute([$key, $name, $device]);
-
-    // Start a new session
-    $stmt = $pdo->prepare("INSERT INTO user_sessions (license_key, device_id, session_start) VALUES (?, ?, NOW())");
     $stmt->execute([$key, $device]);
 
     ob_clean();
-    echo json_encode(["status" => "success"]);
+    echo json_encode(["status"=>"success"]);
 } catch (Exception $e) {
     ob_clean();
     echo json_encode(["status"=>"error"]);

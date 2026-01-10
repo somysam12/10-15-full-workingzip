@@ -2,11 +2,8 @@
 require_once 'header.php';
 
 $app_type = $_SESSION['app_type'] ?? 'master';
-$status_key = ($app_type === 'panel') ? 'panel_app_status' : 'app_status';
+$status_key = ($app_type === 'panel') ? 'panel_maintenance' : 'master_maintenance';
 $msg_key = ($app_type === 'panel') ? 'panel_maintenance_msg' : 'master_maintenance_msg';
-
-$app_status = getConfig($status_key, 'OFF');
-$maintenance_msg = getConfig($msg_key, 'System is under maintenance.');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['update_settings'])) {
