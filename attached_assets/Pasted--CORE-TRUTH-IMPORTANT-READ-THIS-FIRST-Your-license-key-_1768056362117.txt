@@ -1,0 +1,261 @@
+🔥 CORE TRUTH (IMPORTANT – READ THIS FIRST)
+
+Your license key verification is WORKING.
+Your backend APIs are WORKING.
+Your database tables now exist.
+
+👉 The problem is NOT the key
+👉 The problem is NOT JSON purity
+👉 The problem is NOT TextInput / EditText anymore
+
+❌ The REAL issue
+
+The error “An unexpected error occurred” after successful login happens because:
+
+Your app expects a specific JSON field / flow AFTER login, but your backend does NOT return what the app expects at that stage.
+
+This is a POST-LOGIN FLOW BREAK, not a login failure.
+
+🧠 WHAT EXACTLY IS BREAKING
+Current flow (what’s happening now)
+
+User enters key ✅
+
+verify_key.php returns:
+
+{
+  "status": "success",
+  "message": "Key valid",
+  "expires_at": "2026-01-11 12:13:37"
+  }
+
+
+✅ Correct
+
+App assumes one of these:
+
+User already exists → go to MainActivity
+
+OR user does NOT exist → go to ProfileSetupActivity
+
+App calls register_user.php OR heartbeat.php
+
+Backend response does NOT match what the app is checking
+
+App hits fallback:
+
+"unexpected error occurred"
+
+🚨 THE NUMBER ONE MISTAKE BOTH AGENTS MADE
+
+They kept changing logic on BOTH sides at the same time.
+
+This caused:
+
+Mismatched field names
+
+Missing status flags
+
+App branching into wrong screens
+
+✅ THE ONLY STABLE, 100% WORKING DESIGN (DO THIS EXACTLY)
+
+We will LOCK THE API CONTRACT
+No guessing. No optional fields.
+
+🔒 FIX STRATEGY (FINAL, STABLE)
+PART 1 — BACKEND (Website Agent)
+✅ 1. verify_key.php MUST RETURN THIS EXACT JSON
+{
+  "status": "success",
+  "expires_at": "2026-01-11 12:13:37",
+  "user_exists": true
+}
+
+
+or
+
+{
+  "status": "success",
+  "expires_at": "2026-01-11 12:13:37",
+  "user_exists": false
+}
+
+🔴 Why this matters
+
+Your app cannot guess whether to show:
+
+ProfileSetupActivity
+
+OR MainActivity
+
+This boolean decides the entire app flow.
+
+🔧 Backend logic (conceptual)
+
+Check app_users table
+
+If license_key exists → user_exists = true
+
+Else → false
+
+⚠️ No UI change
+⚠️ No DB redesign
+⚠️ Only add this flag
+
+PART 2 — APP AGENT (THIS IS WHERE IT’S FAILING)
+❌ STOP doing this
+
+❌ Do NOT try-catch everything
+
+❌ Do NOT show “unexpected error” for logic branches
+
+❌ Do NOT guess response structure
+
+✅ Correct Login Flow (MANDATORY)
+
+In LoginActivityV2:
+
+Step 1: Verify key
+if (status.equals("success")) {
+    boolean userExists = response.getBoolean("user_exists");
+
+    if (userExists) {
+        goToMain();
+    } else {
+        goToProfileSetup();
+    }
+}
+
+Step 2: NO OTHER CONDITIONS
+
+No:
+
+expires_at checks here
+
+heartbeat here
+
+register here
+
+PART 3 — Profile Setup (STRICT RULE)
+register_user.php must return ONLY:
+{
+  "status": "success"
+}
+
+
+or
+
+{
+  "status": "blocked"
+}
+
+App logic:
+if (status.equals("success")) {
+    goToMain();
+} else if (status.equals("blocked")) {
+    logoutAndShowBlocked();
+}
+
+
+❌ No messages
+❌ No UI parsing
+❌ No silent fallbacks
+
+PART 4 — Heartbeat (BACKGROUND ONLY)
+When to call:
+
+ONLY after MainActivity loads
+
+Every 60 seconds
+
+Expected response:
+{ "status": "success" }
+
+
+or
+
+{ "status": "blocked" }
+
+If blocked:
+
+Clear session
+
+Redirect to login
+
+Show “You have been blocked”
+
+🚫 WHY YOU SEE “UNEXPECTED ERROR”
+
+Because right now:
+
+App expects → status
+
+Backend sends → status + message
+
+Or missing field
+
+Or empty body (after ob_clean)
+
+Or app reads wrong branch
+
+👉 And agent coded:
+
+else {
+   showUnexpectedError();
+}
+
+
+This is BAD DESIGN.
+
+🔐 FINAL RULES FOR BOTH AGENTS (SEND THIS AS-IS)
+🚫 DO NOT
+
+Do NOT change existing working APIs
+
+Do NOT add optional JSON fields
+
+Do NOT reuse error messages
+
+Do NOT handle logic with “else”
+
+✅ MUST
+
+Use explicit flags (user_exists)
+
+One API = one responsibility
+
+One screen = one decision
+
+🧩 BONUS: Your Admin Panel Is ALREADY GOOD
+
+Your user_activity.php UI is correct 👍
+You already have:
+
+Name
+
+Key
+
+Device ID
+
+Last login
+
+Usage
+
+Block/unblock
+
+Once app flow is fixed → data will start appearing.
+
+🧠 WHY THIS WILL 100% WORK
+
+Because:
+
+Your key verification already works
+
+Your DB tables exist
+
+Your APIs are reachable
+
+The only missing link was FLOW CONTROL
+
+We fix flow → everything stabilizes.
