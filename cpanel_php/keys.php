@@ -50,32 +50,32 @@ include 'header.php';
 include 'sidebar.php';
 ?>
 
-<div class="main-content">
-    <div class="container-fluid">
-        <div class="row mt-4">
-            <div class="col-md-12">
+<div class="main-content d-flex flex-column align-items-center justify-content-start">
+    <div class="container-fluid" style="max-width: 1000px; width: 100%;">
+        <div class="row mt-4 justify-content-center">
+            <div class="col-12 col-xl-10">
                 <div class="card bg-dark text-white border-secondary shadow-lg">
-                    <div class="card-header border-secondary d-flex justify-content-between align-items-center bg-gradient">
-                        <h4 class="mb-0"><i class="fas fa-key me-2 text-primary"></i>License Key Management</h4>
-                        <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#generateModal">
+                    <div class="card-header border-secondary d-flex flex-wrap justify-content-between align-items-center bg-gradient gap-3 py-3">
+                        <h4 class="mb-0 fs-5 fs-md-4"><i class="fas fa-key me-2 text-primary"></i>License Key Management</h4>
+                        <button class="btn btn-primary shadow-sm w-auto" data-bs-toggle="modal" data-bs-target="#generateModal">
                             <i class="fas fa-plus-circle me-1"></i> Generate Keys
                         </button>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-0 p-md-3">
                         <?php if (isset($_GET['success'])): ?>
-                            <div class="alert alert-success border-0 bg-success bg-opacity-10 text-success">
+                            <div class="alert alert-success border-0 bg-success bg-opacity-10 text-success m-3">
                                 <i class="fas fa-check-circle me-2"></i><?php echo htmlspecialchars($_GET['success']); ?>
                             </div>
                         <?php endif; ?>
                         
                         <div class="table-responsive">
-                            <table class="table table-dark table-hover align-middle">
+                            <table class="table table-dark table-hover align-middle mb-0" style="min-width: 600px;">
                                 <thead class="table-light text-dark">
                                     <tr>
                                         <th>Key</th>
                                         <th>Status</th>
-                                        <th>Expires At</th>
-                                        <th>Device ID</th>
+                                        <th class="d-none d-md-table-cell">Expires At</th>
+                                        <th class="d-none d-sm-table-cell">Device ID</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -84,23 +84,26 @@ include 'sidebar.php';
                                         <tr>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <code class="text-info me-2"><?php echo htmlspecialchars($k['license_key']); ?></code>
+                                                    <code class="text-info me-2 fw-bold" style="font-size: 0.9rem;"><?php echo htmlspecialchars($k['license_key']); ?></code>
                                                     <button class="btn btn-sm btn-outline-secondary border-0 p-1" onclick="copyToClipboard('<?php echo $k['license_key']; ?>')" title="Copy Key">
                                                         <i class="fas fa-copy"></i>
                                                     </button>
                                                 </div>
+                                                <div class="d-md-none mt-1">
+                                                    <small class="text-muted d-block">Exp: <?php echo date('M d, Y', strtotime($k['expires_at'])); ?></small>
+                                                </div>
                                             </td>
                                             <td>
                                                 <?php if ($k['status'] == 'active'): ?>
-                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">ACTIVE</span>
+                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25" style="font-size: 0.75rem;">ACTIVE</span>
                                                 <?php elseif ($k['status'] == 'banned'): ?>
-                                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">BANNED</span>
+                                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25" style="font-size: 0.75rem;">BANNED</span>
                                                 <?php else: ?>
-                                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">EXPIRED</span>
+                                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25" style="font-size: 0.75rem;">EXPIRED</span>
                                                 <?php endif; ?>
                                             </td>
-                                            <td><small><?php echo date('M d, Y H:i', strtotime($k['expires_at'])); ?></small></td>
-                                            <td>
+                                            <td class="d-none d-md-table-cell"><small><?php echo date('M d, Y H:i', strtotime($k['expires_at'])); ?></small></td>
+                                            <td class="d-none d-sm-table-cell">
                                                 <?php if ($k['device_id']): ?>
                                                     <small class="text-muted"><?php echo substr($k['device_id'], 0, 8); ?>...</small>
                                                     <a href="?action=reset&id=<?php echo $k['id']; ?>" class="ms-1 text-warning" title="Reset Device"><i class="fas fa-redo-alt"></i></a>
@@ -114,6 +117,9 @@ include 'sidebar.php';
                                                         <a href="?action=block&id=<?php echo $k['id']; ?>" class="btn btn-sm btn-outline-warning" title="Block"><i class="fas fa-ban"></i></a>
                                                     <?php else: ?>
                                                         <a href="?action=unblock&id=<?php echo $k['id']; ?>" class="btn btn-sm btn-outline-success" title="Unblock"><i class="fas fa-check"></i></a>
+                                                    <?php endif; ?>
+                                                    <?php if ($k['device_id'] && !in_array('d-sm-table-cell', explode(' ', 'd-none d-sm-table-cell'))): ?>
+                                                        <a href="?action=reset&id=<?php echo $k['id']; ?>" class="btn btn-sm btn-outline-info d-sm-none" title="Reset Device"><i class="fas fa-redo-alt"></i></a>
                                                     <?php endif; ?>
                                                     <a href="?action=delete&id=<?php echo $k['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Permanent delete?')" title="Delete"><i class="fas fa-trash"></i></a>
                                                 </div>
@@ -132,26 +138,26 @@ include 'sidebar.php';
 
 <!-- Generate Modal -->
 <div class="modal fade" id="generateModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark text-white border-secondary shadow">
             <form method="POST">
                 <div class="modal-header border-secondary bg-primary bg-opacity-10">
                     <h5 class="modal-title"><i class="fas fa-magic me-2"></i>Generate New Keys</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Number of Keys</label>
-                        <input type="number" name="count" class="form-control bg-secondary text-white border-0" value="1" min="1" max="500">
+                <div class="modal-body p-4">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Number of Keys</label>
+                        <input type="number" name="count" class="form-control bg-secondary text-white border-0 py-2" value="1" min="1" max="500">
                     </div>
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Duration Value</label>
-                            <input type="number" name="duration" class="form-control bg-secondary text-white border-0" value="1" min="1">
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-bold">Duration Value</label>
+                            <input type="number" name="duration" class="form-control bg-secondary text-white border-0 py-2" value="1" min="1">
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Duration Unit</label>
-                            <select name="duration_unit" class="form-select bg-secondary text-white border-0">
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-bold">Duration Unit</label>
+                            <select name="duration_unit" class="form-select bg-secondary text-white border-0 py-2">
                                 <option value="hours">Hours</option>
                                 <option value="days" selected>Days</option>
                                 <option value="weeks">Weeks</option>
@@ -161,9 +167,9 @@ include 'sidebar.php';
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer border-secondary">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" name="generate" class="btn btn-primary px-4">Generate Now</button>
+                <div class="modal-footer border-secondary p-3">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" name="generate" class="btn btn-primary px-5">Generate Now</button>
                 </div>
             </form>
         </div>
@@ -172,8 +178,25 @@ include 'sidebar.php';
 
 <script>
 function copyToClipboard(text) {
+    if (!navigator.clipboard) {
+        // Fallback for non-HTTPS or older browsers
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            alert('Key copied to clipboard!');
+        } catch (err) {
+            console.error('Fallback: Oops, unable to copy', err);
+        }
+        document.body.removeChild(textArea);
+        return;
+    }
     navigator.clipboard.writeText(text).then(() => {
         alert('Key copied to clipboard!');
+    }, (err) => {
+        console.error('Async: Could not copy text: ', err);
     });
 }
 </script>
