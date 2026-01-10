@@ -60,6 +60,10 @@ $app_type = $_SESSION['app_type'] ?? 'master';
                 <i class="fas fa-key"></i> License Keys
             </a>
 
+            <a href="user_activity.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'user_activity.php' ? 'active' : ''; ?>">
+                <i class="fas fa-users-cog"></i> User Activity
+            </a>
+
             <a href="features.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'features.php' ? 'active' : ''; ?>">
                 <i class="fas fa-star"></i> Pro Features
             </a>

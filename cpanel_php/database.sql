@@ -95,6 +95,26 @@ CREATE TABLE IF NOT EXISTS panel_status (
     last_check TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS app_users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  license_key VARCHAR(100),
+  user_name VARCHAR(100),
+  device_id VARCHAR(150),
+  first_login_at DATETIME,
+  last_login_at DATETIME,
+  total_usage_seconds INT DEFAULT 0,
+  is_blocked TINYINT(1) DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS user_sessions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  license_key VARCHAR(100),
+  device_id VARCHAR(150),
+  session_start DATETIME,
+  session_end DATETIME,
+  duration_seconds INT
+);
+
 -- Default Admin (Password: admin123)
 INSERT INTO admins (username, password_hash) 
 VALUES ('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi')
