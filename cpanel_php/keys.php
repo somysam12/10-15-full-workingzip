@@ -50,50 +50,47 @@ include 'header.php';
 include 'sidebar.php';
 ?>
 
-<div class="main-content d-flex flex-column align-items-center justify-content-start">
-    <div class="container-fluid" style="max-width: 1000px; width: 100%;">
-        <div class="row mt-4 justify-content-center">
+<div class="main-content d-flex flex-column align-items-center justify-content-center min-vh-100 p-0">
+    <div class="container-fluid d-flex justify-content-center align-items-center" style="max-width: 1000px; width: 100%;">
+        <div class="row w-100 justify-content-center">
             <div class="col-12 col-xl-10">
-                <div class="card bg-dark text-white border-secondary shadow-lg">
-                    <div class="card-header border-secondary d-flex flex-wrap justify-content-between align-items-center bg-gradient gap-3 py-3">
-                        <h4 class="mb-0 fs-5 fs-md-4"><i class="fas fa-key me-2 text-primary"></i>License Key Management</h4>
-                        <button class="btn btn-primary shadow-sm w-auto" data-bs-toggle="modal" data-bs-target="#generateModal">
-                            <i class="fas fa-plus-circle me-1"></i> Generate Keys
+                <div class="card bg-dark text-white border-secondary shadow-lg mx-auto">
+                    <div class="card-header border-secondary d-flex flex-wrap justify-content-between align-items-center bg-gradient gap-3 py-3 px-4">
+                        <h4 class="mb-0 fs-5 fs-md-4 text-center w-100 w-sm-auto"><i class="fas fa-key me-2 text-primary"></i>License Key Management</h4>
+                        <button class="btn btn-primary shadow-sm mx-auto mx-sm-0" data-bs-toggle="modal" data-bs-target="#generateModal">
+                            <i class="fas fa-plus-circle me-1"></i> GENERATE KEYS
                         </button>
                     </div>
                     <div class="card-body p-0 p-md-3">
                         <?php if (isset($_GET['success'])): ?>
-                            <div class="alert alert-success border-0 bg-success bg-opacity-10 text-success m-3">
+                            <div class="alert alert-success border-0 bg-success bg-opacity-10 text-success m-3 text-center">
                                 <i class="fas fa-check-circle me-2"></i><?php echo htmlspecialchars($_GET['success']); ?>
                             </div>
                         <?php endif; ?>
                         
                         <div class="table-responsive">
-                            <table class="table table-dark table-hover align-middle mb-0" style="min-width: 600px;">
+                            <table class="table table-dark table-hover align-middle mb-0 text-center" style="min-width: 600px;">
                                 <thead class="table-light text-dark">
                                     <tr>
-                                        <th>Key</th>
-                                        <th>Status</th>
-                                        <th class="d-none d-md-table-cell">Expires At</th>
-                                        <th class="d-none d-sm-table-cell">Device ID</th>
-                                        <th>Action</th>
+                                        <th class="text-center">Key</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-center d-none d-md-table-cell">Expires At</th>
+                                        <th class="text-center d-none d-sm-table-cell">Device ID</th>
+                                        <th class="text-center">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php foreach ($keys as $k): ?>
                                         <tr>
-                                            <td>
-                                                <div class="d-flex align-items-center">
+                                            <td class="text-center">
+                                                <div class="d-flex align-items-center justify-content-center">
                                                     <code class="text-info me-2 fw-bold" style="font-size: 0.9rem;"><?php echo htmlspecialchars($k['license_key']); ?></code>
                                                     <button class="btn btn-sm btn-outline-secondary border-0 p-1" onclick="copyToClipboard('<?php echo $k['license_key']; ?>')" title="Copy Key">
                                                         <i class="fas fa-copy"></i>
                                                     </button>
                                                 </div>
-                                                <div class="d-md-none mt-1">
-                                                    <small class="text-muted d-block">Exp: <?php echo date('M d, Y', strtotime($k['expires_at'])); ?></small>
-                                                </div>
                                             </td>
-                                            <td>
+                                            <td class="text-center">
                                                 <?php if ($k['status'] == 'active'): ?>
                                                     <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25" style="font-size: 0.75rem;">ACTIVE</span>
                                                 <?php elseif ($k['status'] == 'banned'): ?>
@@ -102,8 +99,8 @@ include 'sidebar.php';
                                                     <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25" style="font-size: 0.75rem;">EXPIRED</span>
                                                 <?php endif; ?>
                                             </td>
-                                            <td class="d-none d-md-table-cell"><small><?php echo date('M d, Y H:i', strtotime($k['expires_at'])); ?></small></td>
-                                            <td class="d-none d-sm-table-cell">
+                                            <td class="text-center d-none d-md-table-cell"><small><?php echo date('M d, Y H:i', strtotime($k['expires_at'])); ?></small></td>
+                                            <td class="text-center d-none d-sm-table-cell">
                                                 <?php if ($k['device_id']): ?>
                                                     <small class="text-muted"><?php echo substr($k['device_id'], 0, 8); ?>...</small>
                                                     <a href="?action=reset&id=<?php echo $k['id']; ?>" class="ms-1 text-warning" title="Reset Device"><i class="fas fa-redo-alt"></i></a>
@@ -111,15 +108,12 @@ include 'sidebar.php';
                                                     <span class="text-muted small">Not Bound</span>
                                                 <?php endif; ?>
                                             </td>
-                                            <td>
+                                            <td class="text-center">
                                                 <div class="btn-group">
                                                     <?php if ($k['status'] == 'active'): ?>
                                                         <a href="?action=block&id=<?php echo $k['id']; ?>" class="btn btn-sm btn-outline-warning" title="Block"><i class="fas fa-ban"></i></a>
                                                     <?php else: ?>
                                                         <a href="?action=unblock&id=<?php echo $k['id']; ?>" class="btn btn-sm btn-outline-success" title="Unblock"><i class="fas fa-check"></i></a>
-                                                    <?php endif; ?>
-                                                    <?php if ($k['device_id'] && !in_array('d-sm-table-cell', explode(' ', 'd-none d-sm-table-cell'))): ?>
-                                                        <a href="?action=reset&id=<?php echo $k['id']; ?>" class="btn btn-sm btn-outline-info d-sm-none" title="Reset Device"><i class="fas fa-redo-alt"></i></a>
                                                     <?php endif; ?>
                                                     <a href="?action=delete&id=<?php echo $k['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Permanent delete?')" title="Delete"><i class="fas fa-trash"></i></a>
                                                 </div>
