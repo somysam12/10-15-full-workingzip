@@ -112,9 +112,13 @@ include 'sidebar.php';
                                 $last_login->setTimezone($timezone);
 
                                 // Fetch recent sessions
-                                $stmt_sess = $pdo->prepare("SELECT login_time, duration_seconds FROM user_sessions WHERE license_key = ? AND device_id = ? ORDER BY id DESC LIMIT 3");
-                                $stmt_sess->execute([$u['license_key'], $u['device_id']]);
-                                $sessions = $stmt_sess->fetchAll();
+                                try {
+                                    $stmt_sess = $pdo->prepare("SELECT login_time, duration_seconds FROM user_sessions WHERE license_key = ? AND device_id = ? ORDER BY id DESC LIMIT 3");
+                                    $stmt_sess->execute([$u['license_key'], $u['device_id']]);
+                                    $sessions = $stmt_sess->fetchAll();
+                                } catch (Exception $e) {
+                                    $sessions = [];
+                                }
                             ?>
                                 <tr>
                                     <td class="fw-bold"><?php echo htmlspecialchars($u['user_name']); ?></td>
