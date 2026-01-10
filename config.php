@@ -95,14 +95,38 @@ function getActiveAnnouncement() {
         
         if (!$ann) return null;
 
-        return [
-          "enabled" => true,
-          "title" => $ann['title'] ?? "",
-          "message" => $ann['message'] ?? "",
-          "type" => "info"
-        ];
+        return $ann;
     } catch (Exception $e) {
         return null;
     }
+}
+
+function getAppConfigJSON() {
+    global $pdo;
+    $config = getAllConfig();
+    $app_type = $_SESSION['app_type'] ?? 'all';
+    
+    $ann = getActiveAnnouncement();
+    
+    $status_key = ($app_type === 'panel') ? 'panel_app_status' : 'app_status';
+    $msg_key = ($app_type === 'panel') ? 'panel_maintenance_msg' : 'master_maintenance_msg';
+    
+    $app_status = $config[$status_key] ?? 'OFF';
+    $maintenance_enabled = ($app_status === 'ON');
+    $maintenance_message = $config[$msg_key] ?? 'System is under maintenance.';
+
+    return json_encode([
+        "maintenance" => [
+            "enabled" => $maintenance_enabled,
+            "message" => $maintenance_message
+        ],
+        "announcement" => [
+            "enabled" => $ann ? true : false,
+            "title" => $ann['title'] ?? "",
+            "message" => $ann['message'] ?? "",
+            "type" => $ann['type'] ?? "info"
+        ],
+        "config" => $config
+    ]);
 }
 ?>
