@@ -2,6 +2,8 @@
 require_once 'config.php';
 requireLogin();
 
+global $pdo;
+
 // Handle Actions
 if (isset($_GET['action'])) {
     $id = (int)$_GET['id'];
