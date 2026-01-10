@@ -1,0 +1,293 @@
+🎯 FEATURE SUMMARY (SIMPLE WORDS)
+
+Flow kya hoga:
+
+1️⃣ User valid license key paste karta hai → login success
+2️⃣ First-time only → app ek “Profile Setup” page dikhata hai
+
+User apna Name enter karega
+3️⃣ App:
+
+Name
+
+Device ID
+
+Key
+
+Login time
+
+Session start
+backend ko bhej dega
+4️⃣ Admin Panel me:
+
+Har user ka record
+
+Kab login hua
+
+Kitni der use kiya
+
+Kis device se
+5️⃣ Admin:
+
+Name search kare
+
+User block / unblock kare
+
+Block karte hi → key bhi disable
+
+⚠️ GOLDEN RULE (DONO AGENTS KE LIYE)
+
+❌ Existing login logic / key verification / working API TOUCH NAHI KARNA
+
+✅ Sirf NEW endpoints, NEW tables, NEW screens
+
+🧠 ARCHITECTURE OVERVIEW (HIGH LEVEL)
+APP
+ ├── Login (already working ✅)
+ ├── Profile Setup (NEW)
+ ├── Main App
+ └── Session Ping (background)
+
+WEBSITE
+ ├── verify_key.php (NO CHANGE ❌)
+ ├── register_user.php (NEW ✅)
+ ├── heartbeat.php (NEW ✅)
+ └── Admin → User Activity Page (NEW UI)
+
+🗄️ DATABASE CHANGES (WEBSITE AGENT)
+1️⃣ NEW TABLE: app_users
+CREATE TABLE app_users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  license_key VARCHAR(100),
+  user_name VARCHAR(100),
+  device_id VARCHAR(150),
+  first_login_at DATETIME,
+  last_login_at DATETIME,
+  total_usage_seconds INT DEFAULT 0,
+  is_blocked TINYINT(1) DEFAULT 0
+);
+
+
+📌 Purpose:
+
+User identity
+
+Block status
+
+Usage tracking
+
+2️⃣ NEW TABLE: user_sessions
+CREATE TABLE user_sessions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  license_key VARCHAR(100),
+  device_id VARCHAR(150),
+  session_start DATETIME,
+  session_end DATETIME,
+  duration_seconds INT
+);
+
+
+📌 Purpose:
+
+Detailed login history
+
+Time spent per session
+
+🌐 WEBSITE AGENT – BACKEND WORK
+🔹 API 1: register_user.php (NEW)
+Input (POST):
+license_key
+device_id
+user_name
+
+Logic:
+
+Check:
+
+key exists
+
+key active
+
+not blocked
+
+If first time:
+
+insert into app_users
+
+Else:
+
+update last_login_at
+
+Response:
+{
+  "status": "success",
+  "message": "User registered"
+}
+
+🔹 API 2: heartbeat.php (NEW – session tracking)
+Input (POST):
+license_key
+device_id
+
+Logic:
+
+Every 60 seconds:
+
+update total_usage_seconds
+
+keep session alive
+
+📌 App band hote hi → session_end update
+
+🔹 BLOCK LOGIC (VERY IMPORTANT)
+
+Admin panel se:
+
+is_blocked = 1
+
+License key → inactive
+
+👉 App side:
+
+Agar API response me "blocked": true
+
+App force logout + message
+
+🖥️ ADMIN PANEL – NEW PAGE (WEBSITE AGENT)
+📄 Page Name: User Activity
+Columns:
+
+User Name
+
+License Key
+
+Device ID
+
+First Login
+
+Last Login
+
+Total Usage (HH:MM)
+
+Status (Active / Blocked)
+
+Action (Block / Unblock)
+
+Features:
+
+🔍 Search by User Name
+
+🔍 Search by Key
+
+⛔ Block user
+
+✅ Unblock user
+
+🧠 Block = user + key both disabled
+
+📱 APP AGENT – APP SIDE CHANGES
+1️⃣ PROFILE SETUP SCREEN (NEW ACTIVITY)
+Show only if:
+
+Login success
+
+User not registered yet
+
+UI:
+
+Title: “Complete Your Profile”
+
+Input: Name
+
+Button: Continue
+
+On submit:
+
+Call register_user.php
+
+Save flag locally: profile_completed = true
+
+❌ Login logic touch nahi karna
+
+2️⃣ DEVICE ID (SAFE METHOD)
+Settings.Secure.ANDROID_ID
+
+
+Stable
+
+No extra permission
+
+Already allowed
+
+3️⃣ SESSION TRACKING (BACKGROUND)
+
+On app open:
+
+Start timer
+
+Every 60 sec:
+
+Call heartbeat.php
+
+On app close / background:
+
+End session
+
+📌 Silent, no UI impact
+
+🧾 APP CONFIG JSON (NO BREAKING CHANGE)
+ADD ONLY (don’t remove anything):
+"user_tracking": {
+  "enabled": true,
+  "heartbeat_interval_sec": 60
+}
+
+🛑 BLOCK HANDLING (APP AGENT)
+
+If any API returns:
+
+"blocked": true
+
+
+App should:
+
+Clear session
+
+Show dialog:
+
+“Your access has been blocked. Contact support.”
+
+Redirect to login
+
+🧪 TESTING ORDER (IMPORTANT)
+
+1️⃣ Verify key login (already working ✅)
+2️⃣ First login → profile screen
+3️⃣ Name saved → admin panel visible
+4️⃣ Session time increments
+5️⃣ Block user from admin
+6️⃣ App instantly logs out
+7️⃣ Unblock → login works again
+
+🧩 WHY THIS DESIGN IS CORRECT
+
+✔ No existing logic touched
+✔ Scalable
+✔ Searchable admin UI
+✔ Accurate time tracking
+✔ Clean separation of concerns
+✔ No hacks / no overlays
+
+🧨 FINAL STRICT MESSAGE FOR YOUR AGENTS
+
+🔒 Login system is frozen
+
+➕ Only ADD:
+
+new tables
+
+new APIs
+
+new screens
+
+❌ Do NOT refactor existing working code
