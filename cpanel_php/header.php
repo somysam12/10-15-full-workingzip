@@ -66,6 +66,7 @@ $app_status = getConfig('app_status', 'ON');
             will-change: transform;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
         .sidebar nav {
@@ -73,20 +74,36 @@ $app_status = getConfig('app_status', 'ON');
             display: flex;
             flex-direction: column;
             overflow-y: auto;
-            scrollbar-width: none; /* Firefox */
+            overflow-x: hidden;
+            padding-bottom: 20px;
+            /* Scrollbar styling for better visibility */
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color) var(--sidebar-bg);
         }
         
         .sidebar nav::-webkit-scrollbar {
-            display: none; /* Chrome/Safari */
+            width: 6px;
+        }
+
+        .sidebar nav::-webkit-scrollbar-track {
+            background: var(--sidebar-bg);
+        }
+
+        .sidebar nav::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
         }
 
         .nav-links {
-            flex: 1;
+            display: block;
+            width: 100%;
         }
 
         .sidebar-footer {
-            padding-bottom: 2rem;
+            padding: 15px;
             background: var(--sidebar-bg);
+            border-top: 1px solid rgba(168, 85, 247, 0.1);
+            margin-top: auto;
         }
 
         .main-content {

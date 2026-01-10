@@ -16,8 +16,8 @@ $app_type = $_SESSION['app_type'] ?? 'master';
             </span>
         </div>
     </div>
-    <nav class="d-flex flex-column h-100">
-        <div class="nav-links flex-grow-1">
+    <nav>
+        <div class="nav-links">
             <a href="index.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''; ?>">
                 <i class="fas fa-home"></i> Dashboard
             </a>
@@ -75,9 +75,8 @@ $app_type = $_SESSION['app_type'] ?? 'master';
             </a>
         </div>
 
-        <div class="sidebar-footer px-3 mt-auto pb-4">
-            <hr class="border-secondary opacity-25">
-            <form action="switch_app.php" method="POST" class="mb-3">
+        <div class="sidebar-footer">
+            <form action="switch_app.php" method="POST" class="mb-2">
                 <button type="submit" name="switch_type" value="<?php echo $app_type === 'master' ? 'panel' : 'master'; ?>" class="btn btn-outline-info w-100 py-3 d-flex align-items-center justify-content-center">
                     <i class="fas fa-sync-alt me-2"></i> 
                     <span>Switch to <?php echo $app_type === 'master' ? 'Panel' : 'Master'; ?></span>
