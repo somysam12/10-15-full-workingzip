@@ -1,78 +1,93 @@
 <?php
-ob_start(); // Prevent any accidental output
+/**
+ * Silent Panel - Key Verification API
+ * STRICT JSON RESPONSE ONLY
+ */
+
+// Phase 1: Ensure JSON purity
+ob_start(); 
+error_reporting(0); // Disable all error reporting to avoid polluting JSON output
+ini_set('display_errors', 0);
+
 require_once '../config.php';
-header('Content-Type: application/json');
 
-// Get and clean input
-$key = trim($_POST['license_key'] ?? $_GET['license_key'] ?? '');
-$device_id = trim($_POST['device_id'] ?? $_GET['device_id'] ?? '');
-
-if (empty($key)) {
-    echo json_encode(['status' => 'invalid', 'message' => 'Key is required']);
-    exit;
-}
+// Prepare header
+header('Content-Type: application/json; charset=utf-8');
 
 try {
-    // Case-insensitive match using UPPER()
-    $stmt = $pdo->prepare("SELECT * FROM license_keys WHERE UPPER(license_key) = UPPER(?)");
+    // Phase 2: Normalize key (trim + uppercase)
+    $raw_key = $_POST['key'] ?? $_GET['key'] ?? $_POST['license_key'] ?? $_GET['license_key'] ?? '';
+    $key = strtoupper(trim($raw_key));
+    $device_id = trim($_POST['device_id'] ?? $_GET['device_id'] ?? '');
+
+    if (empty($key)) {
+        ob_clean();
+        echo json_encode([
+            "status" => "error",
+            "message" => "Key is required"
+        ]);
+        exit;
+    }
+
+    global $pdo;
+    if (!$pdo) {
+        throw new Exception("Database connection failed");
+    }
+
+    // Phase 1: Database check with normalized key
+    $stmt = $pdo->prepare("SELECT * FROM license_keys WHERE UPPER(license_key) = ? LIMIT 1");
     $stmt->execute([$key]);
     $license = $stmt->fetch();
 
     if (!$license) {
-        echo json_encode(['status' => 'invalid', 'message' => 'License key not found']);
+        ob_clean();
+        echo json_encode([
+            "status" => "error",
+            "message" => "Invalid license key"
+        ]);
         exit;
     }
 
-    // Status check (case-insensitive)
-    if (strtolower($license['status'] ?? '') !== 'active') {
-        echo json_encode(['status' => 'invalid', 'message' => 'License key is ' . ($license['status'] ?? 'unknown')]);
+    // Status check
+    if (strtoupper($license['status']) !== 'ACTIVE') {
+        ob_clean();
+        echo json_encode([
+            "status" => "error",
+            "message" => "License is " . $license['status']
+        ]);
         exit;
     }
 
     // Expiry check
-    $now = time();
     $expiry_time = strtotime($license['expires_at']);
-    if ($now > $expiry_time) {
-        $stmt = $pdo->prepare("UPDATE license_keys SET status = 'expired' WHERE id = ?");
-        $stmt->execute([$license['id']]);
-        echo json_encode(['status' => 'invalid', 'message' => 'License key has expired']);
+    if (time() > $expiry_time) {
+        // Auto-update status to expired
+        $update = $pdo->prepare("UPDATE license_keys SET status = 'expired' WHERE id = ?");
+        $update->execute([$license['id']]);
+        
+        ob_clean();
+        echo json_encode([
+            "status" => "error",
+            "message" => "License key has expired"
+        ]);
         exit;
     }
 
-    // Device Binding
-    if (!empty($device_id)) {
-        if (empty($license['device_id'])) {
-            $stmt = $pdo->prepare("UPDATE license_keys SET device_id = ? WHERE id = ?");
-            $stmt->execute([$device_id, $license['id']]);
-        } elseif ($license['device_id'] !== $device_id) {
-            echo json_encode(['status' => 'invalid', 'message' => 'Device mismatch']);
-            exit;
-        }
-    }
-
-    $config = getAllConfig();
-
-    // Clean JSON response
+    // Phase 3: Exact Response Format
     ob_clean();
     echo json_encode([
-        'status' => 'success',
-        'expires_at' => date('Y-m-d H:i', $expiry_time),
-        'message' => 'Valid license',
-        'maintenance' => [
-            'enabled' => ($config['maintenance_enabled'] ?? 'false') === 'true',
-            'message' => $config['maintenance_message'] ?? ''
-        ],
-        'announcement' => [
-            'enabled' => ($config['announcement_enabled'] ?? 'false') === 'true',
-            'title' => $config['announcement_title'] ?? '',
-            'message' => $config['announcement_message'] ?? '',
-            'type' => $config['announcement_type'] ?? 'info'
-        ]
+        "status" => "success",
+        "message" => "Key valid",
+        "expires_at" => date('Y-m-d H:i:s', $expiry_time)
     ]);
+    exit;
 
 } catch (Exception $e) {
     ob_clean();
-    echo json_encode(['status' => 'error', 'message' => 'Server Error']);
+    echo json_encode([
+        "status" => "error",
+        "message" => "Server error occurred"
+    ]);
+    exit;
 }
-exit;
 ?>
