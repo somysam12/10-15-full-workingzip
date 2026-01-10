@@ -102,6 +102,16 @@ function getActiveAnnouncement() {
 function getMaintenanceConfig() {
     global $pdo;
     $app_type = $_SESSION['app_type'] ?? 'master';
+    
+    // Check global app status first
+    $global_status = getConfig('app_status', 'ON');
+    if ($global_status === 'OFF') {
+        return [
+            "enabled" => true,
+            "message" => getConfig('maintenance_message', 'System is under maintenance.')
+        ];
+    }
+
     $status_key = ($app_type === 'panel') ? 'panel_maintenance' : 'master_maintenance';
     $msg_key = ($app_type === 'panel') ? 'panel_maintenance_msg' : 'master_maintenance_msg';
     

@@ -18,15 +18,6 @@ try {
         "app_enabled" => !$maintenance['enabled'],
         "maintenance" => $maintenance,
         "announcement" => $ann,
-        "login" => [
-            "required" => ($config['login_required'] ?? 'true') === 'true',
-            "logo_url" => !empty($config['login_logo_url']) ? $config['login_logo_url'] : $base_url . "/logo.png"
-        ],
-        "global_control" => [
-            "app_status" => $maintenance['enabled'] ? 'OFF' : 'ON',
-            "maintenance_message" => $maintenance['message'],
-            "force_logout" => ($config['force_logout_flag'] ?? 'no') === 'yes'
-        ],
 
         /* ================= VERSION CONTROL ================= */
         "version_management" => [
@@ -77,23 +68,10 @@ try {
         ],
 
         /* ================= NEW: LOGIN & MAINTENANCE ================= */
-        "app_enabled" => ($config['app_status'] ?? 'ON') === 'ON',
-        "maintenance" => [
-            "enabled" => ($config['maintenance_enabled'] ?? 'false') === 'true',
-            "message" => $config['maintenance_message'] ?? 'App under maintenance. Please come back later.'
-        ],
-        "announcement" => [
-            "enabled" => ($config['announcement_enabled'] ?? 'false') === 'true',
-            "title" => $config['announcement_title'] ?? '',
-            "message" => $config['announcement_message'] ?? '',
-            "type" => $config['announcement_type'] ?? 'info'
-        ],
         "login" => [
             "required" => ($config['login_required'] ?? 'true') === 'true',
             "logo_url" => !empty($config['login_logo_url']) ? $config['login_logo_url'] : $base_url . "/logo.png"
         ],
-
-        /* ================= PANELS ================= */
         "panels" => []
     ];
 
