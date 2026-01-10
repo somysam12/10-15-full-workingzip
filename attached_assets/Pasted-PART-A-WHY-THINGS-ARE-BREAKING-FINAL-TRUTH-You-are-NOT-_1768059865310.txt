@@ -1,0 +1,305 @@
+PART A — WHY THINGS ARE BREAKING (FINAL TRUTH)
+
+You are NOT crazy. Your system is now mostly correct.
+
+The remaining problems are NOT license logic anymore. They are:
+
+1️⃣ Announcement & maintenance JSON is fetched but not rendered
+
+App fetches config → does not map it to UI correctly
+
+2️⃣ Paste icon works visually but:
+
+Clipboard read is correct
+
+EditText focus + keyboard flags are wrong
+
+Value not persisted correctly
+
+3️⃣ “Critical / Unexpected error” comes from:
+
+App still trying to parse fields that don’t exist
+
+Or doing navigation before config/announcement completes
+
+4️⃣ User Activity page works BUT:
+
+UI is desktop-biased
+
+Session granularity not correct (login vs logout vs duration)
+
+PART B — FINAL RULES (READ THIS TO BOTH AGENTS)
+
+📢 STRICT RULES — NO EXCEPTIONS
+
+❌ DO NOT CHANGE
+
+License verification logic
+
+API URLs
+
+Existing DB tables
+
+Key validation flow
+
+✅ ONLY ADD
+
+UI rendering
+
+JSON mapping
+
+Tracking rows
+
+Animations
+
+Persistence
+
+If any agent violates this → rollback.
+
+PART C — APP AGENT INSTRUCTIONS (VERY IMPORTANT)
+🔹 1. Announcement & Maintenance (MANDATORY FIX)
+Source JSON (YOU PROVIDED — THIS IS FINAL)
+"maintenance": {
+  "enabled": false,
+  "message": "App under maintenance. Please come back later."
+},
+"announcement": {
+  "enabled": true,
+  "title": "New Update",
+  "message": "Server upgraded. Enjoy smoother experience!",
+  "type": "info"
+}
+
+App Agent MUST DO:
+
+Where: MainActivity (or config fetch handler)
+
+Logic:
+IF maintenance.enabled == true
+→ Block app
+→ Full-screen modal (NO DISMISS)
+→ Text = maintenance.message
+
+IF announcement.enabled == true
+→ Show modal / bottom sheet ONCE
+→ Animate in
+→ OK button dismiss
+→ Save flag locally (SharedPreferences)
+
+
+❗ Do NOT look for message on success responses
+❗ Do NOT assume announcement always exists
+
+🔹 2. Announcement UI (STYLE + ANIMATION)
+
+Tell app agent:
+
+UI requirements:
+
+Gradient background (purple → blue)
+
+Icon based on type (info / warning / success)
+
+Scale + fade animation
+
+Rounded card
+
+Soft shadow
+
+Animation:
+
+scale 0.9 → 1
+
+alpha 0 → 1
+
+duration: 250–300ms
+
+🔹 3. Login Page FIXES (CRITICAL)
+✅ Paste Icon FIX (THIS IS WHY IT FAILS NOW)
+
+Tell agent EXACTLY this:
+
+Paste icon click must do ONLY this
+
+clipboard.getPrimaryClip()
+editText.setText(text)
+editText.setSelection(text.length)
+editText.requestFocus()
+
+
+Keyboard MUST OPEN
+
+editText.requestFocus()
+InputMethodManager.showSoftInput(editText, SHOW_IMPLICIT)
+
+
+❌ NO touch listeners
+
+❌ NO custom focus intercept
+
+❌ NO postDelayed hacks
+
+🔹 4. Persist Key (ONLY IF VALID)
+Behavior:
+
+If login SUCCESS → save key
+
+If login FAIL → DO NOT save
+
+Storage:
+SharedPreferences:
+KEY_SAVED_LICENSE
+
+On app start:
+If saved key exists:
+→ auto-fill field
+→ user presses LOGIN only
+
+
+If user edits key → overwrite stored key.
+
+🔹 5. White Screen after Login (2nd Screenshot)
+
+That white screen is because:
+
+You finish LoginActivity
+
+Before MainActivity fully loads UI background
+
+FIX:
+
+Set same background color on:
+
+Splash
+
+Login
+
+MainActivity root
+
+OR
+
+Delay finish() until MainActivity onResume()
+
+🔹 6. Loading Animation on Login
+Must do:
+
+Circular indeterminate loader
+
+Pulse or rotate animation
+
+Disable button during API call
+
+PART D — WEBSITE AGENT INSTRUCTIONS
+🔹 1. User Activity UI (CENTER + RESPONSIVE)
+Fix UI:
+
+Center card horizontally
+
+Max-width 1100px
+
+Table scrollable on mobile
+
+Sticky header
+
+Status pill (Active / Blocked)
+
+🔹 2. Proper Session Tracking (IMPORTANT)
+DB TABLES (You already have base)
+user_sessions
+
+Add:
+
+session_id
+
+license_key
+
+device_id
+
+login_time
+
+logout_time
+
+duration_seconds
+
+On Login:
+
+INSERT new session row
+
+On Heartbeat:
+
+UPDATE duration_seconds += 60
+
+On App Close / Block:
+
+SET logout_time
+
+🔹 3. Admin Controls
+Admin can:
+
+Search by:
+
+Name
+
+Key
+
+Device ID
+
+Click Block
+
+Sets is_blocked = 1
+
+Invalidates active sessions
+
+Click Unblock
+
+Restores access
+
+🔹 4. Activity Analytics Page
+
+Show:
+
+Total logins
+
+Avg session duration
+
+Last active time
+
+Device count per user
+
+PART E — FINAL SYSTEM FLOW (LOCK THIS)
+LOGIN FLOW
+verify_key.php
+→ success
+→ user_exists?
+
+false → ProfileSetup
+true → MainActivity
+
+PROFILE SETUP
+register_user.php
+→ success
+→ MainActivity
+
+RUNTIME
+heartbeat.php (every 60s)
+→ blocked? → logout
+
+FINAL WORD (IMPORTANT)
+
+You ARE VERY CLOSE.
+Your backend is now solid.
+Your issue is UI binding + JSON rendering, not logic.
+
+If your agents follow ONLY WHAT I WROTE ABOVE, the system will:
+
+Stop crashing
+
+Show announcements
+
+Persist keys
+
+Track users properly
+
+Be admin-controllable
+
+Feel premium & stable
