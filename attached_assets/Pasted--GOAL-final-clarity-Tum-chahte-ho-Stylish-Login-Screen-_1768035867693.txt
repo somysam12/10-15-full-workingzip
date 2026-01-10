@@ -1,0 +1,235 @@
+🎯 GOAL (final clarity)
+
+Tum chahte ho:
+
+Stylish Login Screen (app side)
+
+Logo (admin panel se changeable)
+
+License Key required to login
+
+Smooth animations & aesthetic look
+
+License / Key System (admin panel)
+
+Duration-based keys (1d / 7d / 30d / lifetime etc.)
+
+Key expire hone par auto logout
+
+Device bind option (optional future)
+
+Maintenance + Announcement System
+
+Admin panel se ON/OFF
+
+App me popup / banner show ho
+
+Existing JSON bilkul change na ho
+
+Strict Rule
+❌ Old JSON structure ko touch nahi karna
+❌ Existing app logic ko break nahi karna
+✅ Sirf new fields add karne hain
+
+🔐 PART 1 — LOGIN SCREEN (APP SIDE)
+🔹 App Agent ko EXACT ORDER
+✅ WHAT TO ADD (only additive)
+
+New Activity
+
+LoginActivity.java
+activity_login.xml
+
+
+⚠️ MainActivity / WebView ko touch nahi karna
+
+Flow
+
+App Open
+  ↓
+Check local session
+  ↓
+If not logged in → LoginActivity
+  ↓
+If logged in & key valid → MainActivity
+
+🎨 Login UI Requirements (agent ko bolo)
+UI Look (like screenshot)
+
+Dark gradient background
+
+Center logo (fade + scale animation)
+
+Key input field (rounded, glowing focus)
+
+Login button with ripple + subtle glow
+
+Small loading animation on login
+
+Animations (mandatory)
+
+Logo: scale + fade in
+
+Button press: scale 0.97 → 1
+
+Error: shake animation
+
+⚠️ NO WebView here, pure native UI
+
+🔑 Login Logic (simple & safe)
+
+User enters license key
+
+App hits:
+
+/api/verify_key.php
+
+
+Backend returns:
+
+valid / invalid
+
+expiry timestamp
+
+maintenance flag
+
+announcement text
+
+If valid → save session → open MainActivity
+
+🖥️ PART 2 — WEBSITE / ADMIN PANEL
+🔹 Website Agent ko STRICT ORDER
+❌ DO NOT TOUCH
+
+Existing app_config.php
+
+Existing JSON keys used by app
+
+✅ ADD NEW FILES ONLY
+1️⃣ License API
+/api/verify_key.php
+
+
+Responsibilities:
+
+Check key exists
+
+Check expiry
+
+Return JSON response
+
+Bind device (optional)
+
+🔑 Database Table (example logic)
+license_keys
+- id
+- license_key
+- expires_at
+- status (active / expired / banned)
+- device_id (optional)
+- created_at
+
+🧾 PART 3 — JSON STRUCTURE (VERY IMPORTANT)
+🔒 RULE
+
+👉 Old JSON fields remain unchanged
+👉 New keys are optional additions
+
+✅ NEW JSON (SAFE ADDITIVE)
+{
+  "app_enabled": true,
+
+  "maintenance": {
+    "enabled": false,
+    "message": "App under maintenance. Please come back later."
+  },
+
+  "announcement": {
+    "enabled": true,
+    "title": "New Update",
+    "message": "Server upgraded. Enjoy smoother experience!",
+    "type": "info"
+  },
+
+  "login": {
+    "required": true,
+    "logo_url": "https://yoursite.com/logo.png"
+  }
+}
+
+
+📌 Old JSON keys untouched
+📌 App checks login.required only
+
+🗣️ Announcement Behavior (App Agent)
+
+If announcement.enabled == true
+
+Show popup on app open
+
+Dismiss button
+
+If maintenance enabled:
+
+Block login
+
+Show full-screen message
+
+🖼️ PART 4 — LOGO CONTROL (Admin → App)
+🔹 Website Agent
+
+Add Logo Upload section
+
+Store URL in DB
+
+Return in JSON (login.logo_url)
+
+🔹 App Agent
+
+Load logo via Glide / Coil
+
+Cache enabled
+
+Fallback to default if URL fails
+
+🛠️ PART 5 — SECURITY RULES
+
+Tell both agents clearly 👇
+
+🚫 STRICTLY NOT ALLOWED
+
+Changing existing JSON keys
+
+Touching WebView scaling logic
+
+Mixing login logic inside MainActivity
+
+✅ ALLOWED
+
+New Activity
+
+New API
+
+New JSON keys (optional only)
+
+🧠 FUTURE READY (bonus)
+
+Later easily add:
+
+Key reset from admin
+
+Max devices per key
+
+Key renew
+
+Trial keys
+
+Telegram login sync
+
+🧾 FINAL MESSAGE (copy-paste to both agents)
+Do not modify any existing JSON or app logic.
+Login system must be additive only.
+Create new LoginActivity + verify_key API.
+Keys, logo, maintenance & announcements controlled from admin.
+No WebView changes.
+No breaking changes.
