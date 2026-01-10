@@ -50,14 +50,14 @@ include 'header.php';
 include 'sidebar.php';
 ?>
 
-<div class="main-content d-flex flex-column align-items-center justify-content-center min-vh-100 p-0">
-    <div class="container-fluid d-flex justify-content-center align-items-center" style="max-width: 1000px; width: 100%;">
-        <div class="row w-100 justify-content-center">
-            <div class="col-12 col-xl-10">
-                <div class="card bg-dark text-white border-secondary shadow-lg mx-auto">
+<div class="main-content d-flex flex-column align-items-center justify-content-center min-vh-100 p-0 m-0" style="margin-left: 0 !important; width: 100% !important;">
+    <div class="container-fluid d-flex justify-content-center align-items-center px-3 px-md-4" style="max-width: 1200px; width: 100%;">
+        <div class="row w-100 justify-content-center m-0">
+            <div class="col-12">
+                <div class="card bg-dark text-white border-secondary shadow-lg mx-auto w-100">
                     <div class="card-header border-secondary d-flex flex-wrap justify-content-between align-items-center bg-gradient gap-3 py-3 px-4">
-                        <h4 class="mb-0 fs-5 fs-md-4 text-center w-100 w-sm-auto"><i class="fas fa-key me-2 text-primary"></i>License Key Management</h4>
-                        <button class="btn btn-primary shadow-sm mx-auto mx-sm-0" data-bs-toggle="modal" data-bs-target="#generateModal">
+                        <h4 class="mb-0 fs-5 fs-md-4 text-center text-sm-start w-100 w-sm-auto"><i class="fas fa-key me-2 text-primary"></i>License Key Management</h4>
+                        <button class="btn btn-primary shadow-sm mx-auto mx-sm-0 px-4" data-bs-toggle="modal" data-bs-target="#generateModal">
                             <i class="fas fa-plus-circle me-1"></i> GENERATE KEYS
                         </button>
                     </div>
@@ -68,8 +68,8 @@ include 'sidebar.php';
                             </div>
                         <?php endif; ?>
                         
-                        <div class="table-responsive">
-                            <table class="table table-dark table-hover align-middle mb-0 text-center" style="min-width: 600px;">
+                        <div class="table-responsive w-100">
+                            <table class="table table-dark table-hover align-middle mb-0 text-center w-100">
                                 <thead class="table-light text-dark">
                                     <tr>
                                         <th class="text-center">Key</th>
