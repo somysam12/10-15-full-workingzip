@@ -48,12 +48,15 @@ try {
         $unit = $_POST['duration_unit']; // hours, days, months
         $max_devices = (int)($_POST['max_devices'] ?? 1);
         
-        // Fix for India Timezone
-        date_default_timezone_set('Asia/Kolkata');
+        // Use DateTime with specific timezone to be 100% sure
+        $timezone = new DateTimeZone('Asia/Kolkata');
         
         for ($i = 0; $i < $count; $i++) {
             $key = "SHASH-" . strtoupper(bin2hex(random_bytes(4)));
-            $expiry = date('Y-m-d H:i:s', strtotime("+$duration $unit"));
+            $date = new DateTime('now', $timezone);
+            $date->modify("+$duration $unit");
+            $expiry = $date->format('Y-m-d H:i:s');
+            
             $stmt = $pdo->prepare("INSERT INTO license_keys (license_key, expires_at, max_devices) VALUES (?, ?, ?)");
             $stmt->execute([$key, $expiry, $max_devices]);
         }
