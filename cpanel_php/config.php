@@ -34,6 +34,9 @@ try {
     die("Database Connection Error: " . $e->getMessage());
 }
 
+// Set global timezone for the entire application to India
+date_default_timezone_set('Asia/Kolkata');
+
 // --- CORE UTILITIES ---
 function getConfig($key, $default = '') {
     global $pdo;

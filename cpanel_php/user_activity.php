@@ -80,12 +80,17 @@ include 'sidebar.php';
                             <?php foreach ($users as $u): 
                                 $hours = floor($u['total_usage_seconds'] / 3600);
                                 $mins = floor(($u['total_usage_seconds'] % 3600) / 60);
+                                
+                                // Fix for India Timezone Display
+                                $timezone = new DateTimeZone('Asia/Kolkata');
+                                $last_login = new DateTime($u['last_login_at']);
+                                $last_login->setTimezone($timezone);
                             ?>
                                 <tr>
                                     <td><?php echo htmlspecialchars($u['user_name']); ?></td>
                                     <td><code><?php echo htmlspecialchars($u['license_key']); ?></code></td>
                                     <td><small class="text-muted"><?php echo substr($u['device_id'], 0, 12); ?>...</small></td>
-                                    <td><small><?php echo date('M d, H:i', strtotime($u['last_login_at'])); ?></small></td>
+                                    <td><small><?php echo $last_login->format('M d, H:i'); ?></small></td>
                                     <td><?php echo sprintf("%02d:%02d", $hours, $mins); ?></td>
                                     <td>
                                         <?php if ($u['is_blocked']): ?>
