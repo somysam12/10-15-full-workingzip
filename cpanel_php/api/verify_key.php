@@ -1,9 +1,11 @@
 <?php
+ob_start(); // Prevent any accidental output
 require_once '../config.php';
 header('Content-Type: application/json');
 
-$key = $_POST['license_key'] ?? $_GET['license_key'] ?? '';
-$device_id = $_POST['device_id'] ?? $_GET['device_id'] ?? '';
+// Get and clean input
+$key = trim($_POST['license_key'] ?? $_GET['license_key'] ?? '');
+$device_id = trim($_POST['device_id'] ?? $_GET['device_id'] ?? '');
 
 if (empty($key)) {
     echo json_encode(['status' => 'invalid', 'message' => 'Key is required']);
@@ -11,7 +13,8 @@ if (empty($key)) {
 }
 
 try {
-    $stmt = $pdo->prepare("SELECT * FROM license_keys WHERE license_key = ?");
+    // Case-insensitive match using UPPER()
+    $stmt = $pdo->prepare("SELECT * FROM license_keys WHERE UPPER(license_key) = UPPER(?)");
     $stmt->execute([$key]);
     $license = $stmt->fetch();
 
@@ -20,21 +23,23 @@ try {
         exit;
     }
 
-    if ($license['status'] !== 'active') {
-        echo json_encode(['status' => 'invalid', 'message' => 'License key is ' . $license['status']]);
+    // Status check (case-insensitive)
+    if (strtolower($license['status'] ?? '') !== 'active') {
+        echo json_encode(['status' => 'invalid', 'message' => 'License key is ' . ($license['status'] ?? 'unknown')]);
         exit;
     }
 
-    $now = new DateTime();
-    $expiry = new DateTime($license['expires_at']);
-    if ($now > $expiry) {
+    // Expiry check
+    $now = time();
+    $expiry_time = strtotime($license['expires_at']);
+    if ($now > $expiry_time) {
         $stmt = $pdo->prepare("UPDATE license_keys SET status = 'expired' WHERE id = ?");
         $stmt->execute([$license['id']]);
         echo json_encode(['status' => 'invalid', 'message' => 'License key has expired']);
         exit;
     }
 
-    // Optional: Device Binding
+    // Device Binding
     if (!empty($device_id)) {
         if (empty($license['device_id'])) {
             $stmt = $pdo->prepare("UPDATE license_keys SET device_id = ? WHERE id = ?");
@@ -45,12 +50,14 @@ try {
         }
     }
 
-    // Maintenance & Announcement status
     $config = getAllConfig();
 
+    // Clean JSON response
+    ob_clean();
     echo json_encode([
-        'status' => 'valid',
-        'expiry' => $license['expires_at'],
+        'status' => 'success',
+        'expires_at' => date('Y-m-d H:i', $expiry_time),
+        'message' => 'Valid license',
         'maintenance' => [
             'enabled' => ($config['maintenance_enabled'] ?? 'false') === 'true',
             'message' => $config['maintenance_message'] ?? ''
@@ -64,5 +71,8 @@ try {
     ]);
 
 } catch (Exception $e) {
-    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    ob_clean();
+    echo json_encode(['status' => 'error', 'message' => 'Server Error']);
 }
+exit;
+?>
