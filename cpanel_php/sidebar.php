@@ -55,6 +55,10 @@ $app_type = $_SESSION['app_type'] ?? 'master';
             <i class="fas fa-code"></i> Advanced CSS
         </a>
 
+        <a href="keys.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'keys.php' ? 'active' : ''; ?>">
+            <i class="fas fa-key"></i> License Keys
+        </a>
+
         <a href="features.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'features.php' ? 'active' : ''; ?>">
             <i class="fas fa-star"></i> Pro Features
         </a>
