@@ -11,11 +11,20 @@ try {
     $base_url = $protocol . "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']);
 
     // ---------- CORE RESPONSE ----------
+    $maintenance = getMaintenanceConfig();
+    $ann = getActiveAnnouncement();
+
     $response = [
-        /* ================= GLOBAL CONTROL ================= */
+        "app_enabled" => !$maintenance['enabled'],
+        "maintenance" => $maintenance,
+        "announcement" => $ann,
+        "login" => [
+            "required" => ($config['login_required'] ?? 'true') === 'true',
+            "logo_url" => !empty($config['login_logo_url']) ? $config['login_logo_url'] : $base_url . "/logo.png"
+        ],
         "global_control" => [
-            "app_status" => $config['app_status'] ?? 'ON',
-            "maintenance_message" => $config['maintenance_message'] ?? '',
+            "app_status" => $maintenance['enabled'] ? 'OFF' : 'ON',
+            "maintenance_message" => $maintenance['message'],
             "force_logout" => ($config['force_logout_flag'] ?? 'no') === 'yes'
         ],
 

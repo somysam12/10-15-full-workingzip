@@ -108,7 +108,7 @@ include 'sidebar.php';
                                 <tr>
                                     <td class="fw-bold"><?php echo htmlspecialchars($u['user_name']); ?></td>
                                     <td><code class="text-info"><?php echo htmlspecialchars($u['license_key']); ?></code></td>
-                                    <td class="d-none d-md-table-cell"><small class="text-muted"><?php echo substr($u['device_id'], 0, 12); ?>...</small></td>
+                                    <td class="d-none d-md-table-cell"><code class="text-info" style="color: #0dcaf0 !important;"><?php echo htmlspecialchars($u['device_id']); ?></code></td>
                                     <td><small><?php echo $last_login->format('M d, H:i'); ?></small></td>
                                     <td><span class="badge bg-secondary"><?php echo sprintf("%02d:%02d", $hours, $mins); ?></span></td>
                                     <td>

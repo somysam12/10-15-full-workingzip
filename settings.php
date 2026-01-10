@@ -1,9 +1,8 @@
 <?php
 require_once 'header.php';
 
-$app_type = $_SESSION['app_type'] ?? 'master';
-$status_key = ($app_type === 'panel') ? 'panel_maintenance' : 'master_maintenance';
-$msg_key = ($app_type === 'panel') ? 'panel_maintenance_msg' : 'master_maintenance_msg';
+$maintenance_status = getConfig($status_key, 'OFF');
+$maintenance_msg = getConfig($msg_key, 'System is under maintenance.');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['update_settings'])) {
@@ -90,8 +89,8 @@ $layout_preset = $config['layout_preset'] ?? 'RIGHT_FOCUS';
                     <div class="mb-3">
                         <label class="form-label text-white-50">App Status</label>
                         <select name="app_status" class="form-select bg-dark text-white border-secondary">
-                            <option value="OFF" <?php echo $app_status == 'OFF' ? 'selected' : ''; ?>>Online (Active)</option>
-                            <option value="ON" <?php echo $app_status == 'ON' ? 'selected' : ''; ?>>Maintenance Mode (Offline)</option>
+                            <option value="OFF" <?php echo $maintenance_status == 'OFF' ? 'selected' : ''; ?>>Online (Active)</option>
+                            <option value="ON" <?php echo $maintenance_status == 'ON' ? 'selected' : ''; ?>>Maintenance Mode (Offline)</option>
                         </select>
                     </div>
                     <div class="mb-3">

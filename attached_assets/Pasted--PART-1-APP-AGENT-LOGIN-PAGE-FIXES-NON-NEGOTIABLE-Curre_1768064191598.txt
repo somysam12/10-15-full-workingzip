@@ -1,0 +1,262 @@
+🔴 PART 1 — APP AGENT (LOGIN PAGE FIXES – NON-NEGOTIABLE)
+❌ Current Problems (Confirmed from screenshots)
+
+Paste icon tap does nothing
+
+Keyboard doesn’t open
+
+Key not retained after successful login
+
+White screen flash before login
+
+Touch interception line visible (gesture overlay bug)
+
+✅ FIX 1 — Paste Icon MUST work + Keyboard MUST open
+🔧 What your agent must do (EXACT):
+
+DO NOT use setOnTouchListener on EditText
+It breaks focus & keyboard.
+
+✅ Correct implementation (ONLY THIS):
+licenseInput.setEndIconOnClickListener(v -> {
+    ClipboardManager clipboard =
+        (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+
+    if (clipboard != null && clipboard.hasPrimaryClip()) {
+        ClipData clip = clipboard.getPrimaryClip();
+        if (clip != null && clip.getItemCount() > 0) {
+            String pasted = clip.getItemAt(0).coerceToText(this).toString();
+            licenseInput.getEditText().setText(pasted);
+            licenseInput.getEditText().setSelection(pasted.length());
+
+            licenseInput.getEditText().requestFocus();
+            InputMethodManager imm =
+                (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.showSoftInput(licenseInput.getEditText(),
+                InputMethodManager.SHOW_IMPLICIT);
+        }
+    }
+});
+
+🚫 STRICT RULE
+
+❌ No onTouch
+
+❌ No custom gesture listeners
+
+❌ No overlay views on top of EditText
+
+✅ FIX 2 — Keyboard MUST open when user taps input
+XML MUST contain:
+android:focusable="true"
+android:focusableInTouchMode="true"
+android:inputType="textVisiblePassword"
+
+Java MUST contain:
+licenseInput.getEditText().setFocusableInTouchMode(true);
+
+✅ FIX 3 — Save key ONLY if key is VALID
+After verify_key.php returns:
+{ "status": "success" }
+
+Save key:
+prefs.edit()
+    .putString("saved_key", enteredKey)
+    .apply();
+
+On app start:
+String savedKey = prefs.getString("saved_key", "");
+if (!savedKey.isEmpty()) {
+    licenseInput.getEditText().setText(savedKey);
+}
+
+❌ If login fails:
+prefs.edit().remove("saved_key").apply();
+
+✅ FIX 4 — Remove WHITE SCREEN before login
+Root cause:
+
+Splash / Login activity has no background
+
+FIX (MANDATORY):
+
+In ALL of these:
+
+activity_splash.xml
+
+activity_login_v2.xml
+
+activity_main.xml
+
+Use same background color:
+
+android:background="#1A1A2E"
+
+🟣 PART 2 — APP AGENT (ANNOUNCEMENT & MAINTENANCE)
+
+Your backend JSON is CORRECT.
+❌ App agent is NOT parsing it properly.
+
+✅ REQUIRED JSON PARSING (NO EXTRA FIELDS)
+App MUST read from:
+announcement.enabled
+announcement.title
+announcement.message
+
+maintenance.enabled
+maintenance.message
+
+🔧 REQUIRED LOGIC (NO SHORTCUTS)
+Maintenance (BLOCKING):
+if (config.maintenance.enabled) {
+    showBlockingMaintenanceDialog(
+        config.maintenance.message
+    );
+    return; // STOP APP
+}
+
+Announcement (ONE TIME ONLY):
+if (config.announcement.enabled &&
+    !prefs.getBoolean("ann_shown", false)) {
+
+    showAnimatedAnnouncementDialog(
+        config.announcement.title,
+        config.announcement.message
+    );
+
+    prefs.edit().putBoolean("ann_shown", true).apply();
+}
+
+🎨 Announcement UI (Tell App Agent)
+
+Design rules
+
+Gradient background (purple → blue)
+
+Rounded card
+
+Scale + fade animation
+
+Centered modal
+
+Button glow animation
+
+Animation example:
+
+scale 0.85 → 1.0
+alpha 0 → 1
+duration 300ms
+
+🟢 PART 3 — WEBSITE AGENT (ANNOUNCEMENT NOT SHOWING – ROOT CAUSE)
+❌ PROBLEM (Seen in screenshot)
+
+Your admin announcement page saves data,
+but app_config.php is NOT OUTPUTTING IT
+
+✅ WEBSITE AGENT MUST FIX THIS
+In app_config.php
+
+❌ WRONG:
+
+$announcement = null;
+
+
+✅ CORRECT:
+
+$stmt = $pdo->query("SELECT * FROM announcements WHERE target='panel' AND status=1 ORDER BY id DESC LIMIT 1");
+$ann = $stmt->fetch(PDO::FETCH_ASSOC);
+
+$announcement = [
+  "enabled" => $ann ? true : false,
+  "title" => $ann['title'] ?? "",
+  "message" => $ann['message'] ?? "",
+  "type" => "info"
+];
+
+
+And then include in JSON:
+
+"announcement" => $announcement
+
+🔴 MAINTENANCE MODE BUG (CRITICAL)
+❌ Problem:
+
+Maintenance ON but app still opens
+
+Fix in app_config.php:
+$app_enabled = ($settings['app_status'] === 'online');
+
+$maintenance = [
+  "enabled" => !$app_enabled,
+  "message" => $settings['maintenance_message']
+];
+
+
+❌ DO NOT rely only on frontend toggle
+
+🔵 PART 4 — USER ACTIVITY (FINAL, CLEAN DESIGN)
+Database MUST have:
+user_sessions (
+  id,
+  license_key,
+  device_id,
+  login_time,
+  logout_time,
+  duration_seconds
+)
+
+On login:
+
+INSERT new session
+
+On heartbeat:
+
+UPDATE duration
+
+On logout / block:
+
+SET logout_time
+
+Admin Panel UX (Tell Website Agent)
+
+✅ Center card
+✅ Mobile friendly
+✅ Columns:
+
+User
+
+Key
+
+Device
+
+Login Time
+
+Logout Time
+
+Session Duration
+
+Total Usage
+
+Status
+
+Block / Unblock
+
+🧠 FINAL VERDICT (IMPORTANT)
+
+❌ Backend is NOT your problem now
+
+❌ License logic is NOT broken
+
+❌ JSON is CORRECT
+
+✅ Your ONLY issues were:
+
+Touch listeners breaking keyboard
+
+Announcement not injected into app_config
+
+Maintenance flag logic incorrect
+
+White screen from missing background
+
+App parsing OLD JSON fields

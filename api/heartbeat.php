@@ -42,6 +42,19 @@ try {
     ");
     $stmt->execute([$key, $device]);
 
+    // Track Session
+    $stmt = $pdo->prepare("SELECT id FROM user_sessions WHERE license_key = ? AND device_id = ? AND session_end IS NULL ORDER BY id DESC LIMIT 1");
+    $stmt->execute([$key, $device]);
+    $session = $stmt->fetch();
+    
+    if ($session) {
+        $stmt = $pdo->prepare("UPDATE user_sessions SET duration_seconds = duration_seconds + 60 WHERE id = ?");
+        $stmt->execute([$session['id']]);
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO user_sessions (license_key, device_id, duration_seconds) VALUES (?, ?, 60)");
+        $stmt->execute([$key, $device]);
+    }
+
     ob_clean();
     echo json_encode(["status"=>"success"]);
 } catch (Exception $e) {

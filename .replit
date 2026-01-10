@@ -27,7 +27,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "php -S 0.0.0.0:5000 -t cpanel_php -c /home/runner/workspace/php.ini"
+args = "php -S 0.0.0.0:5000 -t . -c /home/runner/workspace/php.ini"
 waitForPort = 5000
 
 [[ports]]

@@ -87,25 +87,30 @@ function getActiveAnnouncement() {
     if (!$pdo) return null;
     $app_type = $_SESSION['app_type'] ?? 'all';
     
-    try {
-        // Safe check for column existence and value
-        $sql = "SELECT * FROM announcements WHERE active = 1 ORDER BY id DESC LIMIT 1";
-        $stmt = $pdo->query($sql);
-        $ann = $stmt->fetch();
-        
-        if ($ann) {
-            // If app_type column exists, filter by it
-            if (array_key_exists('app_type', $ann)) {
-                if ($ann['app_type'] !== 'all' && $ann['app_type'] !== $app_type) {
-                    $stmt = $pdo->prepare("SELECT * FROM announcements WHERE active = 1 AND (app_type = ? OR app_type = 'all') ORDER BY id DESC LIMIT 1");
-                    $stmt->execute([$app_type]);
-                    return $stmt->fetch();
-                }
-            }
-        }
-        return $ann;
-    } catch (Exception $e) {
-        return null;
-    }
+    $stmt = $pdo->prepare("SELECT * FROM announcements WHERE active = 1 AND (app_type = ? OR app_type = 'all') ORDER BY id DESC LIMIT 1");
+    $stmt->execute([$app_type]);
+    $ann = $stmt->fetch();
+    
+    return [
+        "enabled" => $ann ? true : false,
+        "title" => $ann['title'] ?? "",
+        "message" => $ann['message'] ?? "",
+        "type" => $ann['type'] ?? "info"
+    ];
+}
+
+function getMaintenanceConfig() {
+    global $pdo;
+    $app_type = $_SESSION['app_type'] ?? 'master';
+    $status_key = ($app_type === 'panel') ? 'panel_maintenance' : 'master_maintenance';
+    $msg_key = ($app_type === 'panel') ? 'panel_maintenance_msg' : 'master_maintenance_msg';
+    
+    $status = getConfig($status_key, 'OFF');
+    $message = getConfig($msg_key, 'System is under maintenance.');
+    
+    return [
+        "enabled" => ($status === 'ON'),
+        "message" => $message
+    ];
 }
 ?>
