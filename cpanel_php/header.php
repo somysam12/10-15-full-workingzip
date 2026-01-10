@@ -53,7 +53,7 @@ $app_status = getConfig('app_status', 'ON');
         /* Sidebar Styling */
         .sidebar {
             background: var(--sidebar-bg);
-            min-height: 100vh;
+            height: 100vh;
             color: white;
             position: fixed;
             width: var(--sidebar-width);
@@ -64,6 +64,29 @@ $app_status = getConfig('app_status', 'ON');
             border-right: 1px solid rgba(168, 85, 247, 0.1);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             will-change: transform;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar nav {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            scrollbar-width: none; /* Firefox */
+        }
+        
+        .sidebar nav::-webkit-scrollbar {
+            display: none; /* Chrome/Safari */
+        }
+
+        .nav-links {
+            flex: 1;
+        }
+
+        .sidebar-footer {
+            padding-bottom: 2rem;
+            background: var(--sidebar-bg);
         }
 
         .main-content {
@@ -153,12 +176,6 @@ $app_status = getConfig('app_status', 'ON');
             transform: translateY(-4px);
             border-color: var(--primary-color) !important;
             box-shadow: 0 12px 24px rgba(168, 85, 247, 0.15) !important;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary-color) !important;
-            box-shadow: 0 15px 30px rgba(168, 85, 247, 0.15) !important;
         }
 
         .text-gray-800 { color: var(--text-main) !important; font-weight: 700; }
