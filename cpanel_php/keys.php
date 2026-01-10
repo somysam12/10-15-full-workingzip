@@ -1,4 +1,6 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 require_once 'config.php';
 requireLogin();
 
@@ -7,26 +9,30 @@ global $pdo;
 // Handle Actions
 if (isset($_GET['action'])) {
     $id = (int)$_GET['id'];
-    if ($_GET['action'] === 'delete') {
-        $stmt = $pdo->prepare("DELETE FROM license_keys WHERE id = ?");
-        $stmt->execute([$id]);
-        header("Location: keys.php?success=Key deleted");
-        exit;
-    } elseif ($_GET['action'] === 'reset') {
-        $stmt = $pdo->prepare("UPDATE license_keys SET device_id = NULL WHERE id = ?");
-        $stmt->execute([$id]);
-        header("Location: keys.php?success=Device reset successfully");
-        exit;
-    } elseif ($_GET['action'] === 'block') {
-        $stmt = $pdo->prepare("UPDATE license_keys SET status = 'banned' WHERE id = ?");
-        $stmt->execute([$id]);
-        header("Location: keys.php?success=Key blocked");
-        exit;
-    } elseif ($_GET['action'] === 'unblock') {
-        $stmt = $pdo->prepare("UPDATE license_keys SET status = 'active' WHERE id = ?");
-        $stmt->execute([$id]);
-        header("Location: keys.php?success=Key unblocked");
-        exit;
+    try {
+        if ($_GET['action'] === 'delete') {
+            $stmt = $pdo->prepare("DELETE FROM license_keys WHERE id = ?");
+            $stmt->execute([$id]);
+            header("Location: keys.php?success=Key deleted");
+            exit;
+        } elseif ($_GET['action'] === 'reset') {
+            $stmt = $pdo->prepare("UPDATE license_keys SET device_id = NULL WHERE id = ?");
+            $stmt->execute([$id]);
+            header("Location: keys.php?success=Device reset successfully");
+            exit;
+        } elseif ($_GET['action'] === 'block') {
+            $stmt = $pdo->prepare("UPDATE license_keys SET status = 'banned' WHERE id = ?");
+            $stmt->execute([$id]);
+            header("Location: keys.php?success=Key blocked");
+            exit;
+        } elseif ($_GET['action'] === 'unblock') {
+            $stmt = $pdo->prepare("UPDATE license_keys SET status = 'active' WHERE id = ?");
+            $stmt->execute([$id]);
+            header("Location: keys.php?success=Key unblocked");
+            exit;
+        }
+    } catch (PDOException $e) {
+        $error = "Database Error: " . $e->getMessage();
     }
 }
 
@@ -36,17 +42,26 @@ if (isset($_POST['generate'])) {
     $duration = (int)$_POST['duration']; 
     $unit = $_POST['duration_unit']; // hours, days, months
     
-    for ($i = 0; $i < $count; $i++) {
-        $key = "SHASH-" . strtoupper(bin2hex(random_bytes(4)));
-        $expiry = date('Y-m-d H:i:s', strtotime("+$duration $unit"));
-        $stmt = $pdo->prepare("INSERT INTO license_keys (license_key, expires_at) VALUES (?, ?)");
-        $stmt->execute([$key, $expiry]);
+    try {
+        for ($i = 0; $i < $count; $i++) {
+            $key = "SHASH-" . strtoupper(bin2hex(random_bytes(4)));
+            $expiry = date('Y-m-d H:i:s', strtotime("+$duration $unit"));
+            $stmt = $pdo->prepare("INSERT INTO license_keys (license_key, expires_at) VALUES (?, ?)");
+            $stmt->execute([$key, $expiry]);
+        }
+        header("Location: keys.php?success=$count keys generated");
+        exit;
+    } catch (PDOException $e) {
+        $error = "Generation Error: " . $e->getMessage();
     }
-    header("Location: keys.php?success=$count keys generated");
-    exit;
 }
 
-$keys = $pdo->query("SELECT * FROM license_keys ORDER BY created_at DESC")->fetchAll();
+try {
+    $keys = $pdo->query("SELECT * FROM license_keys ORDER BY created_at DESC")->fetchAll();
+} catch (PDOException $e) {
+    $keys = [];
+    $error = "Could not fetch keys. Please ensure the 'license_keys' table exists in your database. Error: " . $e->getMessage();
+}
 
 include 'header.php';
 include 'sidebar.php';
