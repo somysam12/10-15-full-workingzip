@@ -1,39 +1,46 @@
 <?php
 ob_start();
-require_once '../config.php';
 header('Content-Type: application/json');
+error_reporting(0);
+ini_set('display_errors', 0);
 
-$key = strtoupper(trim($_POST['license_key'] ?? $_POST['key'] ?? ''));
-$device_id = trim($_POST['device_id'] ?? '');
-
-if (empty($key) || empty($device_id)) {
-    ob_clean();
-    echo json_encode(["status" => "error", "message" => "Missing data"]);
-    exit;
-}
+require_once 'config.php';
 
 try {
-    global $pdo;
-    
-    // Check block status
-    $stmt = $pdo->prepare("SELECT is_blocked FROM app_users WHERE license_key = ? LIMIT 1");
-    $stmt->execute([$key]);
-    $user = $stmt->fetch();
-    
-    if ($user && $user['is_blocked']) {
+    $key = strtoupper(trim($_POST['license_key'] ?? ''));
+    $device = trim($_POST['device_id'] ?? '');
+
+    if ($key === '' || $device === '') {
         ob_clean();
-        echo json_encode(["status" => "error", "message" => "Blocked", "blocked" => true]);
+        echo json_encode(["status"=>"error","message"=>"Missing fields"]);
         exit;
     }
 
-    // Update usage (ping every 60s)
-    $stmt = $pdo->prepare("UPDATE app_users SET total_usage_seconds = total_usage_seconds + 60, last_login_at = NOW() WHERE license_key = ?");
-    $stmt->execute([$key]);
+    global $pdo;
+
+    // Check if blocked
+    $stmt = $pdo->prepare("SELECT is_blocked FROM app_users WHERE license_key = ? AND device_id = ? LIMIT 1");
+    $stmt->execute([$key, $device]);
+    $user = $stmt->fetch();
+
+    if ($user && $user['is_blocked']) {
+        ob_clean();
+        echo json_encode(["status" => "blocked", "message" => "You are blocked"]);
+        exit;
+    }
+
+    // Update usage
+    $stmt = $pdo->prepare("
+        UPDATE app_users 
+        SET last_login_at = NOW(), total_usage_seconds = total_usage_seconds + 60
+        WHERE license_key=? AND device_id=? AND is_blocked=0
+    ");
+    $stmt->execute([$key, $device]);
 
     ob_clean();
-    echo json_encode(["status" => "success"]);
+    echo json_encode(["status"=>"success"]);
 } catch (Exception $e) {
     ob_clean();
-    echo json_encode(["status" => "error"]);
+    echo json_encode(["status"=>"error"]);
 }
 exit;
