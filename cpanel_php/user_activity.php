@@ -32,16 +32,21 @@ if (isset($_GET['action'])) {
     }
 }
 
-$search = $_GET['search'] ?? '';
-$query = "SELECT * FROM app_users";
-if ($search) {
-    $query .= " WHERE user_name LIKE ? OR license_key LIKE ?";
-    $stmt = $pdo->prepare($query . " ORDER BY last_login_at DESC");
-    $stmt->execute(["%$search%", "%$search%"]);
-} else {
-    $stmt = $pdo->query($query . " ORDER BY last_login_at DESC");
+try {
+    $search = $_GET['search'] ?? '';
+    $query = "SELECT * FROM app_users";
+    if ($search) {
+        $query .= " WHERE user_name LIKE ? OR license_key LIKE ?";
+        $stmt = $pdo->prepare($query . " ORDER BY last_login_at DESC");
+        $stmt->execute(["%$search%", "%$search%"]);
+    } else {
+        $stmt = $pdo->query($query . " ORDER BY last_login_at DESC");
+    }
+    $users = $stmt->fetchAll();
+} catch (PDOException $e) {
+    $users = [];
+    $error = "Database Error: " . $e->getMessage();
 }
-$users = $stmt->fetchAll();
 
 include 'header.php';
 include 'sidebar.php';
