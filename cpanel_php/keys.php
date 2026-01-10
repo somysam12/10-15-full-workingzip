@@ -1,15 +1,23 @@
 <?php
+ob_start(); // Buffer output to prevent 500 errors if something triggers a warning
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-require_once 'config.php';
-requireLogin();
 
-global $pdo;
+try {
+    if (!file_exists('config.php')) {
+        throw new Exception("config.php is missing");
+    }
+    require_once 'config.php';
+    requireLogin();
 
-// Handle Actions
-if (isset($_GET['action'])) {
-    $id = (int)$_GET['id'];
-    try {
+    global $pdo;
+    if (!isset($pdo) || !$pdo) {
+        throw new Exception("Database connection (\$pdo) is not initialized.");
+    }
+
+    // Handle Actions
+    if (isset($_GET['action'])) {
+        $id = (int)$_GET['id'];
         if ($_GET['action'] === 'delete') {
             $stmt = $pdo->prepare("DELETE FROM license_keys WHERE id = ?");
             $stmt->execute([$id]);
@@ -31,18 +39,14 @@ if (isset($_GET['action'])) {
             header("Location: keys.php?success=Key unblocked");
             exit;
         }
-    } catch (PDOException $e) {
-        $error = "Database Error: " . $e->getMessage();
     }
-}
 
-// Handle Generate
-if (isset($_POST['generate'])) {
-    $count = (int)$_POST['count'];
-    $duration = (int)$_POST['duration']; 
-    $unit = $_POST['duration_unit']; // hours, days, months
-    
-    try {
+    // Handle Generate
+    if (isset($_POST['generate'])) {
+        $count = (int)$_POST['count'];
+        $duration = (int)$_POST['duration']; 
+        $unit = $_POST['duration_unit']; // hours, days, months
+        
         for ($i = 0; $i < $count; $i++) {
             $key = "SHASH-" . strtoupper(bin2hex(random_bytes(4)));
             $expiry = date('Y-m-d H:i:s', strtotime("+$duration $unit"));
@@ -51,16 +55,14 @@ if (isset($_POST['generate'])) {
         }
         header("Location: keys.php?success=$count keys generated");
         exit;
-    } catch (PDOException $e) {
-        $error = "Generation Error: " . $e->getMessage();
     }
-}
 
-try {
     $keys = $pdo->query("SELECT * FROM license_keys ORDER BY created_at DESC")->fetchAll();
-} catch (PDOException $e) {
-    $keys = [];
-    $error = "Could not fetch keys. Please ensure the 'license_keys' table exists in your database. Error: " . $e->getMessage();
+
+} catch (Exception $e) {
+    ob_end_clean();
+    header('Content-Type: text/plain');
+    die("Critical Page Error: " . $e->getMessage() . "\n\nStack Trace:\n" . $e->getTraceAsString());
 }
 
 include 'header.php';
