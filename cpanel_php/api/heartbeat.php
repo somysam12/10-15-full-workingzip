@@ -1,4 +1,9 @@
 <?php
+/**
+ * Silent Panel - Heartbeat API
+ * FINAL STABLE API CONTRACT
+ */
+
 ob_start();
 header('Content-Type: application/json');
 error_reporting(0);
@@ -19,7 +24,7 @@ try {
     global $pdo;
 
     // Check block status
-    $stmt = $pdo->prepare("SELECT is_blocked FROM app_users WHERE license_key = ? AND device_id = ? LIMIT 1");
+    $stmt = $pdo->prepare("SELECT is_blocked FROM app_users WHERE UPPER(license_key) = ? AND device_id = ? LIMIT 1");
     $stmt->execute([$key, $device]);
     $user = $stmt->fetch();
 
@@ -33,7 +38,7 @@ try {
     $stmt = $pdo->prepare("
         UPDATE app_users 
         SET last_login_at = NOW(), total_usage_seconds = total_usage_seconds + 60
-        WHERE license_key=? AND device_id=? AND is_blocked=0
+        WHERE UPPER(license_key)=? AND device_id=? AND is_blocked=0
     ");
     $stmt->execute([$key, $device]);
 
@@ -44,4 +49,3 @@ try {
     echo json_encode(["status"=>"error"]);
 }
 exit;
-?>

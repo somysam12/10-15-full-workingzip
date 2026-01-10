@@ -1,4 +1,9 @@
 <?php
+/**
+ * Silent Panel - User Registration API
+ * FINAL STABLE API CONTRACT
+ */
+
 ob_start();
 header('Content-Type: application/json');
 error_reporting(0);
@@ -20,7 +25,7 @@ try {
     global $pdo;
 
     // Check if user is blocked
-    $stmt = $pdo->prepare("SELECT is_blocked FROM app_users WHERE license_key = ? AND device_id = ? LIMIT 1");
+    $stmt = $pdo->prepare("SELECT is_blocked FROM app_users WHERE UPPER(license_key) = ? AND device_id = ? LIMIT 1");
     $stmt->execute([$key, $device]);
     $user = $stmt->fetch();
 
@@ -45,4 +50,3 @@ try {
     echo json_encode(["status"=>"error"]);
 }
 exit;
-?>

@@ -1,10 +1,15 @@
 <?php
-ob_start();
-header('Content-Type: application/json; charset=utf-8');
+/**
+ * Silent Panel - Key Verification API
+ * FINAL STABLE API CONTRACT
+ */
+
+ob_start(); 
 error_reporting(0);
 ini_set('display_errors', 0);
 
 require_once '../config.php';
+header('Content-Type: application/json; charset=utf-8');
 
 try {
     $raw_key = $_POST['key'] ?? $_GET['key'] ?? $_POST['license_key'] ?? $_GET['license_key'] ?? '';
@@ -30,7 +35,7 @@ try {
         exit;
     }
 
-    // Check if key is active
+    // Status check
     if (strtoupper($license['status']) !== 'ACTIVE') {
         ob_clean();
         echo json_encode(["status" => "error", "message" => "License is " . $license['status']]);
@@ -51,34 +56,15 @@ try {
     }
 
     // Check if user already exists in app_users
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM app_users WHERE license_key = ?");
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM app_users WHERE UPPER(license_key) = ?");
     $stmt->execute([$key]);
     $user_exists = $stmt->fetchColumn() > 0;
 
-    // Device Binding check
-    if (!empty($device_id)) {
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM app_users WHERE license_key = ? AND device_id = ?");
-        $stmt->execute([$key, $device_id]);
-        $already_bound = $stmt->fetchColumn() > 0;
-
-        if (!$already_bound) {
-             $stmt = $pdo->prepare("SELECT COUNT(DISTINCT device_id) FROM app_users WHERE license_key = ?");
-             $stmt->execute([$key]);
-             $current_devices = $stmt->fetchColumn();
-             $max_devices = (int)($license['max_devices'] ?? 1);
-             
-             if ($current_devices >= $max_devices) {
-                 ob_clean();
-                 echo json_encode(["status" => "error", "message" => "Max devices reached ($max_devices)"]);
-                 exit;
-             }
-        }
-    }
-
-    // Success response with user_exists flag
+    // Success response - STRICT CONTRACT
     ob_clean();
     echo json_encode([
         "status" => "success",
+        "message" => "Key valid",
         "expires_at" => $license['expires_at'],
         "user_exists" => (bool)$user_exists
     ]);
@@ -89,4 +75,3 @@ try {
     echo json_encode(["status" => "error", "message" => "Server error"]);
     exit;
 }
-?>
