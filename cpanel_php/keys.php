@@ -46,12 +46,13 @@ try {
         $count = (int)$_POST['count'];
         $duration = (int)$_POST['duration']; 
         $unit = $_POST['duration_unit']; // hours, days, months
+        $max_devices = (int)($_POST['max_devices'] ?? 1);
         
         for ($i = 0; $i < $count; $i++) {
             $key = "SHASH-" . strtoupper(bin2hex(random_bytes(4)));
             $expiry = date('Y-m-d H:i:s', strtotime("+$duration $unit"));
-            $stmt = $pdo->prepare("INSERT INTO license_keys (license_key, expires_at) VALUES (?, ?)");
-            $stmt->execute([$key, $expiry]);
+            $stmt = $pdo->prepare("INSERT INTO license_keys (license_key, expires_at, max_devices) VALUES (?, ?, ?)");
+            $stmt->execute([$key, $expiry, $max_devices]);
         }
         header("Location: keys.php?success=$count keys generated");
         exit;
@@ -162,6 +163,10 @@ include 'sidebar.php';
                     <div class="mb-4">
                         <label class="form-label fw-bold">Number of Keys</label>
                         <input type="number" name="count" class="form-control bg-secondary text-white border-0 py-2" value="1" min="1" max="500">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Max Devices (Devices per Key)</label>
+                        <input type="number" name="max_devices" class="form-control bg-secondary text-white border-0 py-2" value="1" min="1">
                     </div>
                     <div class="row">
                         <div class="col-6 mb-3">

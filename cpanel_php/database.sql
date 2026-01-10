@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS license_keys (
     expires_at DATETIME NOT NULL,
     status VARCHAR(50) DEFAULT 'active',
     device_id VARCHAR(255) NULL,
+    max_devices INT DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
