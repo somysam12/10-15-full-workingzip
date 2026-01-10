@@ -1,6 +1,10 @@
 <?php
 require_once 'header.php';
 
+$app_type = $_SESSION['app_type'] ?? 'master';
+$status_key = ($app_type === 'panel') ? 'panel_maintenance' : 'master_maintenance';
+$msg_key = ($app_type === 'panel') ? 'panel_maintenance_msg' : 'master_maintenance_msg';
+
 $maintenance_status = getConfig($status_key, 'OFF');
 $maintenance_msg = getConfig($msg_key, 'System is under maintenance.');
 
