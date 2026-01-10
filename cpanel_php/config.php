@@ -88,22 +88,19 @@ function getActiveAnnouncement() {
     $app_type = $_SESSION['app_type'] ?? 'all';
     
     try {
-        // Safe check for column existence and value
-        $sql = "SELECT * FROM announcements WHERE active = 1 ORDER BY id DESC LIMIT 1";
-        $stmt = $pdo->query($sql);
+        $sql = "SELECT * FROM announcements WHERE active = 1 AND (app_type = ? OR app_type = 'all') ORDER BY id DESC LIMIT 1";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$app_type]);
         $ann = $stmt->fetch();
         
-        if ($ann) {
-            // If app_type column exists, filter by it
-            if (array_key_exists('app_type', $ann)) {
-                if ($ann['app_type'] !== 'all' && $ann['app_type'] !== $app_type) {
-                    $stmt = $pdo->prepare("SELECT * FROM announcements WHERE active = 1 AND (app_type = ? OR app_type = 'all') ORDER BY id DESC LIMIT 1");
-                    $stmt->execute([$app_type]);
-                    return $stmt->fetch();
-                }
-            }
-        }
-        return $ann;
+        if (!$ann) return null;
+
+        return [
+          "enabled" => true,
+          "title" => $ann['title'] ?? "",
+          "message" => $ann['message'] ?? "",
+          "type" => "info"
+        ];
     } catch (Exception $e) {
         return null;
     }

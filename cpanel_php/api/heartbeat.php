@@ -34,13 +34,27 @@ try {
         exit;
     }
 
-    // Update usage
+    // Update session duration
     $stmt = $pdo->prepare("
-        UPDATE app_users 
-        SET last_login_at = NOW(), total_usage_seconds = total_usage_seconds + 60
-        WHERE UPPER(license_key)=? AND device_id=? AND is_blocked=0
+        UPDATE user_sessions 
+        SET session_end = CURRENT_TIMESTAMP,
+            duration_seconds = EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - session_start))
+        WHERE license_key = ? AND device_id = ? AND session_end IS NULL
     ");
     $stmt->execute([$key, $device]);
+
+    // Update total usage in app_users
+    $stmt = $pdo->prepare("
+        UPDATE app_users 
+        SET total_usage_seconds = (
+            SELECT COALESCE(SUM(duration_seconds), 0) 
+            FROM user_sessions 
+            WHERE license_key = ? AND device_id = ?
+        ),
+        last_login_at = CURRENT_TIMESTAMP
+        WHERE UPPER(license_key) = ? AND device_id = ?
+    ");
+    $stmt->execute([$key, $device, $key, $device]);
 
     ob_clean();
     echo json_encode(["status"=>"success"]);

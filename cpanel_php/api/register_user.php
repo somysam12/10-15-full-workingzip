@@ -39,9 +39,13 @@ try {
     $stmt = $pdo->prepare("
         INSERT INTO app_users (license_key, user_name, device_id, first_login_at, last_login_at)
         VALUES (?, ?, ?, NOW(), NOW())
-        ON DUPLICATE KEY UPDATE user_name = VALUES(user_name), last_login_at = NOW()
+        ON CONFLICT (license_key, device_id) DO UPDATE SET user_name = EXCLUDED.user_name, last_login_at = NOW()
     ");
     $stmt->execute([$key, $name, $device]);
+
+    // Start a new session
+    $stmt = $pdo->prepare("INSERT INTO user_sessions (license_key, device_id, session_start) VALUES (?, ?, NOW())");
+    $stmt->execute([$key, $device]);
 
     ob_clean();
     echo json_encode(["status" => "success"]);
