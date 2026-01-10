@@ -48,10 +48,10 @@ try {
     $session = $stmt->fetch();
     
     if ($session) {
-        $stmt = $pdo->prepare("UPDATE user_sessions SET duration_seconds = duration_seconds + 60 WHERE id = ?");
+        $stmt = $pdo->prepare("UPDATE user_sessions SET duration_seconds = duration_seconds + 60, last_heartbeat = NOW() WHERE id = ?");
         $stmt->execute([$session['id']]);
     } else {
-        $stmt = $pdo->prepare("INSERT INTO user_sessions (license_key, device_id, duration_seconds) VALUES (?, ?, 60)");
+        $stmt = $pdo->prepare("INSERT INTO user_sessions (license_key, device_id, duration_seconds, login_time, last_heartbeat) VALUES (?, ?, 60, NOW(), NOW())");
         $stmt->execute([$key, $device]);
     }
 

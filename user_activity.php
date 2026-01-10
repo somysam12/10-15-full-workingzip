@@ -62,11 +62,11 @@ include 'sidebar.php';
         font-size: 0.75rem;
         font-weight: 600;
     }
-    .sticky-header th {
-        position: sticky;
-        top: 0;
-        background: #212529 !important;
-        z-index: 10;
+    .session-details {
+        font-size: 0.7rem;
+        color: #6c757d;
+        display: block;
+        margin-top: 2px;
     }
 </style>
 
@@ -104,12 +104,28 @@ include 'sidebar.php';
                                 $timezone = new DateTimeZone('Asia/Kolkata');
                                 $last_login = new DateTime($u['last_login_at']);
                                 $last_login->setTimezone($timezone);
+
+                                // Fetch recent sessions
+                                $stmt_sess = $pdo->prepare("SELECT login_time, duration_seconds FROM user_sessions WHERE license_key = ? AND device_id = ? ORDER BY id DESC LIMIT 3");
+                                $stmt_sess->execute([$u['license_key'], $u['device_id']]);
+                                $sessions = $stmt_sess->fetchAll();
                             ?>
                                 <tr>
                                     <td class="fw-bold"><?php echo htmlspecialchars($u['user_name']); ?></td>
                                     <td><code class="text-info"><?php echo htmlspecialchars($u['license_key']); ?></code></td>
                                     <td class="d-none d-md-table-cell"><code class="text-info" style="color: #0dcaf0 !important;"><?php echo htmlspecialchars($u['device_id']); ?></code></td>
-                                    <td><small><?php echo $last_login->format('M d, H:i'); ?></small></td>
+                                    <td>
+                                        <small><?php echo $last_login->format('M d, H:i'); ?></small>
+                                        <?php foreach($sessions as $s): 
+                                            $s_start = new DateTime($s['login_time']);
+                                            $s_start->setTimezone($timezone);
+                                            $s_dur = floor($s['duration_seconds'] / 60);
+                                        ?>
+                                            <span class="session-details">
+                                                <i class="fas fa-history me-1"></i><?php echo $s_start->format('H:i'); ?> (<?php echo $s_dur; ?>m)
+                                            </span>
+                                        <?php endforeach; ?>
+                                    </td>
                                     <td><span class="badge bg-secondary"><?php echo sprintf("%02d:%02d", $hours, $mins); ?></span></td>
                                     <td>
                                         <?php if ($u['is_blocked']): ?>
