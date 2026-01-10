@@ -68,6 +68,12 @@ include 'sidebar.php';
         display: block;
         margin-top: 2px;
     }
+    .session-details {
+        font-size: 0.7rem;
+        color: #6c757d;
+        display: block;
+        margin-top: 2px;
+    }
 </style>
 
 <div class="main-content p-3 p-md-4">
