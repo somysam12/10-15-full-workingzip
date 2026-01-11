@@ -180,8 +180,9 @@ include 'sidebar.php';
                                                 $server_time = time();
                                                 $diff = abs($server_time - $heartbeat_time);
                                                 
-                                                // If heartbeat is within last 180s AND session is not closed
-                                                $is_active = ($s['session_end'] === null && $diff < 180);
+                                                // If heartbeat is within last 120s AND session is not closed
+                                                // Reduced threshold to 120s to be more responsive to offline state
+                                                $is_active = ($s['session_end'] === null && $diff < 120);
                                             ?>
                                                 <div class="session-details mb-1 d-flex justify-content-between align-items-center">
                                                     <span>
