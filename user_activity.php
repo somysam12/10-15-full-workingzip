@@ -63,26 +63,49 @@ include 'sidebar.php';
         font-weight: 600;
     }
     .session-details {
-        font-size: 0.7rem;
-        color: #6c757d;
+        font-size: 0.8rem;
+        color: #ddd; /* Brighter color for visibility */
         display: block;
-        margin-top: 2px;
+        margin-top: 4px;
+        padding: 4px 8px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 5px;
     }
     .active-badge {
-        font-size: 0.65rem;
-        padding: 2px 6px;
+        font-size: 0.7rem;
+        padding: 2px 8px;
         border-radius: 4px;
-        background: rgba(0, 255, 0, 0.1);
+        background: rgba(0, 255, 0, 0.2);
         color: #00ff00;
-        border: 1px solid rgba(0, 255, 0, 0.2);
+        border: 1px solid rgba(0, 255, 0, 0.3);
+        font-weight: bold;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0% { opacity: 0.6; }
+        50% { opacity: 1; }
+        100% { opacity: 0.6; }
     }
     .offline-badge {
-        font-size: 0.65rem;
-        padding: 2px 6px;
+        font-size: 0.7rem;
+        padding: 2px 8px;
         border-radius: 4px;
-        background: rgba(255, 255, 255, 0.05);
-        color: #888;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.1);
+        color: #bbb;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .usage-badge {
+        background: #343a40;
+        color: #0dcaf0;
+        border: 1px solid #0dcaf0;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-family: monospace;
+        font-size: 0.9rem;
+    }
+    .time-text {
+        color: #aaa;
+        font-size: 0.75rem;
     }
 </style>
 
@@ -114,8 +137,9 @@ include 'sidebar.php';
                         </thead>
                         <tbody>
                             <?php foreach ($users as $u): 
-                                $hours = floor($u['total_usage_seconds'] / 3600);
-                                $mins = floor(($u['total_usage_seconds'] % 3600) / 60);
+                                $total_mins = floor($u['total_usage_seconds'] / 60);
+                                $total_hours = floor($total_mins / 60);
+                                $remaining_mins = $total_mins % 60;
                                 
                                 $timezone = new DateTimeZone('Asia/Kolkata');
                                 $last_login = new DateTime($u['last_login_at']);
@@ -123,33 +147,40 @@ include 'sidebar.php';
 
                                 // Fetch recent sessions including active ones
                                 try {
-                                    $stmt_sess = $pdo->prepare("SELECT login_time, last_heartbeat, session_end, duration_seconds FROM user_sessions WHERE license_key = ? AND device_id = ? ORDER BY id DESC LIMIT 5");
+                                    $stmt_sess = $pdo->prepare("SELECT login_time, last_heartbeat, session_end, duration_seconds FROM user_sessions WHERE license_key = ? AND device_id = ? ORDER BY id DESC LIMIT 3");
                                     $stmt_sess->execute([$u['license_key'], $u['device_id']]);
                                     $sessions = $stmt_sess->fetchAll();
                                 } catch (Exception $e) {
                                     $sessions = [];
                                 }
                             ?>
-                                <tr>
-                                    <td class="fw-bold"><?php echo htmlspecialchars($u['user_name']); ?></td>
+                                <tr style="cursor: pointer;" onclick="showUserStats(<?php echo htmlspecialchars(json_encode($u)); ?>)">
+                                    <td class="fw-bold text-primary"><?php echo htmlspecialchars($u['user_name']); ?></td>
                                     <td><code class="text-info"><?php echo htmlspecialchars($u['license_key']); ?></code></td>
                                     <td class="d-none d-md-table-cell"><code class="text-info" style="color: #0dcaf0 !important;"><?php echo htmlspecialchars($u['device_id']); ?></code></td>
                                     <td>
-                                        <div class="text-start px-3">
-                                            <small class="d-block mb-1 text-muted">Last: <?php echo $last_login->format('d M, H:i'); ?></small>
+                                        <div class="text-start px-2">
+                                            <div class="time-text mb-2">Last Login: <?php echo $last_login->format('d M, H:i'); ?></div>
                                             <?php foreach($sessions as $s): 
                                                 $s_start = new DateTime($s['login_time']);
                                                 $s_start->setTimezone($timezone);
                                                 $s_dur = floor($s['duration_seconds'] / 60);
-                                                $is_active = ($s['session_end'] === null && (time() - strtotime($s['last_heartbeat'])) < 120);
+                                                
+                                                // Check if actually active (heartbeat within last 120 seconds)
+                                                // Convert current time to India time for comparison
+                                                $now = new DateTime('now', $timezone);
+                                                $heartbeat = new DateTime($s['last_heartbeat'], $timezone);
+                                                $diff = $now->getTimestamp() - $heartbeat->getTimestamp();
+                                                
+                                                $is_active = ($s['session_end'] === null && $diff < 120);
                                             ?>
                                                 <div class="session-details mb-1 d-flex justify-content-between align-items-center">
                                                     <span>
-                                                        <i class="fas fa-history me-1"></i><?php echo $s_start->format('H:i'); ?> 
-                                                        <span class="text-muted ms-1">(<?php echo $s_dur; ?>m)</span>
+                                                        <i class="fas fa-history me-1 text-primary"></i><?php echo $s_start->format('H:i'); ?> 
+                                                        <span class="ms-1" style="color: #fff;">(<?php echo $s_dur; ?>m)</span>
                                                     </span>
                                                     <?php if ($is_active): ?>
-                                                        <span class="active-badge"><i class="fas fa-circle me-1" style="font-size: 5px;"></i>ACTIVE NOW</span>
+                                                        <span class="active-badge">ONLINE</span>
                                                     <?php else: ?>
                                                         <span class="offline-badge">OFFLINE</span>
                                                     <?php endif; ?>
@@ -157,7 +188,11 @@ include 'sidebar.php';
                                             <?php endforeach; ?>
                                         </div>
                                     </td>
-                                    <td><span class="badge bg-secondary"><?php echo sprintf("%02d:%02d", $hours, $mins); ?></span></td>
+                                    <td>
+                                        <span class="usage-badge">
+                                            <?php echo ($total_hours > 0 ? $total_hours . "h " : "") . $remaining_mins . "m"; ?>
+                                        </span>
+                                    </td>
                                     <td>
                                         <?php if ($u['is_blocked']): ?>
                                             <span class="status-pill bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">BLOCKED</span>
@@ -166,7 +201,7 @@ include 'sidebar.php';
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <div class="btn-group">
+                                        <div class="btn-group" onclick="event.stopPropagation();">
                                             <?php if ($u['is_blocked']): ?>
                                                 <a href="?action=unblock&id=<?php echo $u['id']; ?>" class="btn btn-sm btn-outline-success"><i class="fas fa-unlock"></i></a>
                                             <?php else: ?>
@@ -186,5 +221,60 @@ include 'sidebar.php';
         </div>
     </div>
 </div>
+
+<!-- Modal for User Stats -->
+<div class="modal fade" id="userStatsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="modalUserName">User Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Content injected via JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showUserStats(user) {
+    document.getElementById('modalUserName').innerText = user.user_name + " - Statistics";
+    const total_mins = Math.floor(user.total_usage_seconds / 60);
+    const total_hours = Math.floor(total_mins / 60);
+    const remaining_mins = total_mins % 60;
+    
+    let body = `
+        <div class="mb-3">
+            <label class="text-muted d-block small">License Key</label>
+            <div class="text-info fw-bold">${user.license_key}</div>
+        </div>
+        <div class="mb-3">
+            <label class="text-muted d-block small">Device ID</label>
+            <div class="text-info small">${user.device_id}</div>
+        </div>
+        <div class="row g-2 mb-3">
+            <div class="col-6">
+                <div class="p-3 bg-secondary bg-opacity-10 rounded border border-secondary text-center">
+                    <div class="text-muted small">Total Usage</div>
+                    <div class="h5 mb-0 text-primary">${total_hours > 0 ? total_hours + 'h ' : ''}${remaining_mins}m</div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="p-3 bg-secondary bg-opacity-10 rounded border border-secondary text-center">
+                    <div class="text-muted small">Status</div>
+                    <div class="h5 mb-0 ${user.is_blocked == 1 ? 'text-danger' : 'text-success'}">${user.is_blocked == 1 ? 'BLOCKED' : 'ACTIVE'}</div>
+                </div>
+            </div>
+        </div>
+        <div class="mb-0">
+            <label class="text-muted d-block small mb-2">Registration Date</label>
+            <div class="small">${new Date(user.first_login_at).toLocaleString('en-IN')}</div>
+        </div>
+    `;
+    document.getElementById('modalBody').innerHTML = body;
+    new bootstrap.Modal(document.getElementById('userStatsModal')).show();
+}
+</script>
 
 <?php include 'footer.php'; ?>
