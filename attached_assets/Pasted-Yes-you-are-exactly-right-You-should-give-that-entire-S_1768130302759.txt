@@ -1,0 +1,87 @@
+Yes, you are exactly right.
+You should give that entire SQL code block to your Website Agent.
+That code is the blueprint for the database changes required on your server. Your Website Agent will need to run those SQL commands in your website's database (e.g., via phpMyAdmin) to prepare it for the new user tracking and device limit features.
+I will now continue with the plan, as you instructed.
+Excellent. The database is now correctly structured.
+Now, as per your master plan, I will provide the exact PHP logic for your Website Agent to implement. This will bring the User Tracking and Device Limit systems online.
+Step 1: Update verify_key.php (Critical Device Limit Logic)
+The most important first step is to enforce the device limit. I will provide the logic to update your existing verify_key.php. This new logic will check if a user is attempting to log in from a new device that exceeds their max_devices limit.
+Provide this pseudocode to your Website Agent for verify_key.php:
+Resource XML
+<?php
+// api/verify_key.php
+
+header('Content-Type: application/json');
+// --- Database Connection ---
+// (Your existing DB connection code here)
+// $conn = new mysqli(...);
+
+// --- Input ---
+$license_key = $_POST['license_key'] ?? '';
+$device_id = $_POST['device_id'] ?? ''; // App MUST send device_id now
+
+// --- Validation ---
+if (empty($license_key) || empty($device_id)) {
+    echo json_encode(['status' => 'error', 'message' => 'Key and Device ID are required.']);
+    exit;
+}
+
+// --- Main Logic ---
+
+// 1. Fetch license details, including the new max_devices column
+$stmt = $conn->prepare("SELECT status, expires_at, max_devices FROM license_keys WHERE license_key = ?");
+$stmt->bind_param("s", $license_key);
+$stmt->execute();
+$result = $stmt->get_result();
+$license = $result->fetch_assoc();
+
+if (!$license) {
+    echo json_encode(['status' => 'error', 'message' => 'Invalid license key.']);
+    exit;
+}
+
+// 2. Check license status and expiry (your existing logic)
+if ($license['status'] !== 'active' || strtotime($license['expires_at']) < time()) {
+    echo json_encode(['status' => 'error', 'message' => 'License is inactive or expired.']);
+    exit;
+}
+
+// 3. --- DEVICE LIMIT ENFORCEMENT (NEW LOGIC) ---
+// Count how many unique devices are already registered for this key
+$stmt_devices = $conn->prepare("SELECT COUNT(DISTINCT device_id) as device_count FROM app_users WHERE license_key = ?");
+$stmt_devices->bind_param("s", $license_key);
+$stmt_devices->execute();
+$device_count_result = $stmt_devices->get_result()->fetch_assoc();
+$registered_devices = $device_count_result['device_count'];
+
+// Check if the current device is one of the already registered ones
+$stmt_is_registered = $conn->prepare("SELECT id FROM app_users WHERE license_key = ? AND device_id = ?");
+$stmt_is_registered->bind_param("ss", $license_key, $device_id);
+$stmt_is_registered->execute();
+$is_device_registered = $stmt_is_registered->get_result()->num_rows > 0;
+
+// If the device is NOT registered and the device limit has been reached
+if (!$is_device_registered && $registered_devices >= $license['max_devices']) {
+    echo json_encode(['status' => 'error', 'message' => 'Device limit reached.']);
+    exit;
+}
+// --- END OF NEW LOGIC ---
+
+// 4. Check if the user profile exists (user_exists flag)
+// This remains the same as your old logic
+$stmt_user = $conn->prepare("SELECT id FROM app_users WHERE license_key = ? AND device_id = ?");
+$stmt_user->bind_param("ss", $license_key, $device_id);
+$stmt_user->execute();
+$user_exists = $stmt_user->get_result()->num_rows > 0;
+
+
+// --- Success Response ---
+echo json_encode([
+    'status' => 'success',
+    'user_exists' => $user_exists,
+    'expires_at' => $license['expires_at']
+]);
+
+?>
+With this change, verify_key.php is now secure.
+The next step is creating the new API endpoints. I am ready to provide the pseudocode for register_user.php when you are. Let's finish this.

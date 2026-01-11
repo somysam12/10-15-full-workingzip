@@ -1,0 +1,87 @@
+Step 3: Create heartbeat.php
+This is a new file that your Website Agent must create on the server. Its purpose is to:
+1.
+Log a new session in user_sessions if one isn't already active.
+2.
+Increment the total_usage_seconds in the app_users table.
+Provide this pseudocode to your Website Agent for heartbeat.php:
+Resource XML
+<?php
+// api/heartbeat.php
+
+header('Content-Type: application/json');
+// --- Database Connection ---
+// $conn = new mysqli(...);
+
+// --- Input ---
+$license_key = $_POST['license_key'] ?? '';
+$device_id = $_POST['device_id'] ?? '';
+$heartbeat_interval = 60; // The interval in seconds sent by the app
+
+// --- Validation ---
+if (empty($license_key) || empty($device_id)) {
+    echo json_encode(['status' => 'error', 'message' => 'Key and Device ID are required.']);
+    exit;
+}
+
+// --- Main Logic ---
+
+// 1. Find the user's record
+$stmt_user = $conn->prepare("SELECT id, is_blocked FROM app_users WHERE license_key = ? AND device_id = ?");
+$stmt_user->bind_param("ss", $license_key, $device_id);
+$stmt_user->execute();
+$user_result = $stmt_user->get_result();
+$user = $user_result->fetch_assoc();
+
+if (!$user) {
+    // This could happen if the user record was deleted while the app was running.
+    // Treat as blocked to force re-login.
+    echo json_encode(['status' => 'blocked', 'message' => 'User not found.']);
+    exit;
+}
+
+// 2. Check if user or key is blocked
+// (This assumes you have a similar is_blocked flag on the license_keys table)
+if ($user['is_blocked']) {
+    echo json_encode(['status' => 'blocked', 'message' => 'Your access has been blocked.']);
+    exit;
+}
+
+// 3. Update total usage time
+$stmt_usage = $conn->prepare(
+    "UPDATE app_users SET total_usage_seconds = total_usage_seconds + ? WHERE id = ?"
+);
+$stmt_usage->bind_param("ii", $heartbeat_interval, $user['id']);
+$stmt_usage->execute();
+
+// 4. Manage the session record
+// Find an active session (logout_time is NULL) for this user/device.
+$stmt_session = $conn->prepare(
+    "SELECT id FROM user_sessions WHERE license_key = ? AND device_id = ? AND logout_time IS NULL"
+);
+$stmt_session->bind_param("ss", $license_key, $device_id);
+$stmt_session->execute();
+$active_session = $stmt_session->get_result()->fetch_assoc();
+
+if (!$active_session) {
+    // No active session found, so create a new one.
+    // This handles cases where a previous session was not closed cleanly.
+    $stmt_new_session = $conn->prepare(
+        "INSERT INTO user_sessions (license_key, device_id, session_duration_seconds) VALUES (?, ?, ?)"
+    );
+    $stmt_new_session->bind_param("ssi", $license_key, $device_id, $heartbeat_interval);
+    $stmt_new_session->execute();
+} else {
+    // Active session exists, so update its duration
+    $stmt_update_session = $conn->prepare(
+        "UPDATE user_sessions SET session_duration_seconds = session_duration_seconds + ? WHERE id = ?"
+    );
+    $stmt_update_session->bind_param("ii", $heartbeat_interval, $active_session['id']);
+    $stmt_update_session->execute();
+}
+
+
+// --- Success Response ---
+echo json_encode(['status' => 'success', 'message' => 'Heartbeat received.']);
+
+?>

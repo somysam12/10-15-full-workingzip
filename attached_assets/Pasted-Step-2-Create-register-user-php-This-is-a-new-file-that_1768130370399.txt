@@ -1,0 +1,54 @@
+Step 2: Create register_user.php
+This is a new file that your Website Agent must create on the server. Its purpose is to create a new user record in the app_users table.
+Provide this pseudocode to your Website Agent for register_user.php:
+Resource XML
+<?php
+// api/register_user.php
+
+header('Content-Type: application/json');
+// --- Database Connection ---
+// (Your existing DB connection code here)
+// $conn = new mysqli(...);
+
+// --- Input ---
+$license_key = $_POST['license_key'] ?? '';
+$device_id = $_POST['device_id'] ?? '';
+$user_name = $_POST['user_name'] ?? 'DefaultUser'; // The name the user enters in ProfileSetupActivity
+
+// --- Validation ---
+if (empty($license_key) || empty($device_id)) {
+    echo json_encode(['status' => 'error', 'message' => 'Key and Device ID are required.']);
+    exit;
+}
+
+// --- Main Logic ---
+
+// Check if a record for this license key and device ID already exists
+$stmt_check = $conn->prepare("SELECT id FROM app_users WHERE license_key = ? AND device_id = ?");
+$stmt_check->bind_param("ss", $license_key, $device_id);
+$stmt_check->execute();
+$exists = $stmt_check->get_result()->num_rows > 0;
+
+if ($exists) {
+    // This case should ideally not happen if the app flow is correct,
+    // but it's good to handle it. We can just update the name.
+    $stmt_update = $conn->prepare("UPDATE app_users SET user_name = ? WHERE license_key = ? AND device_id = ?");
+    $stmt_update->bind_param("sss", $user_name, $license_key, $device_id);
+    $stmt_update->execute();
+    echo json_encode(['status' => 'success', 'message' => 'User name updated.']);
+
+} else {
+    // Insert a new record for this user and device
+    $stmt_insert = $conn->prepare("INSERT INTO app_users (license_key, device_id, user_name) VALUES (?, ?, ?)");
+    $stmt_insert->bind_param("sss", $license_key, $device_id, $user_name);
+
+    if ($stmt_insert->execute()) {
+        echo json_encode(['status' => 'success', 'message' => 'User registered successfully.']);
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Failed to register user.']);
+    }
+}
+
+?>
+With register_user.php in place, the app can now create user profiles.
+The next logical step is to create the heartbeat.php endpoint to track active usage. I am ready to provide the pseudocode for it. Let's continue.

@@ -1,0 +1,36 @@
+Now, as you've outlined, we will proceed with the backend implementation to complete the User Tracking and Device Limit systems.
+As per your request, here is the exact SQL required to create and modify your database tables. Please provide this to your Website Agent.
+Step 1: Modify license_keys Table
+This adds the max_devices column to control the device limit for each key.
+Kotlin
+ALTER TABLE`license_keys`
+ADD COLUMN `max_devices` INT(11) NOT NULL DEFAULT 1 AFTER `user_name`;
+(Note: Adjust AFTER user_name based on your existing table structure if needed.)
+Step 2: Create app_users Table
+This table will store a record for each unique user-device combination, tying a user's chosen name to a specific device ID.
+Kotlin
+CREATE TABLE `app_users` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `license_key` VARCHAR(255) NOT NULL,
+  `user_name` VARCHAR(255) NOT NULL,
+  `device_id` VARCHAR(255) NOT NULL,
+  `first_login_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_login_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `total_usage_seconds` BIGINT(20) NOT NULL DEFAULT 0,
+  `is_blocked` BOOLEAN NOT NULL DEFAULT FALSE,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `license_device_unique` (`license_key`,`device_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+Step 3: Create user_sessions Table
+This table is crucial for tracking individual session durations, providing valuable insight into user engagement.
+Kotlin
+CREATE TABLE `user_sessions` (`id` INT(11) NOT NULL AUTO_INCREMENT,
+  `license_key` VARCHAR(255) NOT NULL,
+  `device_id` VARCHAR(255) NOT NULL,
+  `login_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `logout_time` TIMESTAMP NULL DEFAULT NULL,
+  `session_duration_seconds` INT(11) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+The database is now perfectly structured to support the remaining features.
+I am ready for the next step. We can now proceed with the PHP pseudocode for the API endpoints (register_user.php, heartbeat.php, verify_key.php with device limit logic, etc.) to bring the tracking and device limit systems online. Let's finish this cleanly
