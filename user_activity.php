@@ -47,7 +47,7 @@ include 'sidebar.php';
 
 <style>
     .user-card {
-        max-width: 1100px;
+        max-width: 1200px;
         margin: 0 auto;
         border-radius: 15px;
         overflow: hidden;
@@ -68,11 +68,21 @@ include 'sidebar.php';
         display: block;
         margin-top: 2px;
     }
-    .session-details {
-        font-size: 0.7rem;
-        color: #6c757d;
-        display: block;
-        margin-top: 2px;
+    .active-badge {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: rgba(0, 255, 0, 0.1);
+        color: #00ff00;
+        border: 1px solid rgba(0, 255, 0, 0.2);
+    }
+    .offline-badge {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.05);
+        color: #888;
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
 </style>
 
@@ -89,14 +99,14 @@ include 'sidebar.php';
                 </form>
             </div>
             <div class="card-body p-0">
-                <div class="table-responsive" style="max-height: 70vh;">
+                <div class="table-responsive" style="max-height: 80vh;">
                     <table class="table table-dark table-hover align-middle mb-0 text-center">
                         <thead class="sticky-header">
                             <tr>
                                 <th>User Name</th>
                                 <th>License Key</th>
                                 <th class="d-none d-md-table-cell">Device ID</th>
-                                <th>Last Login</th>
+                                <th>Activity Tracker (India Time)</th>
                                 <th>Total Usage</th>
                                 <th>Status</th>
                                 <th>Action</th>
@@ -111,9 +121,9 @@ include 'sidebar.php';
                                 $last_login = new DateTime($u['last_login_at']);
                                 $last_login->setTimezone($timezone);
 
-                                // Fetch recent sessions
+                                // Fetch recent sessions including active ones
                                 try {
-                                    $stmt_sess = $pdo->prepare("SELECT login_time, duration_seconds FROM user_sessions WHERE license_key = ? AND device_id = ? ORDER BY id DESC LIMIT 3");
+                                    $stmt_sess = $pdo->prepare("SELECT login_time, last_heartbeat, session_end, duration_seconds FROM user_sessions WHERE license_key = ? AND device_id = ? ORDER BY id DESC LIMIT 5");
                                     $stmt_sess->execute([$u['license_key'], $u['device_id']]);
                                     $sessions = $stmt_sess->fetchAll();
                                 } catch (Exception $e) {
@@ -125,16 +135,27 @@ include 'sidebar.php';
                                     <td><code class="text-info"><?php echo htmlspecialchars($u['license_key']); ?></code></td>
                                     <td class="d-none d-md-table-cell"><code class="text-info" style="color: #0dcaf0 !important;"><?php echo htmlspecialchars($u['device_id']); ?></code></td>
                                     <td>
-                                        <small><?php echo $last_login->format('M d, H:i'); ?></small>
-                                        <?php foreach($sessions as $s): 
-                                            $s_start = new DateTime($s['login_time']);
-                                            $s_start->setTimezone($timezone);
-                                            $s_dur = floor($s['duration_seconds'] / 60);
-                                        ?>
-                                            <span class="session-details">
-                                                <i class="fas fa-history me-1"></i><?php echo $s_start->format('H:i'); ?> (<?php echo $s_dur; ?>m)
-                                            </span>
-                                        <?php endforeach; ?>
+                                        <div class="text-start px-3">
+                                            <small class="d-block mb-1 text-muted">Last: <?php echo $last_login->format('d M, H:i'); ?></small>
+                                            <?php foreach($sessions as $s): 
+                                                $s_start = new DateTime($s['login_time']);
+                                                $s_start->setTimezone($timezone);
+                                                $s_dur = floor($s['duration_seconds'] / 60);
+                                                $is_active = ($s['session_end'] === null && (time() - strtotime($s['last_heartbeat'])) < 120);
+                                            ?>
+                                                <div class="session-details mb-1 d-flex justify-content-between align-items-center">
+                                                    <span>
+                                                        <i class="fas fa-history me-1"></i><?php echo $s_start->format('H:i'); ?> 
+                                                        <span class="text-muted ms-1">(<?php echo $s_dur; ?>m)</span>
+                                                    </span>
+                                                    <?php if ($is_active): ?>
+                                                        <span class="active-badge"><i class="fas fa-circle me-1" style="font-size: 5px;"></i>ACTIVE NOW</span>
+                                                    <?php else: ?>
+                                                        <span class="offline-badge">OFFLINE</span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
                                     </td>
                                     <td><span class="badge bg-secondary"><?php echo sprintf("%02d:%02d", $hours, $mins); ?></span></td>
                                     <td>
