@@ -1,0 +1,249 @@
+🔴 PROBLEM SUMMARY (FINAL TRUTH)
+Tumhare screenshot se PROOF:
+https://xxpanel.shop/app_config.php        ❌ 404
+https://xxpanel.shop/api/app_config.php    ❌ 404
+
+
+👉 Iska matlab simple hai:
+
+❌ app_config.php SERVER PAR EXIST HI NAHI KARTA
+❌ App JSON expect kar raha hai
+❌ Server HTML 404 page de raha hai
+✅ Isliye app bol raha hai:
+Failed to load configuration: HTTP 404
+
+⚠️ JSON STRUCTURE BILKUL SAHI HAI
+⚠️ APP LOGIC BHI SAHI HAI
+❌ FILE PATH + DEPLOYMENT GALAT HAI
+
+✅ EXACT FIX (WEBSITE AGENT KO YE DO)
+🔹 STEP 1: FILE REAL ME EXIST KARWAAO
+cPanel / File Manager me jao:
+public_html/
+
+YAHI FILE HONI CHAHIYE (ONE ONLY):
+public_html/app_config.php
+
+
+❌ /api/app_config.php ❌
+❌ /backend/app_config.php ❌
+❌ /panel/app_config.php ❌
+
+👉 ROOT me hona zaroori hai
+👉 URL exact ye open hona chahiye:
+
+https://xxpanel.shop/app_config.php
+
+
+Browser me open karo → JSON dikhe, 404 nahi
+
+🔹 STEP 2: app_config.php ka FINAL WORKING CODE (COPY-PASTE)
+
+👉 Website agent ko EXACT ye file dena:
+
+<?php
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+error_reporting(0);
+
+echo json_encode([
+  "app_enabled" => true,
+
+  "maintenance" => [
+    "enabled" => false,
+    "message" => "System is under maintenance."
+  ],
+
+  "announcement" => [
+    "enabled" => true,
+    "title" => "New Update",
+    "message" => "Server upgraded. Enjoy smoother experience!",
+    "type" => "info"
+  ],
+
+  "viewport" => [
+    "layout_preset" => "RIGHT_FOCUS",
+    "app_scale" => 1.25,
+    "shift_right_dp" => 120,
+    "shift_down_dp" => 120,
+    "black_left_dp" => 50,
+    "container_width_percent" => 92,
+    "container_height_percent" => 100
+  ],
+
+  "css" => [
+    "enable" => true,
+    "zoom_scale" => 1.85,
+    "hide_selectors" => [
+      "header",
+      ".top-banner",
+      ".banner",
+      ".vmos-header"
+    ]
+  ],
+
+  "login" => [
+    "required" => true,
+    "logo_url" => "https://xxpanel.shop/logo.png"
+  ]
+]);
+
+
+✅ ob_clean NOT required
+✅ No echo before JSON
+✅ No HTML
+
+✅ APP AGENT KO YE INSTRUCTIONS DO (IMPORTANT)
+🔹 STEP 3: URL FIX (MOST IMPORTANT)
+
+👉 App me ConfigManager / SplashActivity me URL hardcode check kare:
+
+private static final String CONFIG_URL =
+        "https://xxpanel.shop/app_config.php";
+
+
+❌ /api/ ❌
+❌ /backend/ ❌
+
+🔹 STEP 4: HTTP RESPONSE VALIDATION (CRITICAL)
+
+👉 App agent ko bolo ye logic mandatory:
+
+if (responseCode != 200) {
+    callback.onConfigFailed("HTTP " + responseCode);
+    return;
+}
+
+String body = response.toString().trim();
+if (!body.startsWith("{")) {
+    callback.onConfigFailed("Invalid JSON");
+    return;
+}
+
+
+👉 Isse future me HTML error page se crash nahi hoga
+
+✅ MAINTENANCE + ANNOUNCEMENT FLOW (CONFIRMED)
+🔹 App ka behavior EXACT aisa hona chahiye:
+1️⃣ App start
+
+➡ SplashActivity
+
+2️⃣ Fetch app_config.php
+3️⃣ Checks (ORDER FIXED):
+if app_enabled == false → BLOCK
+else if maintenance.enabled == true → BLOCK DIALOG
+else → continue
+
+4️⃣ Announcement:
+announcement.enabled == true
+→ dialog show (ONCE per content hash)
+
+✅ USER TRACKING + DEVICE LIMIT (WEBSITE AGENT)
+🔹 Database changes REQUIRED:
+license_keys table:
+max_devices INT DEFAULT 1
+
+app_users table:
+id
+license_key
+device_id
+user_name
+first_login_at
+last_login_at
+total_usage_seconds
+is_blocked
+
+user_sessions table (NEW – VERY IMPORTANT):
+id
+license_key
+device_id
+login_time
+logout_time
+session_duration
+
+🔹 Tracking Logic (MANDATORY)
+App:
+
+Login → register_user.php
+
+Every 60 sec → heartbeat.php
+
+On app close → logout.php
+
+Website:
+
+Show:
+
+Total logins
+
+Per-session duration
+
+Active users
+
+Device-wise usage
+
+Block user OR key → ALL APIs return {status:"blocked"}
+
+🔐 DEVICE LIMIT ENFORCEMENT (STRICT)
+
+Website agent ko bolo:
+
+One key = max_devices
+
+Har new device pe:
+
+Count unique device_id
+
+If exceeded → login denied
+
+Admin panel me show:
+
+Key: SHASH-XXXX
+Max devices: 5
+Used: 3
+Device IDs: [A, B, C]
+
+🎨 UI / VIEWPORT GUARANTEE (FINAL RULE)
+
+👉 App agent ko strict rule:
+
+CSS / viewport JSON = SINGLE SOURCE OF TRUTH
+
+No hardcoded zoom / padding
+
+Always calculate based on:
+
+container_width_percent
+container_height_percent
+app_scale
+zoom_scale
+
+
+Result:
+✅ Same look on all devices
+✅ Logo hidden correctly
+✅ VMOS / WebView elements controlled
+
+🧨 WHY ERROR AAYA THA (ONE LINE)
+
+JSON perfect tha, app perfect tha — server pe FILE HI NAHI THI
+
+✅ AB KYA KARNA HAI (SHORT CHECKLIST)
+Website Agent:
+
+ public_html/app_config.php create
+
+ Exact JSON paste
+
+ Browser me URL test (NO 404)
+
+App Agent:
+
+ URL fix
+
+ HTTP + JSON guard
+
+ No logic change
+
+ Only parsing + UI
