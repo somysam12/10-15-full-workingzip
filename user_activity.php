@@ -2,6 +2,10 @@
 require_once 'config.php';
 requireLogin();
 
+// Force India Timezone for MySQL/PHP consistency
+date_default_timezone_set('Asia/Kolkata');
+$pdo->exec("SET time_zone = '+05:30'");
+
 // Handle Actions
 if (isset($_GET['action'])) {
     $id = (int)$_GET['id'];
@@ -63,49 +67,54 @@ include 'sidebar.php';
         font-weight: 600;
     }
     .session-details {
-        font-size: 0.8rem;
-        color: #ddd; /* Brighter color for visibility */
+        font-size: 0.85rem;
+        color: #fff; 
         display: block;
-        margin-top: 4px;
-        padding: 4px 8px;
-        background: rgba(255,255,255,0.05);
-        border-radius: 5px;
+        margin-top: 6px;
+        padding: 8px 12px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.15);
     }
     .active-badge {
-        font-size: 0.7rem;
-        padding: 2px 8px;
+        font-size: 0.75rem;
+        padding: 3px 10px;
         border-radius: 4px;
-        background: rgba(0, 255, 0, 0.2);
+        background: rgba(0, 255, 0, 0.3);
         color: #00ff00;
-        border: 1px solid rgba(0, 255, 0, 0.3);
+        border: 1px solid rgba(0, 255, 0, 0.5);
         font-weight: bold;
-        animation: pulse 2s infinite;
+        text-shadow: 0 0 5px rgba(0,255,0,0.5);
+        animation: pulse 1.5s infinite;
     }
     @keyframes pulse {
-        0% { opacity: 0.6; }
-        50% { opacity: 1; }
-        100% { opacity: 0.6; }
+        0% { opacity: 0.7; transform: scale(0.98); }
+        50% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0.7; transform: scale(0.98); }
     }
     .offline-badge {
-        font-size: 0.7rem;
-        padding: 2px 8px;
+        font-size: 0.75rem;
+        padding: 3px 10px;
         border-radius: 4px;
         background: rgba(255, 255, 255, 0.1);
-        color: #bbb;
+        color: #ddd;
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
     .usage-badge {
-        background: #343a40;
+        background: #1a1d21;
         color: #0dcaf0;
         border: 1px solid #0dcaf0;
-        padding: 5px 10px;
-        border-radius: 5px;
-        font-family: monospace;
-        font-size: 0.9rem;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 1rem;
+        font-weight: bold;
     }
     .time-text {
-        color: #aaa;
-        font-size: 0.75rem;
+        color: #00f2fe;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-shadow: 0 0 2px rgba(0,0,0,0.5);
     }
 </style>
 
@@ -160,24 +169,24 @@ include 'sidebar.php';
                                     <td class="d-none d-md-table-cell"><code class="text-info" style="color: #0dcaf0 !important;"><?php echo htmlspecialchars($u['device_id']); ?></code></td>
                                     <td>
                                         <div class="text-start px-2">
-                                            <div class="time-text mb-2">Last Login: <?php echo $last_login->format('d M, H:i'); ?></div>
+                                            <div class="time-text mb-2"><i class="fas fa-clock me-1"></i>Last: <?php echo $last_login->format('d M, H:i'); ?></div>
                                             <?php foreach($sessions as $s): 
                                                 $s_start = new DateTime($s['login_time']);
                                                 $s_start->setTimezone($timezone);
                                                 $s_dur = floor($s['duration_seconds'] / 60);
                                                 
-                                                // Check if actually active (heartbeat within last 120 seconds)
-                                                // Convert current time to India time for comparison
-                                                $now = new DateTime('now', $timezone);
-                                                $heartbeat = new DateTime($s['last_heartbeat'], $timezone);
-                                                $diff = $now->getTimestamp() - $heartbeat->getTimestamp();
+                                                // STRICT HEARTBEAT CHECK
+                                                $heartbeat_time = strtotime($s['last_heartbeat']);
+                                                $server_time = time();
+                                                $diff = abs($server_time - $heartbeat_time);
                                                 
-                                                $is_active = ($s['session_end'] === null && $diff < 120);
+                                                // If heartbeat is within last 180s AND session is not closed
+                                                $is_active = ($s['session_end'] === null && $diff < 180);
                                             ?>
                                                 <div class="session-details mb-1 d-flex justify-content-between align-items-center">
                                                     <span>
                                                         <i class="fas fa-history me-1 text-primary"></i><?php echo $s_start->format('H:i'); ?> 
-                                                        <span class="ms-1" style="color: #fff;">(<?php echo $s_dur; ?>m)</span>
+                                                        <span class="ms-2" style="color: #00ff00; font-weight: 600;">(<?php echo $s_dur; ?>m)</span>
                                                     </span>
                                                     <?php if ($is_active): ?>
                                                         <span class="active-badge">ONLINE</span>
@@ -268,8 +277,8 @@ function showUserStats(user) {
             </div>
         </div>
         <div class="mb-0">
-            <label class="text-muted d-block small mb-2">Registration Date</label>
-            <div class="small">${new Date(user.first_login_at).toLocaleString('en-IN')}</div>
+            <label class="text-muted d-block small mb-2">Registration Date (India Time)</label>
+            <div class="small text-info">${new Date(user.first_login_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</div>
         </div>
     `;
     document.getElementById('modalBody').innerHTML = body;

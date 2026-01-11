@@ -36,6 +36,12 @@ try {
 
 // Set global timezone for the entire application to India
 date_default_timezone_set('Asia/Kolkata');
+$is_postgres = (getenv('DATABASE_URL')) ? true : false;
+if ($is_postgres) {
+    $pdo->exec("SET timezone = 'Asia/Kolkata'");
+} else {
+    $pdo->exec("SET time_zone = '+05:30'");
+}
 
 // --- CORE UTILITIES ---
 function getConfig($key, $default = '') {
