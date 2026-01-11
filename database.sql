@@ -23,7 +23,8 @@ CREATE TABLE IF NOT EXISTS license_keys (
     status VARCHAR(50) DEFAULT 'active',
     device_id VARCHAR(255) NULL,
     max_devices INT DEFAULT 1,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    user_name VARCHAR(255) NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 4. Announcements Table
@@ -86,7 +87,8 @@ CREATE TABLE IF NOT EXISTS app_users (
   first_login_at DATETIME,
   last_login_at DATETIME,
   total_usage_seconds INT DEFAULT 0,
-  is_blocked TINYINT(1) DEFAULT 0
+  is_blocked TINYINT(1) DEFAULT 0,
+  UNIQUE KEY `license_device_unique` (`license_key`,`device_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 10. User Sessions Table
@@ -94,8 +96,9 @@ CREATE TABLE IF NOT EXISTS user_sessions (
   id INT AUTO_INCREMENT PRIMARY KEY,
   license_key VARCHAR(100),
   device_id VARCHAR(150),
-  session_start DATETIME,
-  session_end DATETIME,
+  login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  last_heartbeat TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  session_end DATETIME DEFAULT NULL,
   duration_seconds INT DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
